@@ -1,10 +1,3 @@
-# TODO
-
-+ Rewrite all breadcrumbs.
-+ Remove delete actions.
-+ Add an archive / unarchive action.
-+ Fix filters.
-
 ## Goals
 
 1. Open source.
@@ -21,14 +14,6 @@
    + Obey response code if the user is no longer authorized.
 5. Fire a webhook if a user is no longer valid.
 6. Sweep through the entire inbox.
-
-## Configuration
-
-+ API_KEY
-+ GOOGLE_OAUTH_CLIENT_ID
-+ GOOGLE_OAUTH_CLIENT_SECRET
-+ MESSAGE_WEBHOOK_URL
-+ FAILURE_WEBHOOK_URL
 
 ## Use Cases:
 
