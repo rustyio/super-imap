@@ -1,43 +1,9 @@
-# IMAP Redesign.
+# TODO
 
-rails g model Partner \
-    api_key:string \
-    name:string \
-    success_webhook:string \
-    failure_webhook:string
-
-rails g model PartnerCredential \
-    oauth_provider:references \
-    oauth1_consumer_key:string \
-    oauth1_consumer_secret:string \
-    oauth2_client_id:string \
-    oauth2_client_secret:string
-
-rails g model OauthProvider \
-    type:string \
-    scope:string \
-    site:string \
-    request_token_path:string \
-    authorize_path:string \
-    access_token_path:string
-
-rails g model User \
-    partner:references \
-    tag:string \
-    partner_credential:references \
-    last_connected_at:datetime \
-    last_email_at:datetime \
-    last_uid:integer \
-    archived:boolean
-
-rails g model MailLog \
-    user:references \
-    message_id:string
-
-rails g model TransmitLog \
-    mail_log:references \
-    response_code:integer \
-    response_body:string
++ Rewrite all breadcrumbs.
++ Remove delete actions.
++ Add an archive / unarchive action.
++ Fix filters.
 
 ## Goals
 

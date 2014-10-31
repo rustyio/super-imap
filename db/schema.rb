@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141029214612) do
+ActiveRecord::Schema.define(version: 20141031010433) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -45,5 +45,87 @@ ActiveRecord::Schema.define(version: 20141029214612) do
 
   add_index "admin_users", ["email"], name: "index_admin_users_on_email", unique: true
   add_index "admin_users", ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
+
+  create_table "connection_types", force: true do |t|
+    t.string   "identifier"
+    t.string   "title"
+    t.integer  "partner_connections_count"
+    t.string   "oauth1_access_token_path"
+    t.string   "oauth1_authorize_path"
+    t.string   "oauth1_request_token_path"
+    t.string   "oauth1_scope"
+    t.string   "oauth1_site"
+    t.string   "oauth2_grant_type"
+    t.string   "oauth2_scope"
+    t.string   "oauth2_site"
+    t.string   "oauth2_token_method"
+    t.string   "oauth2_token_url"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "mail_logs", force: true do |t|
+    t.integer  "user_id"
+    t.string   "message_id"
+    t.integer  "transmit_logs_count", default: 0
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "mail_logs", ["user_id"], name: "index_mail_logs_on_user_id"
+
+  create_table "partner_connections", force: true do |t|
+    t.integer  "partner_id"
+    t.integer  "connection_type_id"
+    t.integer  "users_count",            default: 0
+    t.string   "oauth1_consumer_key"
+    t.string   "oauth1_consumer_secret"
+    t.string   "oauth2_client_id"
+    t.string   "oauth2_client_secret"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "partner_connections", ["connection_type_id"], name: "index_partner_connections_on_connection_type_id"
+  add_index "partner_connections", ["partner_id"], name: "index_partner_connections_on_partner_id"
+
+  create_table "partners", force: true do |t|
+    t.string   "api_key"
+    t.string   "name"
+    t.string   "success_webhook"
+    t.string   "failure_webhook"
+    t.integer  "partner_connections_count", default: 0
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "transmit_logs", force: true do |t|
+    t.integer  "mail_log_id"
+    t.integer  "response_code"
+    t.string   "response_body"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "transmit_logs", ["mail_log_id"], name: "index_transmit_logs_on_mail_log_id"
+
+  create_table "users", force: true do |t|
+    t.integer  "partner_connection_id"
+    t.string   "email"
+    t.string   "tag"
+    t.integer  "mail_logs_count",         default: 0
+    t.datetime "last_connected_at"
+    t.datetime "last_email_at"
+    t.integer  "last_imap_uid"
+    t.string   "imap_uid_validity"
+    t.string   "last_imap_email_date_at"
+    t.string   "oauth1_token"
+    t.string   "oauth1_token_secret"
+    t.string   "oauth2_refresh_token"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "users", ["partner_connection_id"], name: "index_users_on_partner_connection_id"
 
 end

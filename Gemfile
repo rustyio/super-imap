@@ -16,5 +16,6 @@ gem 'foreman'
 gem 'unicorn'
 gem 'activeadmin', github: 'activeadmin'
 gem 'devise'
+gem 'strip_attributes'
 gem 'newrelic_rpm', group: :production
 ruby "2.1.2"
