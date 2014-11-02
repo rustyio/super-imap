@@ -7,13 +7,12 @@ class CreateUsers < ActiveRecord::Migration
       t.integer :mail_logs_count, :default => 0
       t.datetime :last_connected_at
       t.datetime :last_email_at
-      t.integer :last_imap_uid
-      t.string :imap_uid_validity
-      t.string :last_imap_email_date_at
+      t.integer :last_uid
+      t.string :last_uid_validity
+      t.string :last_internal_date
       t.string :oauth1_token
       t.string :oauth1_token_secret
       t.string :oauth2_refresh_token
-
       t.timestamps
     end
   end

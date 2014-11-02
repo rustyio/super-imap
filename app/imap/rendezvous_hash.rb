@@ -1,5 +1,5 @@
 # http://en.wikipedia.org/wiki/Rendezvous_hashing
-class RendezvousHashing
+class RendezvousHash
   attr_accessor :site_tags
 
   def initialize(site_tags)

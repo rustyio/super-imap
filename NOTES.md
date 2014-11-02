@@ -1,3 +1,19 @@
+
+# TODO
+
+
+# Testing
+
++ Run a local IMAP server?
+
+# Operations
+
++ Failure webhook? Tracking?
++ Connection retries... rate limiting.
+
++ Librato metrics.
+  + Measure latency around the work queues.
+
 ## Goals
 
 1. Open source.
