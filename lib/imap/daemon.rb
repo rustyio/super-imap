@@ -19,9 +19,9 @@ require 'net/imap'
 class IMAP::Daemon
   attr_accessor :num_worker_threads, :max_user_threads, :max_email_size
   attr_accessor :server_tag, :server_rhash
-  attr_accessor :heartbeat, :heartbeat_thread, :discovery_thread
-  attr_accessor :work_queue, :work_queue_rhash, :worker_threads
-  attr_accessor :user_threads
+  attr_accessor :heartbeat_thread, :discovery_thread
+  attr_accessor :work_queues, :worker_rhash, :worker_threads
+  attr_accessor :claim_thread, :user_threads
   attr_accessor :stop
 
   def initialize(options = {})
@@ -39,19 +39,22 @@ class IMAP::Daemon
     # Worker stuff.
     self.work_queues = []
     self.worker_threads = []
-    self.worker_hash = RendezvousHash.new([])
+    self.worker_rhash = RendezvousHash.new([])
+
+    # User stuff.
+    self.user_threads = {}
   end
 
   def run
-    Signal.trap("INT") do stop = true end
-    Signal.trap("TERM") do stop = true end
+    Signal.trap("INT") do self.stop = true end
+    Signal.trap("TERM") do self.stop = true end
 
     # Start worker threads.
-    num_worker_thread.times do |n|
-      start_worker_thread(queue)
+    num_worker_threads.times do |n|
+      start_worker_thread
     end
     tags = worker_threads.length.times.map(&:to_i)
-    work_queue_rhash = RendezvousHash.new(tags)
+    worker_rhash = RendezvousHash.new(tags)
 
     # Start cross-daemon coordination threads.
     start_heartbeat_thread
@@ -62,11 +65,14 @@ class IMAP::Daemon
       sleep 1
     end
   ensure
-    @stop = true
-    heartbeat_thread.terminate
-    discovery_thread.terminate
-    claim_thread.terminate
+    self.stop = true
+    heartbeat_thread && heartbeat_thread.terminate
+    discovery_thread && discovery_thread.terminate
+    claim_thread && claim_thread.terminate
     disconnect_all_users
+    worker_threads.each do |thread|
+      thread.join
+    end
   end
 
   # Public: Schedule a task to be executed on one of the work
@@ -75,7 +81,7 @@ class IMAP::Daemon
     # Ensure that work for a user consistently goes to the same
     # queue. This helps avoid tricky thread safety issues.
     object_tag = options[:user_id]
-    index = work_queue_rhash.hash(object_tag)
+    index = worker_rhash.hash(object_tag)
 
     # Schedule the work.
     work_queues[index] << options.merge(:action => s, :time => Time.now)
@@ -83,63 +89,96 @@ class IMAP::Daemon
 
   private unless Rails.env.test?
 
-  # Private: Start a thread that creates/updates an
-  # ImapDaemonHeartbeat record in the database every 10 seconds.
   def start_heartbeat_thread
-    self.heartbeat = ImapDaemonHeartbeat.create(:tag => server_tag)
     self.heartbeat_thread = Thread.new do
-      while !stop
-        log.info("Heartbeat (server_tag = #{server_tag}, work_queue = #{work_queue.length}, user_threads = #{user_threads.count}).")
-        heartbeat.touch
-        sleep 10
-      end
+      heartbeat_thread_runner(heartbeat)
     end
-    self.heartbeat_thread.run
   end
 
-  # Private: Start a thread that fetches all recently updated
-  # ImapDaemonHeartbeat records in the database very 30
-  # seconds. Create a new RendezvousHash from the associated tags.
   def start_discovery_thread
     self.discovery_thread = Thread.new do
-      while !stop
-        tags = ImapDaemonHeartbeat.where(:updated_at > 30.seconds.ago).map(&:tag)
-        self.server_rhash = RendezvousHash.new(tags)
-        sleep 30
-      end
+      discovery_thread_runner
     end
   end
 
-  # Private: Every 30 seconds, iterate through users and schedule a
-  # connect or disconnect task depending on whether the user is hashed
-  # to this server.
   def start_claim_thread
     self.claim_thread = Thread.new do
-      while !stop
-        User.find_each do |user|
-          if rhash.hash(user.id) == server_tag
-            schedule_work("connect_user", :user_id => user.id)
-          else
-            schedule_work("disconnect_user", :user_id => user.id)
-          end
-        end
-        sleep 30
-      end
+      claim_thread_runner
     end
   end
 
-  # Private: Create a worker thread with a private work queue.
   def start_worker_thread
+    self.worker_threads << Thread.new do
+      worker_thread_runner
+    end
+  end
+
+  # Private: Creates/updates an ImapDaemonHeartbeat record in the
+  # database every 10 seconds.
+  def heartbeat_thread_runner(heartbeat)
+    heartbeat = ImapDaemonHeartbeat.create(:tag => server_tag)
+    while !stop
+      Log.info("Heartbeat (server_tag = #{server_tag}, work_queue = #{work_queue.length}, user_threads = #{user_threads.count}).")
+      heartbeat.touch
+      sleep 10
+    end
+  rescue => e
+    Log.exception(e)
+    stop = true
+  end
+
+  # Private: Fetches all recently updated ImapDaemonHeartbeat records
+  # in the database very 30 seconds. Create a new RendezvousHash from
+  # the associated tags.
+  def discovery_thread_runner
+    while !stop
+      tags = ImapDaemonHeartbeat.where(:updated_at > 30.seconds.ago).map(&:tag)
+      self.server_rhash = RendezvousHash.new(tags)
+      sleep 30
+    end
+  rescue => e
+    Log.exception(e)
+    stop = true
+  end
+
+  # Private: Iterate through users and schedule a connect or
+  # disconnect task depending on whether the user is hashed to this
+  # server.
+  def claim_thread_runner
+    while !stop
+      User.find_each do |user|
+        if server_rhash.hash(user.id) == server_tag
+          schedule_work("connect_user", :user_id => user.id)
+        else
+          schedule_work("disconnect_user", :user_id => user.id)
+        end
+      end
+      sleep 30
+    end
+  rescue => e
+    Log.exception(e)
+    stop = true
+  end
+
+  def worker_thread_runner
     # Create a work queue.
     work_queue = Queue.new
     self.work_queues << work_queues
 
     # Create the thread.
-    self.worker_threads << Thread.new do
-      while options = work_queue.pop()
-        method = "action_#{options[:action]}".to_sym
-        self.send(method.to_sym, options)
-      end
+    while options = work_queue.pop()
+      method = "action_#{options[:action]}".to_sym
+      self.send(method.to_sym, options)
+    end
+  rescue => e
+    Log.exception(e)
+    stop = true
+  end
+
+  # Private: Disconnect all user threads.
+  def disconnect_all_users
+    user_threads.keys.each do |user_id|
+      schedule_work("disconnect_user", :user_id => user_id)
     end
   end
 

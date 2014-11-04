@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141104193812) do
+ActiveRecord::Schema.define(version: 20141104202256) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -63,6 +63,12 @@ ActiveRecord::Schema.define(version: 20141104193812) do
     t.string   "oauth2_site"
     t.string   "oauth2_token_method"
     t.string   "oauth2_token_url"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "imap_daemon_heartbeats", force: true do |t|
+    t.string   "tag"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

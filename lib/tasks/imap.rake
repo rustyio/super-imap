@@ -1,3 +1,5 @@
+require 'imap/imap'
+
 namespace :imap do
   task :daemon => :environment do
     print "Starting an IMAP daemon process..."

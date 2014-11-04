@@ -8,8 +8,6 @@ class Net::IMAP
     end
 
     def process(s)
-      # HACK!!! - The docs say that we need to base64 encode the
-      # following line; but that doesn't work in practice.
       "user=#{@email_address}\x01auth=Bearer #{@access_token}\x01\x01"
     end
   end
