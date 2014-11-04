@@ -66,8 +66,9 @@ ActiveRecord::Schema.define(version: 20141031010433) do
 
   create_table "mail_logs", force: true do |t|
     t.integer  "user_id"
+    t.string   "md5",                 limit: 32
     t.string   "message_id"
-    t.integer  "transmit_logs_count", default: 0
+    t.integer  "transmit_logs_count",            default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -102,7 +103,7 @@ ActiveRecord::Schema.define(version: 20141031010433) do
   create_table "transmit_logs", force: true do |t|
     t.integer  "mail_log_id"
     t.integer  "response_code"
-    t.string   "response_body"
+    t.string   "response_body", limit: 1024
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -113,12 +114,12 @@ ActiveRecord::Schema.define(version: 20141031010433) do
     t.integer  "partner_connection_id"
     t.string   "email"
     t.string   "tag"
-    t.integer  "mail_logs_count",         default: 0
+    t.integer  "mail_logs_count",       default: 0
     t.datetime "last_connected_at"
     t.datetime "last_email_at"
-    t.integer  "last_imap_uid"
-    t.string   "imap_uid_validity"
-    t.string   "last_imap_email_date_at"
+    t.integer  "last_uid"
+    t.string   "last_uid_validity"
+    t.string   "last_internal_date"
     t.string   "oauth1_token"
     t.string   "oauth1_token_secret"
     t.string   "oauth2_refresh_token"
