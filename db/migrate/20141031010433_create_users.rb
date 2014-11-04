@@ -10,6 +10,8 @@ class CreateUsers < ActiveRecord::Migration
       t.integer :last_uid
       t.string :last_uid_validity
       t.string :last_internal_date
+      t.string :login_username
+      t.string :login_password
       t.string :oauth1_token
       t.string :oauth1_token_secret
       t.string :oauth2_refresh_token

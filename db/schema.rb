@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141031010433) do
+ActiveRecord::Schema.define(version: 20141104193812) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -50,6 +50,9 @@ ActiveRecord::Schema.define(version: 20141031010433) do
     t.string   "identifier"
     t.string   "title"
     t.integer  "partner_connections_count"
+    t.string   "host"
+    t.integer  "port"
+    t.boolean  "use_ssl"
     t.string   "oauth1_access_token_path"
     t.string   "oauth1_authorize_path"
     t.string   "oauth1_request_token_path"
@@ -120,6 +123,8 @@ ActiveRecord::Schema.define(version: 20141031010433) do
     t.integer  "last_uid"
     t.string   "last_uid_validity"
     t.string   "last_internal_date"
+    t.string   "login_username"
+    t.string   "login_password"
     t.string   "oauth1_token"
     t.string   "oauth1_token_secret"
     t.string   "oauth2_refresh_token"

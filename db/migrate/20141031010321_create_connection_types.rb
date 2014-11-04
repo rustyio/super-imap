@@ -4,6 +4,9 @@ class CreateConnectionTypes < ActiveRecord::Migration
       t.string :identifier
       t.string :title
       t.integer :partner_connections_count
+      t.string :host
+      t.integer :port
+      t.boolean :use_ssl
       t.string :oauth1_access_token_path
       t.string :oauth1_authorize_path
       t.string :oauth1_request_token_path

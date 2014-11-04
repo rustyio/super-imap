@@ -1,8 +1,6 @@
 AdminUser.new(:email => "rusty@fivestreet.com", :password => "password").save
 
-ct1 = ConnectionType.create(:identifier => "TYPE 1")
-ct2 = ConnectionType.create(:identifier => "TYPE 2")
-ct3 = ConnectionType.create(:identifier => "TYPE 3")
+conn_type = ConnectionType.find_by_identifier("GREENMAIL")
 
 def create_transmit_log(mail_log, n)
   mail_log.transmit_logs.create(:response_code => 200, :response_body => "Response #{n}")
@@ -17,7 +15,11 @@ def create_mail_log(user, n)
 end
 
 def create_user(connection, n)
-  connection.users.create(:email => "email#{n}@email.com", :tag => "User #{n}").tap do |user|
+  connection.users.create(
+    :tag            => "User #{n}",
+    :email          => "user#{n}@localhost",
+    :login_username => "user#{n}",
+    :login_password => "password").tap do |user|
     create_mail_log(user, 1)
     create_mail_log(user, 2)
     create_mail_log(user, 3)
@@ -33,7 +35,5 @@ def create_partner_connection(partner, ct)
 end
 
 Partner.create(:name => "Partner").tap do |partner|
-  create_partner_connection(partner, ct1)
-  create_partner_connection(partner, ct2)
-  create_partner_connection(partner, ct3)
+  create_partner_connection(partner, conn_type)
 end

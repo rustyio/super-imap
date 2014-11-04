@@ -45,30 +45,15 @@ class IMAP::UserThread
 
   # Private: Connect to the server, set the client.
   def connect
-    log.info("IMAP::UserThread - #{user.id} - Connecting")
-    self.client = Net::IMAP.new("imap.gmail.com", 993, true)
+    conn_type = user.connection.connection_type
+    log.info("IMAP::UserThread - #{user.id} - Connecting to #{conn_type.host}")
+    self.client = Net::IMAP.new(conn_type.host, :port => conn_type.port, :ssl => conn_type.use_ssl)
   end
 
   # Private: Authenticate a user to the server.
   def authenticate
     log.info("IMAP::UserThread - #{user.id} - Authenticating")
-
-    # Create the consumer.
-    partner_connection = user.partner_connection
-    connection = partner_connection.connection_type
-    consumer = OAuth::Consumer.new(
-      partner_connection.oauth1_consumer_key,
-      partner_connection.oauth1_consumer_secret,
-      :site               => connection.oauth1_site,
-      :request_token_path => connection.oauth1_request_token_path,
-      :authorize_path     => connection.oauth1_authize_path,
-      :access_token_path  => connection.oauth1_access_token_path)
-
-    # Authenticate.
-    access_token = OAuth::AccessToken.new(consumer, user.oauth1_token, user.oauth1_token_secret)
-    client.authenticate('XOAUTH', user.email, :access_token => access_token)
-
-    # Update the user.
+    Authenticator.new(user).authenticate(client)
     user.update_attributes(:last_connected_at => Time.now)
   end
 

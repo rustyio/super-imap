@@ -18,4 +18,8 @@ gem 'activeadmin', github: 'activeadmin'
 gem 'devise'
 gem 'strip_attributes'
 gem 'newrelic_rpm', group: :production
+
+gem 'oauth', '~> 0.4.7'
+gem 'oauth2', '~> 0.9.3'
+
 ruby "2.1.2"

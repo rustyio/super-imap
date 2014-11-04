@@ -1,5 +1,6 @@
 # TODO
 
++ Unique constraints.
 
 # Operations
 

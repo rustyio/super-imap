@@ -12,6 +12,9 @@ ActiveAdmin.register ConnectionType do
     panel "Test" do
       attributes_table_for obj do
         row :identifier
+        row :host
+        row :port
+        row :use_ssl
       end
     end
     panel "OAUTH 1.0" do
@@ -38,6 +41,9 @@ ActiveAdmin.register ConnectionType do
   form do |f|
     f.inputs "Details" do
       f.input :identifier
+      f.input :host
+      f.input :port
+      f.input :use_ssl
     end
 
     f.inputs "OAUTH 1.0" do

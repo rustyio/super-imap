@@ -17,7 +17,7 @@
 require 'net/imap'
 
 class IMAP::Daemon
-  attr_accessor :num_worker_threads, :num_user_threads
+  attr_accessor :num_worker_threads, :max_user_threads, :max_email_size
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat, :heartbeat_thread, :discovery_thread
   attr_accessor :work_queue, :work_queue_rhash, :worker_threads
@@ -146,7 +146,7 @@ class IMAP::Daemon
   # Private: Construct and return user thread options.
   def user_options
     @user_options ||= {
-      :max_email_size = self.max_email_size
+      :max_email_size => self.max_email_size
     }
   end
 
