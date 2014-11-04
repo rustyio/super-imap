@@ -1,10 +1,5 @@
-
 # TODO
 
-
-# Testing
-
-+ Run a local IMAP server?
 
 # Operations
 
