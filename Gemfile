@@ -13,6 +13,7 @@ gem 'spring',        group: :development
 
 gem 'rails_12factor',     group: :production
 gem 'foreman'
+gem 'rails_stdout_logging'
 gem 'unicorn'
 gem 'activeadmin', github: 'activeadmin'
 gem 'devise'

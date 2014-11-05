@@ -1,32 +1,34 @@
-#  IMAP::Daemon - Main entry point for the server-side code. Reads
+#  ImapClient::Daemon - Main entry point for the server-side code. Reads
 #  credentials from a database, connects to IMAP servers, listens for
 #  email, generates webhook events.
 #
-#  Contains load-balancing code so that when multiple IMAP::Daemon
-#  processes are running they claim users evenly. The IMAP::Daemon
+#  Contains load-balancing code so that when multiple ImapClient::Daemon
+#  processes are running they claim users evenly. The ImapClient::Daemon
 #  coordinate through the database.
 #
 #  Starts a few different types of threads:
 #
 #  + Heartbeat thread - Publishes our heartbeat to the database. Runs every 10 seconds.
-#  + Discovery thread - Listen for the heartbeats of other IMAP::Daemon processes. Runs every 30 seconds.
+#  + Discovery thread - Listen for the heartbeats of other ImapClient::Daemon processes. Runs every 30 seconds.
 #  + Claim thread - Claims an even share of users. Runs every 30 seconds.
 #  + Worker threads - A small pool of threads to run CPU intensive operations. (5 by default.)
 #  + User threads - A list of threads created on demand to managed communication with IMAP server. (Limited to 500 by default.)
 
 require 'net/imap'
 
-class IMAP::Daemon
+class ImapClient::Daemon
+  include Common::Stoppable
+  include Common::WorkerPool
+  include Common::LightSleep
+  include Common::WrappedThread
+  include Common::DbConnection
+
   attr_accessor :num_worker_threads, :max_user_threads, :max_email_size
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
-  attr_accessor :work_queues, :worker_rhash, :worker_threads
   attr_accessor :claim_thread, :user_threads
-  attr_accessor :stop
 
   def initialize(options = {})
-    self.stop = false
-
     # Settings.
     self.num_worker_threads = options[:num_worker_threads] || 5
     self.max_user_threads   = options[:max_user_threads]   || 500
@@ -34,97 +36,85 @@ class IMAP::Daemon
 
     # Load balancing stuff.
     self.server_tag = SecureRandom.hex(10)
-    self.server_rhash = RendezvousHash.new([])
-
-    # Worker stuff.
-    self.work_queues = []
-    self.worker_threads = []
-    self.worker_rhash = RendezvousHash.new([])
+    self.server_rhash = ImapClient::RendezvousHash.new([])
 
     # User stuff.
     self.user_threads = {}
   end
 
   def run
-    Signal.trap("INT") do self.stop = true end
-    Signal.trap("TERM") do self.stop = true end
+    trap_signals
+    force_class_loading
 
-    # Start worker threads.
-    num_worker_threads.times do |n|
-      start_worker_thread
-    end
-    tags = worker_threads.length.times.map(&:to_i)
-    worker_rhash = RendezvousHash.new(tags)
-
-    # Start cross-daemon coordination threads.
+    # Start our threads.
+    set_db_connection_pool_size(self.num_worker_threads + 3)
+    start_worker_pool(num_worker_threads)
     start_heartbeat_thread
     start_discovery_thread
     start_claim_thread
 
-    while !stop
-      sleep 1
-    end
+    # Sleep.
+    light_sleep
+  rescue => e
+    Log.exception(e)
+    raise e
   ensure
-    self.stop = true
+    stop!
     heartbeat_thread && heartbeat_thread.terminate
     discovery_thread && discovery_thread.terminate
     claim_thread && claim_thread.terminate
     disconnect_all_users
-    worker_threads.each do |thread|
-      thread.join
-    end
+    wait_for_worker_pool
   end
 
-  # Public: Schedule a task to be executed on one of the work
-  # queues.
-  def schedule_work(s, options)
-    # Ensure that work for a user consistently goes to the same
-    # queue. This helps avoid tricky thread safety issues.
-    object_tag = options[:user_id]
-    index = worker_rhash.hash(object_tag)
 
-    # Schedule the work.
-    work_queues[index] << options.merge(:action => s, :time => Time.now)
+  private
+
+
+  def force_class_loading
+    # Force ImapDaemonHeartbeat to load before we create any
+    # threads. This fixes a "Circular dependency detected while
+    # autoloading constant ImapDaemonHeartbeat" error.
+    ImapDaemonHeartbeat
   end
-
-  private unless Rails.env.test?
 
   def start_heartbeat_thread
-    self.heartbeat_thread = Thread.new do
-      heartbeat_thread_runner(heartbeat)
+    self.heartbeat_thread = wrapped_thread do
+      establish_db_connection
+      heartbeat_thread_runner
     end
   end
 
   def start_discovery_thread
-    self.discovery_thread = Thread.new do
+    self.discovery_thread = wrapped_thread do
+      establish_db_connection
       discovery_thread_runner
+    end
+
+    # Wait for servers.
+    while running? && server_rhash.size == 0
+      Log.info("Discovering other daemons...")
+      light_sleep 1
     end
   end
 
   def start_claim_thread
-    self.claim_thread = Thread.new do
+    self.claim_thread = wrapped_thread do
+      establish_db_connection
       claim_thread_runner
     end
   end
 
-  def start_worker_thread
-    self.worker_threads << Thread.new do
-      worker_thread_runner
-    end
-  end
 
   # Private: Creates/updates an ImapDaemonHeartbeat record in the
   # database every 10 seconds.
-  def heartbeat_thread_runner(heartbeat)
+  def heartbeat_thread_runner
     heartbeat = ImapDaemonHeartbeat.create(:tag => server_tag)
-    while !stop
-      Log.info("Heartbeat (server_tag = #{server_tag}, work_queue = #{work_queue.length}, user_threads = #{user_threads.count}).")
+    while running?
+      Log.info("Heartbeat (server_tag = #{server_tag}, work_queue = #{work_queue_length}, user_threads = #{user_threads.count}).")
       heartbeat.touch
-      sleep 10
+      light_sleep 10
     end
-  rescue => e
-    Log.exception(e)
-    stop = true
   end
 
   # Private: Fetches all recently updated ImapDaemonHeartbeat records
@@ -132,13 +122,17 @@ class IMAP::Daemon
   # the associated tags.
   def discovery_thread_runner
     while !stop
-      tags = ImapDaemonHeartbeat.where(:updated_at > 30.seconds.ago).map(&:tag)
-      self.server_rhash = RendezvousHash.new(tags)
-      sleep 30
+      tags = ImapDaemonHeartbeat.where("updated_at >= ?", 30.seconds.ago).map(&:tag)
+      Log.info("There are #{tags.count} daemons running.")
+
+      self.server_rhash = ImapClient::RendezvousHash.new(tags)
+
+      if server_rhash.size == 0
+        light_sleep 1
+      else
+        light_sleep 30
+      end
     end
-  rescue => e
-    Log.exception(e)
-    stop = true
   end
 
   # Private: Iterate through users and schedule a connect or
@@ -146,33 +140,17 @@ class IMAP::Daemon
   # server.
   def claim_thread_runner
     while !stop
-      User.find_each do |user|
+      User.select(:id, :email).find_each do |user|
+        Log.info("Creating thread for #{user.email}")
+
         if server_rhash.hash(user.id) == server_tag
-          schedule_work("connect_user", :user_id => user.id)
+          schedule_work(:connect_user, :user_id => user.id)
         else
-          schedule_work("disconnect_user", :user_id => user.id)
+          schedule_work(:disconnect_user, :user_id => user.id)
         end
       end
-      sleep 30
+      light_sleep 30
     end
-  rescue => e
-    Log.exception(e)
-    stop = true
-  end
-
-  def worker_thread_runner
-    # Create a work queue.
-    work_queue = Queue.new
-    self.work_queues << work_queues
-
-    # Create the thread.
-    while options = work_queue.pop()
-      method = "action_#{options[:action]}".to_sym
-      self.send(method.to_sym, options)
-    end
-  rescue => e
-    Log.exception(e)
-    stop = true
   end
 
   # Private: Disconnect all user threads.
@@ -193,20 +171,24 @@ class IMAP::Daemon
   #
   # options[:user_id] - The user id.
   def action_connect_user(options)
-    id = options[:user_id]
+    user_id = options[:user_id]
 
     # Nothing to do if stopped.
-    return if stop
+    return if stopping?
 
     # Nothing to do if already a thread.
-    return if user_threads[id].present?
+    return if user_threads[user_id].present?
 
     # Are we allowed to create a new user thread?
     return if user_threads.count >= max_user_threads
 
+    # Load the user; preload connection information.
+    user = User.find(user_id)
+    user.connection.connection_type
+
     # Start the thread.
-    user_threads << Thread.new do
-      UserThread.new(self, id, user_options).run
+    user_threads[user_id] = wrapped_thread do
+      ImapClient::UserThread.new(self, user, user_options).run
     end
   end
 

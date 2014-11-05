@@ -1,4 +1,4 @@
-#  IMAP::UserThread - Manages the interactions of a single user
+#  ImapClient::UserThread - Manages the interactions of a single user
 #  against an IMAP server. Written in a "crash-only" style. If
 #  something goes wrong, we tear down the whole thread and start from
 #  scratch.
@@ -14,29 +14,33 @@
 
 require 'net/imap'
 
-class IMAP::UserThread
-  attr_accessor :daemon, :options
-  attr_accessor :user, :client, :folder_name, :stop
+class ImapClient::UserThread
+  include Common::Stoppable
 
-  def initialize(daemon, user_id, options)
+  attr_accessor :daemon, :options
+  attr_accessor :user, :client, :folder_name
+
+  def initialize(daemon, user, options)
     self.daemon = daemon
-    self.user = User.find(user_id).include(:partner_connection => :connection_type)
+    self.user = user
     self.options = options
-    self.stop = false
   end
 
   def run
     connect
     authenticate
     choose_folder
-    read_email
     if valid_uid?
       read_email_by_uid
     else
       read_email_by_date
     end
     listen_for_emails
+  rescue => e
+    Log.exception(e)
+    stop!
   ensure
+    stop!
     daemon.schedule_work("disconnect_user", :user_id => user.id)
     disconnect
   end
@@ -46,21 +50,23 @@ class IMAP::UserThread
   # Private: Connect to the server, set the client.
   def connect
     conn_type = user.connection.connection_type
-    log.info("IMAP::UserThread - #{user.id} - Connecting to #{conn_type.host}")
+    Log.info("ImapClient::UserThread - #{user.id} - Connecting to #{conn_type.host}")
     self.client = Net::IMAP.new(conn_type.host, :port => conn_type.port, :ssl => conn_type.use_ssl)
   end
 
   # Private: Authenticate a user to the server.
   def authenticate
-    log.info("IMAP::UserThread - #{user.id} - Authenticating")
-    Authenticator.new(user).authenticate(client)
-    user.update_attributes(:last_connected_at => Time.now)
+    Log.info("ImapClient::UserThread - #{user.id} - Authenticating")
+    ImapClient::Authenticator.new(user).authenticate(client)
+    schedule do
+      user.update_attributes(:last_connected_at => Time.now)
+    end
   end
 
   # Private: Fetch a list of folders, choose the first one that looks
   # promising.
   def choose_folder
-    log.info("IMAP::UserThread - #{user.id} - Choosing folder.")
+    Log.info("ImapClient::UserThread - #{user.id} - Choosing folder.")
 
     best_folders = [
       "[Gmail]/All Mail",
@@ -71,7 +77,7 @@ class IMAP::UserThread
     # Discover the folder.
     client.list("", "*").each do |folder|
       if best_folders.include?(folder.name)
-        log.info("IMAP::UserThread - Examining #{folder.name}")
+        Log.info("ImapClient::UserThread - Examining #{folder.name}")
         self.folder_name = folder.name
         break
       end
@@ -85,7 +91,7 @@ class IMAP::UserThread
   # email.
   def listen_for_emails
     while true
-      idle
+      wait_for_email
       read_email_by_uid
     end
   end
@@ -156,20 +162,15 @@ class IMAP::UserThread
   # Private: Schedule a block of code to run in a worker thread
   # (rather than a user thread).
   #
-  # We do this in order to prevent ourselves from exhausting memory
-  # and redlining the CPU at startup or at times of lots of email
-  # activity. This helps smooth out the load.
+  # We do this in order to prevent ourselves from using too many
+  # database connections, exhausting memory, and redlining the CPU at
+  # startup or at times of lots of email activity. This helps smooth
+  # out the load.
   #
   # Without this, we would have all the user threads (500 by default)
-  # trying to crunch through emails as quickly as possible at the same
-  # time.
+  # maintaining separate database connections and trying to crunch
+  # through emails as quickly as possible at the same time.
   def schedule(&block)
-    # If testing, just run the logic.
-    if Rails.env.test
-      block.call()
-      return
-    end
-
     # Schedule the block to run on a worker thread, and put ourselves to sleep.
     daemon.schedule_work("block", :user_id => user.id,
                          :block => block, :thread => Thread.current)
@@ -248,6 +249,9 @@ class IMAP::UserThread
 
     # Transmit to the partner's webhook.
     System::TransmitToWebhook.new(mail_log, raw_eml).delay.run
+  rescue => e
+    Log.exception(e)
+    stop!
   end
 
   # Private: Logout the user, disconnect the client.

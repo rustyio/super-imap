@@ -1,7 +1,8 @@
 require 'oauth'
 require 'oauth2'
+require 'xoauth2_authenticator'
 
-class IMAP::Authenticator
+class ImapClient::Authenticator
   attr_accessor :user
 
   def initialize(user)
@@ -11,24 +12,24 @@ class IMAP::Authenticator
   def authenticate(client)
     identifier = user.connection.connection_type.identifier
     method = "authenticate_#{identifier.downcase}".to_sym
-    return self.send(:method, client)
+    return self.send(method, client)
   end
 
   private unless Rails.env.test?
 
   # Private: Connect to greenmail, used for performance testing.
-  def authenticate_greenmail
-    authenticate_login
+  def authenticate_greenmail(client)
+    authenticate_login(client)
   end
 
   # Private: Connect to Gmail using OAUTH 1.0.
-  def authenticate_gmail_oauth_1
-    return authenticate_oauth_1
+  def authenticate_gmail_oauth_1(client)
+    return authenticate_oauth_1(client)
   end
 
   # Private: Connect to Gmail using OAUTH 2.0.
-  def authenticate_gmail_oauth_2
-    return authenticate_oauth_2
+  def authenticate_gmail_oauth_2(client)
+    return authenticate_oauth_2(client)
   end
 
   ###
@@ -36,12 +37,12 @@ class IMAP::Authenticator
   ###
 
   # Private: Connect via username and password.
-  def authenticate_login
-    client.authenticate('LOGIN', user.login_username, user.login_password)
+  def authenticate_login(client)
+    client.login(user.login_username, user.login_password)
   end
 
   # Private: Connect via OAUTH 1.0
-  def authenticate_oauth_1
+  def authenticate_oauth_1(client)
     conn  = user.connection
     conn_type = conn.connection_type
 
@@ -61,7 +62,7 @@ class IMAP::Authenticator
   end
 
   # Private: Connect via OAUTH 2.0
-  def authenticate_oauth_2
+  def authenticate_oauth_2(client)
     conn = user.connection
     conn_type = conn.connection_type
 
