@@ -1,6 +1,6 @@
 namespace :imap do
   task :client => :environment do
-    Log.info("Starting an IMAP daemon process...")
+    Log.info("Starting an IMAP Client process...")
 
     config = {}
     [:num_worker_threads, :max_user_threads, :max_email_size].each do |key|
@@ -10,5 +10,12 @@ namespace :imap do
 
     require 'imap_client'
     ImapClient::Daemon.new(config).run
+  end
+
+  task :test_server => :environment do
+    Log.info("Starting an IMAP Test Server process...")
+
+    require 'imap_test_server'
+    ImapTestServer::Daemon.new(:port => 10143).run
   end
 end

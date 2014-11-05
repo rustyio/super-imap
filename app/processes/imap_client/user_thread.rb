@@ -87,15 +87,6 @@ class ImapClient::UserThread
     client.examine(folder_name)
   end
 
-  # Private: Start a loop that alternates between idling and reading
-  # email.
-  def listen_for_emails
-    while true
-      wait_for_email
-      read_email_by_uid
-    end
-  end
-
   # Private: Return true if our knowledge of the server's uid is still
   # valid. See "http://tools.ietf.org/html/rfc4549#section-4.1"
   def valid_uid?
@@ -115,6 +106,15 @@ class ImapClient::UserThread
     return is_valid
   end
 
+  # Private: Start a loop that alternates between idling and reading
+  # email.
+  def listen_for_emails
+    while true
+      wait_for_email
+      read_email_by_uid
+    end
+  end
+
   # Private: Search for new email by uid. See
   # "https://tools.ietf.org/html/rfc3501#section-2.3.1.1"
   def read_email_by_uid
@@ -122,8 +122,7 @@ class ImapClient::UserThread
     # big ending number.
     max_uid = 2 ** 32 - 1
     client.uid_search(["UID", "#{user.last_uid + 1}:#{max_uid}"]).each do |uid|
-      break if stop
-
+      break if stopped?
       schedule do
         self.process_uid(uid)
       end
@@ -138,8 +137,7 @@ class ImapClient::UserThread
     # days. We filter out duplicates later.
     date_string = 2.days.ago.strftime("%d-%b-%Y")
     client.uid_search(["SINCE", date_string]).each do |uid|
-      break if stop
-
+      break if stopped?
       schedule do
         self.process_uid(uid)
       end
@@ -193,7 +191,7 @@ class ImapClient::UserThread
     internal_date = Time.parse(response.attr["INTERNALDATE"])
     if internal_date < 4.days.ago
       user.update_attributes(:last_uid => nil, :last_uid_validity => nil)
-      self.stop = true
+      stop!
       return
     end
 

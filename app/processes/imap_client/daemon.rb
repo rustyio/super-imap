@@ -53,13 +53,13 @@ class ImapClient::Daemon
     start_discovery_thread
     start_claim_thread
 
-    # Sleep.
+    # Sleep we are stopped.
     light_sleep
   rescue => e
     Log.exception(e)
+    stop!
     raise e
   ensure
-    stop!
     heartbeat_thread && heartbeat_thread.terminate
     discovery_thread && discovery_thread.terminate
     claim_thread && claim_thread.terminate
