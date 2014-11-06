@@ -1,3 +1,17 @@
+#  ImapTestServer::Daemon - A test IMAP server that can respond to all
+#  calls made by the ImapClient process. Generates test data and
+#  (muhahaha) deliberately responds to some calls with gibberish in
+#  order to test how well ImapClient recovers.
+#
+#  Consists of two threads. A Connection thread listens for incoming
+#  connections and adds them to a list of sockets. Then a processing
+#  thread (the main thread), sits in a tight loop listening for
+#  incoming commands and responding appropriately.
+#
+#  + This class contains high level connection logic.
+#  + SocketState holds the state of a socket and contains our IMAP logic.
+#  + GlobalMailbox holds mail for all users.
+
 require 'socket'
 
 class ImapTestServer::Daemon
@@ -9,13 +23,14 @@ class ImapTestServer::Daemon
   attr_accessor :port
   attr_accessor :connection_thread
   attr_accessor :new_sockets, :sockets, :socket_states
-  attr_accessor :mailboxes
+  attr_accessor :global_mailbox
 
   def initialize(options = {})
     self.port = (options[:port] || 10143).to_i
     self.new_sockets = Queue.new
     self.sockets = []
     self.socket_states = {}
+    self.global_mailbox = GlobalMailbox.new()
   end
 
   # Add the given Mail object to a user's inbox.
@@ -87,7 +102,7 @@ class ImapTestServer::Daemon
 
   def process_new_socket(socket)
     # Say "Hi!"
-    socket_state = ImapTestServer::SocketState.new(socket)
+    socket_state = ImapTestServer::SocketState.new(global_mailbox, socket)
     socket_state.handle_connect
 
     # Add to our list of existing sockets.
@@ -106,6 +121,8 @@ class ImapTestServer::Daemon
     else
       close_socket(socket)
     end
+  rescue ImapTestServer::SocketState::NormalDisconnect => e
+    close_socket(socket)
   rescue ImapTestServer::SocketState::ChaosDisconnect => e
     close_socket(socket)
   rescue => e

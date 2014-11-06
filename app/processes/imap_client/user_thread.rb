@@ -41,7 +41,6 @@ class ImapClient::UserThread
     Log.exception(e)
     stop!
   ensure
-    Log.info("USER IS DISCONNECTING!!!")
     stop!
     daemon.schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
     disconnect
@@ -52,14 +51,11 @@ class ImapClient::UserThread
   # Private: Connect to the server, set the client.
   def connect
     conn_type = user.connection.connection_type
-    Log.info("Connecting #{user.email} to #{conn_type.host}.")
     self.client = Net::IMAP.new(conn_type.host, :port => conn_type.port, :ssl => conn_type.use_ssl)
-    Log.info("Connected #{user.email}!")
   end
 
   # Private: Authenticate a user to the server.
   def authenticate
-    Log.info("Authenticating #{user.email}.")
     ImapClient::Authenticator.new(user).authenticate(client)
     schedule do
       user.update_attributes(:last_connected_at => Time.now)
@@ -69,8 +65,6 @@ class ImapClient::UserThread
   # Private: Fetch a list of folders, choose the first one that looks
   # promising.
   def choose_folder
-    Log.info("ImapClient::UserThread - #{user.id} - Choosing folder.")
-
     best_folders = [
       "[Gmail]/All Mail",
       "[Google Mail]/All Mail",
@@ -80,7 +74,6 @@ class ImapClient::UserThread
     # Discover the folder.
     client.list("", "*").each do |folder|
       if best_folders.include?(folder.name)
-        Log.info("ImapClient::UserThread - Examining #{folder.name}")
         self.folder_name = folder.name
         break
       end
@@ -125,9 +118,9 @@ class ImapClient::UserThread
     # big ending number.
     max_uid = 2 ** 32 - 1
     client.uid_search(["UID", "#{user.last_uid + 1}:#{max_uid}"]).each do |uid|
-      break if stopped?
+      break if stopping?
       schedule do
-        self.process_uid(uid)
+        process_uid(uid)
       end
     end
   end
@@ -140,9 +133,9 @@ class ImapClient::UserThread
     # days. We filter out duplicates later.
     date_string = 2.days.ago.strftime("%d-%b-%Y")
     client.uid_search(["SINCE", date_string]).each do |uid|
-      break if stopped?
+      break if stopping?
       schedule do
-        self.process_uid(uid)
+        process_uid(uid)
       end
     end
   end
@@ -234,6 +227,7 @@ class ImapClient::UserThread
     user.update_attributes(:last_uid           => uid,
                            :last_email_at      => Time.now,
                            :last_internal_date => internal_date)
+
 
     # Get the message_id.
     envelope = response.attr["ENVELOPE"]

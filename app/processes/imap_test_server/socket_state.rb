@@ -1,21 +1,32 @@
+require 'date'
+
 class ImapTestServer::SocketState
+  NormalDisconnect = Class.new(StandardError)
   ChaosDisconnect = Class.new(StandardError)
-  MailStruct = Struct.new(:uid, :date, :eml)
 
   attr_accessor :socket
   attr_accessor :state
   attr_accessor :uid_validity
+  attr_accessor :idling
   attr_accessor :new_email, :inbox
+  attr_accessor :global_mailbox
 
-  def initialize(socket)
+  def initialize(global_mailbox, socket)
+    self.global_mailbox = global_mailbox
     self.socket = socket
     self.state = {}
     self.uid_validity = 1
+    self.idling = false
   end
 
   # Public: Return the username of the authenticated user.
   def username
     state[:username]
+  end
+
+  # Public: Return true if we are idling.
+  def idling?
+    self.idling
   end
 
   # Public: Greet the new connection.
@@ -71,7 +82,6 @@ class ImapTestServer::SocketState
 
   # Private: Write a response to the socket.
   def respond(tag, s)
-    Log.info("Sending #{tag} #{s}")
     socket.write("#{tag} #{s}\r\n")
     socket.flush
   end
@@ -148,16 +158,98 @@ class ImapTestServer::SocketState
   end
 
   # UID SEARCH Command
+  # https://tools.ietf.org/html/rfc3501#section-6.4.4
 
-  # def imap_uid_search(tag, args)
-  #   from_uid, to_uid = args[args.index("UID") + 1].split(":")
-  #   from_uid = from_uid.to_i
-  #   to_uid = to_uid.to_i
+  def imap_uid_search(tag, args)
+    if args.index("UID")
+      imap_uid_search_by_uid(tag, args)
+    elsif args.index("SINCE")
+      imap_uid_search_by_date(tag, args)
+    else
+      raise "Unhandled search:  #{args}"
+    end
+  end
 
-  #   SEARCH FLAGGED SINCE 1-Feb-1994
-  #   * SEARCH 2 84 882
-  #   S: A282 OK SEARCH completed
-  # end
+  def imap_uid_search_by_uid(tag, args)
+    # Parse the search request.
+    from_uid, to_uid = args[args.index("UID") + 1].split(":")
+    from_uid = from_uid.to_i
+    to_uid = to_uid.to_i
+
+    # Get a list of uids, offset by uid validity.
+    uids = global_mailbox.uid_search(from_uid, to_uid).map do |uid|
+      uid + self.uid_validity
+    end
+
+    respond("*", %(SEARCH #{uids.join(' ')}))
+    respond(tag, %(OK SEARCH completed))
+  end
+
+  def imap_uid_search_by_date(tag, args)
+    # Parse the search request.
+    since_date = Time.parse(args[args.index("SINCE") + 1])
+
+    # Make sure we have a valid date.
+    if since_date.nil?
+      raise "Unhandled date: #{args}"
+    end
+
+    # Get a list of uids, offset by uid validity.
+    uids = global_mailbox.date_search(since_date).map do |uid|
+      uid + self.uid_validity
+    end
+
+    respond("*", %(SEARCH #{uids.join(' ')}))
+    respond(tag, %(OK SEARCH completed))
+  end
+
+  def imap_uid_search_chaos(tag, args)
+    imap_uid_search(tag, args)
+  end
+
+  # UID FETCH Command
+  # https://tools.ietf.org/html/rfc3501#section-6.4.5
+
+  def imap_uid_fetch(tag, args)
+    raise "Fetching: #{args}"
+  end
+
+  def imap_uid_fetch_chaos(tag, args)
+    imap_uid_fetch(tag, args)
+  end
+
+  # IDLE Command
+  # http://tools.ietf.org/html/rfc2177
+
+  def imap_idle(tag, args)
+    self.idling = true
+    respond("+", "idling")
+  end
+
+  def imap_idle_chaos(tag, args)
+    imap_idle(tag, args)
+  end
+
+  def imap_done(tag, args)
+    respond(tag, "OK IDLE terminated")
+  end
+
+  def imap_done_chaos(tag, args)
+    imap_done(tag, args)
+  end
+
+  # LOGOUT Command
+  # https://tools.ietf.org/html/rfc3501#section-6.1.3
+
+  def imap_logout(tag, args)
+    respond("*", "BYE ImapTestServer logging out")
+    respond(tag, "OK LOGOUT completed")
+    raise NormalDisconnect.new()
+  end
+
+  def imap_logout_chaos(tag, args)
+    imap_logout(tag, args)
+  end
 
   # GENERAL CHAOS
 

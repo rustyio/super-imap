@@ -1,8 +1,11 @@
 # TODO
 
+Generate test mail:
+
+ How many emails should each user receive.
+
 + Unique constraints.
 
-+ http://www.skytale.net/blog/archives/23-Manual-IMAP.html
 
 # Operations
 

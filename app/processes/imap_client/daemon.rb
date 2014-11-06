@@ -1,4 +1,4 @@
-#  ImapClient::Daemon - Main entry point for the server-side code. Reads
+#  ImapClient::Daemon - Main entry point for the IMAP client. Reads
 #  credentials from a database, connects to IMAP servers, listens for
 #  email, generates webhook events.
 #
@@ -53,7 +53,7 @@ class ImapClient::Daemon
     start_discovery_thread
     start_claim_thread
 
-    # Sleep we are stopped.
+    # Sleep until we are stopped.
     light_sleep
   rescue => e
     Log.exception(e)
