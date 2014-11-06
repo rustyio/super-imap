@@ -14,8 +14,9 @@ namespace :imap do
 
   task :test_server => :environment do
     Log.info("Starting an IMAP Test Server process...")
-
+    ImapDaemonHeartbeat.destroy_all
     require 'imap_test_server'
-    ImapTestServer::Daemon.new(:port => 10143).run
+    daemon = ImapTestServer::Daemon.new(:port => 10143)
+    daemon.run
   end
 end

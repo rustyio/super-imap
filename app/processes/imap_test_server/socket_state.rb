@@ -1,4 +1,4 @@
-class SocketState
+class ImapTestServer::SocketState
   ChaosDisconnect = Class.new(StandardError)
   MailStruct = Struct.new(:uid, :date, :eml)
 
@@ -20,7 +20,7 @@ class SocketState
 
   # Public: Greet the new connection.
   def handle_connect()
-    handle_command("* HELLO")
+    handle_command("TAG HELLO")
   end
 
   # Public: Handle the specified IMAP command, respond to the socket.
@@ -35,8 +35,8 @@ class SocketState
   private
 
   def parse_command(s)
-    tag, s = /(\w+)\s+(.*)/.match(s).captures
-    verb, s = /(UID SEARCH|UID_FETCH|\w+)\s+(.*)/.match(s).captures
+    tag, s = /(.+?)\s+(.*)/.match(s).captures
+    verb, s = /(UID SEARCH|UID_FETCH|\w+)\s*(.*)/.match(s).captures
     args = s.split(/\s+/)
     [tag, verb, args]
   end
@@ -46,14 +46,14 @@ class SocketState
   def verb_to_method(verb)
     verb = verb.downcase.gsub(/\s/, "_")
     choices = [
-      [95, "imap_#{verb}".to_sym],
-      [3,  "imap_#{verb}_chaos".to_sym],
-      [1,  :imap_chaos_respond_no],
-      [1,  :imap_chaos_respond_bad],
-      [1,  :imap_chaos_gibberish_tagged],
-      [1,  :imap_chaos_gibberish_untagged],
-      [1,  :imap_chaos_soft_disconnect],
-      [1,  :imap_chaos_hard_disconnect],
+      [95, "imap_#{verb}".to_sym] #,
+      # [3,  "imap_#{verb}_chaos".to_sym],
+      # [1,  :imap_chaos_respond_no],
+      # [1,  :imap_chaos_respond_bad],
+      # [1,  :imap_chaos_gibberish_tagged],
+      # [1,  :imap_chaos_gibberish_untagged],
+      # [1,  :imap_chaos_soft_disconnect],
+      # [1,  :imap_chaos_hard_disconnect],
     ]
     choose(choices)
   end
@@ -71,18 +71,19 @@ class SocketState
 
   # Private: Write a response to the socket.
   def respond(tag, s)
-    Log.info("Sending #{s}")
-    socket.puts("#{tag} #{s}")
+    Log.info("Sending #{tag} #{s}")
+    socket.write("#{tag} #{s}\r\n")
+    socket.flush
   end
 
   # CONNECT
 
   def imap_hello(tag, args)
-    respond(tag, "OK Dovecot ready.")
+    respond("*", "OK ImapTestServer ready.")
   end
 
   def imap_hello_chaos(tag, args)
-    respond(tag, "ERROR Not ready.")
+    respond("*", "ERROR Not ready.")
   end
 
   # LOGIN Command
@@ -124,7 +125,7 @@ class SocketState
     respond("*", %(OK [UNSEEN 1] First unseen.))
     respond("*", %(OK [UIDVALIDITY #{uid_validity}] UIDs valid))
     respond("*", %(OK [UIDNEXT 2] Predicted next UID))
-    respnod(tag, %(OK [READ-ONLY] Select completed.))
+    respond(tag, %(OK [READ-ONLY] Select completed.))
   end
 
   def imap_examine_chaos(tag, args)
@@ -173,7 +174,7 @@ class SocketState
   end
 
   def imap_chaos_gibberish_untagged(tag, args)
-    respond(*, "ZZZ")
+    respond("*", "ZZZ")
   end
 
   def imap_chaos_soft_disconnect(tag, args)

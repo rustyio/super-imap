@@ -37,11 +37,13 @@ class ImapClient::UserThread
     end
     listen_for_emails
   rescue => e
+    print e
     Log.exception(e)
     stop!
   ensure
+    Log.info("USER IS DISCONNECTING!!!")
     stop!
-    daemon.schedule_work("disconnect_user", :user_id => user.id)
+    daemon.schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
     disconnect
   end
 
@@ -50,13 +52,14 @@ class ImapClient::UserThread
   # Private: Connect to the server, set the client.
   def connect
     conn_type = user.connection.connection_type
-    Log.info("ImapClient::UserThread - #{user.id} - Connecting to #{conn_type.host}")
+    Log.info("Connecting #{user.email} to #{conn_type.host}.")
     self.client = Net::IMAP.new(conn_type.host, :port => conn_type.port, :ssl => conn_type.use_ssl)
+    Log.info("Connected #{user.email}!")
   end
 
   # Private: Authenticate a user to the server.
   def authenticate
-    Log.info("ImapClient::UserThread - #{user.id} - Authenticating")
+    Log.info("Authenticating #{user.email}.")
     ImapClient::Authenticator.new(user).authenticate(client)
     schedule do
       user.update_attributes(:last_connected_at => Time.now)
@@ -170,11 +173,14 @@ class ImapClient::UserThread
   # through emails as quickly as possible at the same time.
   def schedule(&block)
     # Schedule the block to run on a worker thread, and put ourselves to sleep.
-    daemon.schedule_work("block", :user_id => user.id,
-                         :block => block, :thread => Thread.current)
+    daemon.schedule_work(:callback,
+                         :hash    => user.id,
+                         :user_id => user.id,
+                         :block   => block,
+                         :thread  => Thread.current)
 
     # Put ourselves to sleep.
-    Thread.sleep
+    sleep
   end
 
   # Private: Read and act on a single email. Keep in mind that this is

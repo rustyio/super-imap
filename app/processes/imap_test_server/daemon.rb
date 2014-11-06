@@ -46,10 +46,10 @@ class ImapTestServer::Daemon
   end
 
   def connection_thread_runner
-    server = TCPServer.new(self.port)
+    Log.info("Waiting for connections on port 127.0.0.1:#{port}.")
+    server = TCPServer.new("127.0.0.1", port)
     while running?
       begin
-        Log.info("Waiting for connections.")
         socket = server.accept_nonblock
         new_sockets << socket
       rescue IO::EAGAINWaitReadable
@@ -62,11 +62,12 @@ class ImapTestServer::Daemon
     while running?
       process_new_sockets
       process_existing_sockets
+      sleep 0.1
     end
   end
 
   def process_new_sockets
-    while !new_sockets.empty?
+    while running? && !new_sockets.empty?
       socket = new_sockets.pop(true)
       process_new_socket(socket)
     end
@@ -74,15 +75,17 @@ class ImapTestServer::Daemon
 
   def process_existing_sockets
     # Which sockets need attention?
-    read_sockets, _, _ = IO.select(sockets)
+    response = IO.select(sockets, [], [], 0)
+    return if response.nil?
+
+    # Attend to the sockets.
+    read_sockets, _, _ = response
     read_sockets.each do |socket|
       process_existing_socket(socket)
     end
   end
 
   def process_new_socket(socket)
-    Log.info("Greeting the new socket.")
-
     # Say "Hi!"
     socket_state = ImapTestServer::SocketState.new(socket)
     socket_state.handle_connect
@@ -96,10 +99,9 @@ class ImapTestServer::Daemon
   end
 
   def process_existing_socket(socket)
-    Log.info("Handling an existing socket.")
-
     command = socket.gets
     if command.present?
+      socket_state = socket_states[socket.hash]
       socket_state.handle_command(command)
     else
       close_socket(socket)
@@ -109,5 +111,13 @@ class ImapTestServer::Daemon
   rescue => e
     Log.exception(e)
     close_socket(socket)
+  end
+
+  def close_socket(socket)
+    sockets.delete(socket)
+    socket_states.delete(socket.hash)
+    socket.close()
+  rescue => e
+    Log.exception(e)
   end
 end

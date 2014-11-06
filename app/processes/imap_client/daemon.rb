@@ -141,12 +141,10 @@ class ImapClient::Daemon
   def claim_thread_runner
     while !stop
       User.select(:id, :email).find_each do |user|
-        Log.info("Creating thread for #{user.email}")
-
         if server_rhash.hash(user.id) == server_tag
-          schedule_work(:connect_user, :user_id => user.id)
+          schedule_work(:connect_user, :hash => user.id, :user_id => user.id)
         else
-          schedule_work(:disconnect_user, :user_id => user.id)
+          schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
         end
       end
       light_sleep 30
@@ -156,7 +154,7 @@ class ImapClient::Daemon
   # Private: Disconnect all user threads.
   def disconnect_all_users
     user_threads.keys.each do |user_id|
-      schedule_work("disconnect_user", :user_id => user_id)
+      schedule_work(:disconnect_user, :hash => user_id, :user_id => user_id)
     end
   end
 
@@ -171,6 +169,8 @@ class ImapClient::Daemon
   #
   # options[:user_id] - The user id.
   def action_connect_user(options)
+    Log.info("action_connect_user")
+
     user_id = options[:user_id]
 
     # Nothing to do if stopped.
@@ -196,6 +196,8 @@ class ImapClient::Daemon
   #
   # options[:user_id] - The user id.
   def action_disconnect_user(options)
+    Log.info("action_disconnect_user")
+
     id = options[:user_id]
 
     # Nothing to do if no thread.
