@@ -56,15 +56,16 @@ class ImapClient::Daemon
     # Sleep until we are stopped.
     light_sleep
   rescue => e
-    Log.exception(e)
     stop!
-    raise e
+    Log.exception(e)
   ensure
+    stop!
     heartbeat_thread && heartbeat_thread.terminate
     discovery_thread && discovery_thread.terminate
     claim_thread && claim_thread.terminate
-    disconnect_all_users
-    wait_for_worker_pool
+    terminate_worker_pool
+    user_threads.values.map(&:terminate)
+    user_threads.values.map(&:join)
   end
 
 
@@ -120,7 +121,7 @@ class ImapClient::Daemon
   # in the database very 30 seconds. Create a new RendezvousHash from
   # the associated tags.
   def discovery_thread_runner
-    while !stop
+    while running?
       tags = ImapDaemonHeartbeat.where("updated_at >= ?", 30.seconds.ago).map(&:tag)
       Log.info("There are #{tags.count} daemons running.")
 
@@ -138,7 +139,7 @@ class ImapClient::Daemon
   # disconnect task depending on whether the user is hashed to this
   # server.
   def claim_thread_runner
-    while !stop
+    while running?
       User.select(:id, :email).find_each do |user|
         if server_rhash.hash(user.id) == server_tag
           schedule_work(:connect_user, :hash => user.id, :user_id => user.id)
@@ -146,13 +147,13 @@ class ImapClient::Daemon
           schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
         end
       end
-      light_sleep 30
+      light_sleep 10
     end
   end
 
   # Private: Disconnect all user threads.
   def disconnect_all_users
-    user_threads.keys.each do |user_id|
+    user_threads.keys.dup.each do |user_id|
       schedule_work(:disconnect_user, :hash => user_id, :user_id => user_id)
     end
   end
@@ -197,13 +198,12 @@ class ImapClient::Daemon
   def action_disconnect_user(options)
     Log.info("action_disconnect_user")
 
-    id = options[:user_id]
-
     # Nothing to do if no thread.
-    return if user_threads[id].nil?
+    user_id = options[:user_id]
+    return if user_threads[user_id].nil?
 
     # Tell the thread to stop.
-    thread = user_threads.delete(id)
+    thread = user_threads.delete(user_id)
     thread.terminate
   end
 
@@ -218,7 +218,6 @@ class ImapClient::Daemon
   rescue => e
     Log.exception(e)
   ensure
-    Log.info("Continuing Thread")
     options[:thread].run
   end
 end

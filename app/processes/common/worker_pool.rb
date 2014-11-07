@@ -42,8 +42,9 @@ module Common::WorkerPool
   end
 
   # Public: Wait for the worker pool to finish processing all items.
-  def wait_for_worker_pool
-    worker_threads && worker_threads.map(&:join)
+  def terminate_worker_pool
+    Log.info("Waiting for worker threads...")
+    worker_threads.present? && worker_threads.map(&:terminate)
   end
 
   private
@@ -60,8 +61,17 @@ module Common::WorkerPool
     work_queue = Queue.new
     self.work_queues << work_queue
 
-    # Create the thread.
-    while options = work_queue.pop()
+    while running?
+      begin
+        # Don't block, otherwise we can't exit.
+        options = work_queue.pop(true)
+      rescue ThreadError => e
+        # Queue is empty.
+        sleep 0.1
+        next
+      end
+
+      Log.info("work_queue: #{work_queue.length}")
       method = "action_#{options[:'$action']}".to_sym
       self.send(method.to_sym, options)
     end

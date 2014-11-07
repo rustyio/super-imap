@@ -2,8 +2,8 @@ module Common::Stoppable
   attr_accessor :stop
 
   def trap_signals
-    Signal.trap("INT") do self.stop = true end
-    Signal.trap("TERM") do self.stop = true end
+    Signal.trap("INT") do self.stop! end
+    Signal.trap("TERM") do self.stop! end
   end
 
   def stop!

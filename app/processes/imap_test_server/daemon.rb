@@ -34,7 +34,7 @@ class ImapTestServer::Daemon
     self.sockets = []
     self.socket_states = {}
     self.mailboxes = Mailboxes.new()
-    self.emails_per_minute = 60
+    self.emails_per_minute = 5000
   end
 
   # Public: Start threads and begin servicing connections.
@@ -114,24 +114,6 @@ class ImapTestServer::Daemon
     end
   end
 
-  def process_incoming_messages
-    # Which sockets need attention?
-    response = IO.select(sockets, [], [], 0)
-    return if response.nil?
-
-    # Attend to the sockets.
-    read_sockets, _, _ = response
-    read_sockets.each do |socket|
-      process_incoming_message(socket)
-    end
-  end
-
-  def send_exists_messages
-    socket_states.values.each do |socket_state|
-      socket_state.send_exists_messages
-    end
-  end
-
   def process_new_socket(socket)
     socket_state = ImapTestServer::SocketState.new(self.mailboxes, socket)
     socket_state.handle_connect
@@ -142,6 +124,18 @@ class ImapTestServer::Daemon
   rescue => e
     Log.exception(e)
     close_socket(socket)
+  end
+
+  def process_incoming_messages
+    # Which sockets need attention?
+    response = IO.select(sockets, [], [], 0)
+    return if response.nil?
+
+    # Attend to the sockets.
+    read_sockets, _, _ = response
+    read_sockets.each do |socket|
+      process_incoming_message(socket)
+    end
   end
 
   def process_incoming_message(socket)
@@ -161,6 +155,19 @@ class ImapTestServer::Daemon
     close_socket(socket)
   end
 
+  def send_exists_messages
+    socket_states.values.each do |socket_state|
+      send_exists_message(socket_state)
+    end
+  end
+
+  def send_exists_message(socket_state)
+    socket_state.send_exists_messages
+  rescue => e
+    Log.exception(e)
+    close_socket(socket_state.socket)
+  end
+
   def close_socket(socket)
     sockets.delete(socket)
     socket_states.delete(socket.hash)
@@ -170,7 +177,7 @@ class ImapTestServer::Daemon
   end
 
   def new_mail_thread_runner
-    sleep_seconds = 5
+    sleep_seconds = 1
 
     while running?
       if self.mailboxes.count > 0

@@ -66,14 +66,14 @@ class ImapTestServer::SocketState
   def verb_to_method(verb)
     verb = verb.downcase.gsub(/\s/, "_")
     choices = [
-      [95, "imap_#{verb}".to_sym],
-      [3,  "imap_#{verb}_chaos".to_sym],
-      [1,  :imap_chaos_respond_no],
-      [1,  :imap_chaos_respond_bad],
-      [1,  :imap_chaos_gibberish_tagged],
-      [1,  :imap_chaos_gibberish_untagged],
-      [1,  :imap_chaos_soft_disconnect],
-      [1,  :imap_chaos_hard_disconnect],
+      [95, "imap_#{verb}".to_sym] # ,
+      # [3,  "imap_#{verb}_chaos".to_sym],
+      # [1,  :imap_chaos_respond_no],
+      # [1,  :imap_chaos_respond_bad],
+      # [1,  :imap_chaos_gibberish_tagged],
+      # [1,  :imap_chaos_gibberish_untagged],
+      # [1,  :imap_chaos_soft_disconnect],
+      # [1,  :imap_chaos_hard_disconnect],
     ]
     choose(choices)
   end
