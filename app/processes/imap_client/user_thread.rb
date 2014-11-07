@@ -98,10 +98,15 @@ class ImapClient::UserThread
   # email.
   def listen_for_emails
     while running?
-      if user.last_uid.present?
-        read_email_by_uid
-      else
-        read_email_by_date
+      # Read emails until we have read everything there is to
+      # read. Then go into idle mode.
+      last_read_count = 9999
+      while running? && last_read_count > 0
+        if user.last_uid.present?
+          last_read_count = read_email_by_uid
+        else
+          last_read_count = read_email_by_date
+        end
       end
 
       # Maybe we stopped?
@@ -112,32 +117,42 @@ class ImapClient::UserThread
   end
 
   # Private: Search for new email by uid. See
-  # "https://tools.ietf.org/html/rfc3501#section-2.3.1.1"
+  # "https://tools.ietf.org/html/rfc3501#section-2.3.1.1"e
+  #
+  # Returns the number of emails read.
   def read_email_by_uid
     # HACK - Library doesn't work with "UID N:*". Just use a really
     # big ending number.
     max_uid = 2 ** 32 - 1
-    client.uid_search(["UID", "#{user.last_uid + 1}:#{max_uid}"]).each do |uid|
+    uids = client.uid_search(["UID", "#{user.last_uid + 1}:#{max_uid}"])
+    uids.each do |uid|
       break if stopping?
       schedule do
         process_uid(uid)
       end
     end
+
+    return uids.count
   end
 
   # Private: Search for new email by date. See
   # "https://tools.ietf.org/html/rfc3501#section-6.4.4"
+  #
+  # Returns the number of uids read.
   def read_email_by_date
     # Search by date. Unfortunately, IMAP date searching isn't very
     # granular. To ensure we get all emails we go back two full
     # days. We filter out duplicates later.
     date_string = 2.days.ago.strftime("%d-%b-%Y")
-    client.uid_search(["SINCE", date_string]).each do |uid|
+    uids = client.uid_search(["SINCE", date_string])
+    uids.each do |uid|
       break if stopping?
       schedule do
         process_uid(uid)
       end
     end
+
+    return uids.count
   end
 
   # Private: Put the connection into idle mode, exit when we receive a

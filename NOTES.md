@@ -1,11 +1,6 @@
 # TODO
 
-Generate test mail:
-
- How many emails should each user receive.
-
-+ Unique constraints.
-
++ Why are we processing some emails twice?
 
 # Operations
 

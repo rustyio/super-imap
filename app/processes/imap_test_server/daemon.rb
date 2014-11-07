@@ -33,8 +33,8 @@ class ImapTestServer::Daemon
     # Config stuff.
     self.port = (options[:port] || 10143).to_i
     self.enable_chaos = options[:enable_chaos] || false
-    self.emails_per_minute = options[:email_per_minute] || 5000
-    self.max_emails = options[:max_emails] || 500
+    self.emails_per_minute = options[:email_per_minute] || 500
+    self.max_emails = options[:max_emails] || 1000
 
     # Socket stuff.
     self.new_sockets = Queue.new

@@ -28,7 +28,7 @@ end
 
 def create_partner_connection(partner, ct)
   partner.connections.create(:connection_type_id => ct.id).tap do |connection|
-    50.times.each do |n|
+    500.times.each do |n|
       create_user(connection, n)
     end
   end
