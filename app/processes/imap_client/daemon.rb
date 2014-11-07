@@ -105,7 +105,6 @@ class ImapClient::Daemon
     end
   end
 
-
   # Private: Creates/updates an ImapDaemonHeartbeat record in the
   # database every 10 seconds.
   def heartbeat_thread_runner

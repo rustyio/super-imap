@@ -3,12 +3,14 @@
 #  (muhahaha) deliberately responds to some calls with gibberish in
 #  order to test how well ImapClient recovers.
 #
-#  Consists of two threads. A Connection thread listens for incoming
-#  connections and adds them to a list of sockets. Then a processing
-#  thread (the main thread), sits in a tight loop listening for
-#  incoming commands and responding appropriately.
+#  The daemon has three threads:
+#  + The Connection thread listens for incoming connections.
+#  + The New Mail thread generates new emails to users.
+#  + The Process Sockets (main) thread sits in a tight loop, sending and receiving IMAP commands.
 #
-#  + This class contains high level connection logic.
+#  The code is organized as follows:
+#
+#  + The Daemon class contains high level connection logic.
 #  + SocketState holds the state of a socket and contains our IMAP logic.
 #  + GlobalMailbox holds mail for all users.
 
@@ -31,16 +33,14 @@ class ImapTestServer::Daemon
     self.sockets = []
     self.socket_states = {}
     self.global_mailbox = GlobalMailbox.new()
+    self.emails_per_minute = 60
   end
 
-  # Add the given Mail object to a user's inbox.
-  def add_mail(mail)
-    raise :todo
-  end
-
+  # Public: Start threads and begin servicing connections.
   def run
     trap_signals
     start_connection_thread
+    start_new_mail_thread
     process_sockets
   rescue => e
     Log.exception(e)
@@ -60,6 +60,14 @@ class ImapTestServer::Daemon
     end
   end
 
+  def start_new_mail_thread
+    self.connection_thread = wrapped_thread do
+      establish_db_connection
+      new_mail_thread_runner
+    end
+  end
+
+  # Private: Accepts incoming connections.
   def connection_thread_runner
     Log.info("Waiting for connections on port 127.0.0.1:#{port}.")
     server = TCPServer.new("127.0.0.1", port)
@@ -73,10 +81,12 @@ class ImapTestServer::Daemon
     end
   end
 
+  # Private: Sends and receives IMAP commands.
   def process_sockets
     while running?
       process_new_sockets
-      process_existing_sockets
+      process_incoming_messages
+      send_exists_messages
       sleep 0.1
     end
   end
@@ -88,7 +98,7 @@ class ImapTestServer::Daemon
     end
   end
 
-  def process_existing_sockets
+  def process_incoming_messages
     # Which sockets need attention?
     response = IO.select(sockets, [], [], 0)
     return if response.nil?
@@ -96,12 +106,17 @@ class ImapTestServer::Daemon
     # Attend to the sockets.
     read_sockets, _, _ = response
     read_sockets.each do |socket|
-      process_existing_socket(socket)
+      process_incoming_message(socket)
+    end
+  end
+
+  def send_exists_messages
+    socket_states.values.each do |socket_state|
+      socket_state.send_exists_messages
     end
   end
 
   def process_new_socket(socket)
-    # Say "Hi!"
     socket_state = ImapTestServer::SocketState.new(global_mailbox, socket)
     socket_state.handle_connect
 
@@ -113,7 +128,7 @@ class ImapTestServer::Daemon
     close_socket(socket)
   end
 
-  def process_existing_socket(socket)
+  def process_incoming_message(socket)
     command = socket.gets
     if command.present?
       socket_state = socket_states[socket.hash]
@@ -136,5 +151,22 @@ class ImapTestServer::Daemon
     socket.close()
   rescue => e
     Log.exception(e)
+  end
+
+  def new_mail_thread_runner
+    sleep_seconds = 5
+
+    while running?
+      # What's our chance of generating an email for an individual user?
+      prob_of_email = (1.0 * sleep_seconds / 60) * (emails_per_minute / mailboxes.count)
+
+      self.mailboxes.each do |mailbox|
+        if rand() < prob_of_email
+          mailbox.add_fake_message
+        end
+      end
+
+      light_sleep sleep_seconds
+    end
   end
 end

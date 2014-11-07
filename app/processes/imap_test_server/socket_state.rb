@@ -5,23 +5,20 @@ class ImapTestServer::SocketState
   ChaosDisconnect = Class.new(StandardError)
 
   attr_accessor :socket
-  attr_accessor :state
+  attr_accessor :username
   attr_accessor :uid_validity
+  attr_accessor :last_count
   attr_accessor :idling
   attr_accessor :new_email, :inbox
-  attr_accessor :global_mailbox
+  attr_accessor :mailboxes, :mailbox
 
   def initialize(global_mailbox, socket)
-    self.global_mailbox = global_mailbox
+    self.mailboxes = mailboxes
     self.socket = socket
     self.state = {}
-    self.uid_validity = 1
+    self.uid_validity = rand(999999)
     self.idling = false
-  end
-
-  # Public: Return the username of the authenticated user.
-  def username
-    state[:username]
+    self.last_count = 0
   end
 
   # Public: Return true if we are idling.
@@ -41,6 +38,13 @@ class ImapTestServer::SocketState
     method = verb_to_method(verb)
     Log.info("Running #{method}")
     send(method, tag, args)
+  end
+
+  def send_exists_messages
+    if self.mailbox && self.last_count < self.mailbox.count
+      respond("*", "#{self.mailbox.count} EXISTS")
+      self.last_count = mailbox.count
+    end
   end
 
   private
@@ -100,7 +104,8 @@ class ImapTestServer::SocketState
   # https://tools.ietf.org/html/rfc3501#section-6.2.3
 
   def imap_login(tag, args)
-    state[:username] = args[0]
+    self.username = args[0]
+    self.mailbox = mailboxes.find(username)
     respond(tag, "OK Logged in.")
   end
 
@@ -130,11 +135,8 @@ class ImapTestServer::SocketState
   def imap_examine(tag, args)
     respond("*", %(FLAGS (\Answered \Flagged \Deleted \Seen \Draft)))
     respond("*", %(OK [PERMANENTFLAGS ()] Read-only mailbox.))
-    respond("*", %(1 EXISTS))
-    respond("*", %(1 RECENT))
-    respond("*", %(OK [UNSEEN 1] First unseen.))
+    respond("*", %(#{mailbox.count} EXISTS))
     respond("*", %(OK [UIDVALIDITY #{uid_validity}] UIDs valid))
-    respond("*", %(OK [UIDNEXT 2] Predicted next UID))
     respond(tag, %(OK [READ-ONLY] Select completed.))
   end
 
@@ -173,11 +175,11 @@ class ImapTestServer::SocketState
   def imap_uid_search_by_uid(tag, args)
     # Parse the search request.
     from_uid, to_uid = args[args.index("UID") + 1].split(":")
-    from_uid = from_uid.to_i
-    to_uid = to_uid.to_i
+    from_uid = from_uid.to_i - self.uid_validity
+    to_uid = to_uid.to_i - self.uid_validity
 
     # Get a list of uids, offset by uid validity.
-    uids = global_mailbox.uid_search(from_uid, to_uid).map do |uid|
+    uids = self.mailbox.uid_search(from_uid, to_uid).map do |uid|
       uid + self.uid_validity
     end
 
@@ -195,7 +197,7 @@ class ImapTestServer::SocketState
     end
 
     # Get a list of uids, offset by uid validity.
-    uids = global_mailbox.date_search(since_date).map do |uid|
+    uids = mailbox.date_search(since_date).map do |uid|
       uid + self.uid_validity
     end
 
@@ -211,7 +213,8 @@ class ImapTestServer::SocketState
   # https://tools.ietf.org/html/rfc3501#section-6.4.5
 
   def imap_uid_fetch(tag, args)
-    raise "Fetching: #{args}"
+    from_uid, to_uid = args[0].split(":")
+    raise args.join(" ")
   end
 
   def imap_uid_fetch_chaos(tag, args)
