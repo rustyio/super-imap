@@ -22,19 +22,30 @@ class ImapTestServer::Daemon
   include Common::WrappedThread
   include Common::DbConnection
 
-  attr_accessor :port
+  attr_accessor :port, :enable_chaos, :emails_per_minute, :max_emails
   attr_accessor :stats_thread
   attr_accessor :connection_thread
   attr_accessor :new_sockets, :sockets, :socket_states
-  attr_accessor :mailboxes, :emails_per_minute
+  attr_accessor :mailboxes
+  attr_accessor :total_emails_generated
 
   def initialize(options = {})
+    # Config stuff.
     self.port = (options[:port] || 10143).to_i
+    self.enable_chaos = options[:enable_chaos] || false
+    self.emails_per_minute = options[:email_per_minute] || 5000
+    self.max_emails = options[:max_emails] || 500
+
+    # Socket stuff.
     self.new_sockets = Queue.new
     self.sockets = []
     self.socket_states = {}
+
+    # Mailboxes.
     self.mailboxes = Mailboxes.new()
-    self.emails_per_minute = 5000
+
+    # Stats.
+    self.total_emails_generated = 0
   end
 
   # Public: Start threads and begin servicing connections.
@@ -78,7 +89,7 @@ class ImapTestServer::Daemon
 
   def stats_thread_runner
     while running?
-      Log.info("Managing #{sockets.count} connections.")
+      Log.info("Managing #{sockets.count} connections, generated #{total_emails_generated} emails.")
       light_sleep 10
     end
   end
@@ -115,7 +126,10 @@ class ImapTestServer::Daemon
   end
 
   def process_new_socket(socket)
-    socket_state = ImapTestServer::SocketState.new(self.mailboxes, socket)
+    options = {
+      :enable_chaos => self.enable_chaos
+    }
+    socket_state = ImapTestServer::SocketState.new(self.mailboxes, socket, options)
     socket_state.handle_connect
 
     # Add to our list of existing sockets.
@@ -179,7 +193,7 @@ class ImapTestServer::Daemon
   def new_mail_thread_runner
     sleep_seconds = 1
 
-    while running?
+    while running? && self.total_emails_generated < self.max_emails
       if self.mailboxes.count > 0
         n = (1.0 * sleep_seconds / 60) * emails_per_minute
         generate_new_mail(n)
@@ -193,7 +207,8 @@ class ImapTestServer::Daemon
     prob_of_email = n / self.mailboxes.count
 
     self.mailboxes.each do |mailbox|
-      if rand() < prob_of_email
+      if rand() < prob_of_email &&
+        self.total_emails_generated += 1
         mailbox.add_fake_message
       end
     end

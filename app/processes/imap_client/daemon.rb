@@ -27,6 +27,7 @@ class ImapClient::Daemon
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
   attr_accessor :claim_thread, :user_threads
+  attr_accessor :total_emails_processed
 
   def initialize(options = {})
     # Settings.
@@ -40,6 +41,9 @@ class ImapClient::Daemon
 
     # User stuff.
     self.user_threads = {}
+
+    # Stats.
+    self.total_emails_processed = 0
   end
 
   def run
@@ -111,7 +115,7 @@ class ImapClient::Daemon
   def heartbeat_thread_runner
     heartbeat = ImapDaemonHeartbeat.create(:tag => server_tag)
     while running?
-      Log.info("Heartbeat (server_tag = #{server_tag}, work_queue = #{work_queue_length}, user_threads = #{user_threads.count}).")
+      Log.info("Heartbeat (server_tag = #{server_tag}, work_queue = #{work_queue_length}, user_threads = #{user_threads.count}, total_emails_processed = #{total_emails_processed}).")
       heartbeat.touch
       light_sleep 10
     end
@@ -169,8 +173,6 @@ class ImapClient::Daemon
   #
   # options[:user_id] - The user id.
   def action_connect_user(options)
-    Log.info("action_connect_user")
-
     user_id = options[:user_id]
 
     # Nothing to do if stopped.
@@ -196,8 +198,6 @@ class ImapClient::Daemon
   #
   # options[:user_id] - The user id.
   def action_disconnect_user(options)
-    Log.info("action_disconnect_user")
-
     # Nothing to do if no thread.
     user_id = options[:user_id]
     return if user_threads[user_id].nil?

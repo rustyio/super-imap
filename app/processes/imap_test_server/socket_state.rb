@@ -4,17 +4,19 @@ class ImapTestServer::SocketState
   NormalDisconnect = Class.new(StandardError)
   ChaosDisconnect = Class.new(StandardError)
 
+  attr_accessor :mailboxes, :mailbox
   attr_accessor :socket
+  attr_accessor :enable_chaos
   attr_accessor :username
   attr_accessor :uid_validity
   attr_accessor :last_count
   attr_accessor :idling, :idle_tag
   attr_accessor :new_email, :inbox
-  attr_accessor :mailboxes, :mailbox
 
-  def initialize(mailboxes, socket)
+  def initialize(mailboxes, socket, options)
     self.mailboxes = mailboxes
     self.socket = socket
+    self.enable_chaos = options[:enable_chaos]
     self.uid_validity = rand(999999)
     self.idling = false
     self.last_count = 0
@@ -32,10 +34,8 @@ class ImapTestServer::SocketState
 
   # Public: Handle the specified IMAP command, respond to the socket.
   def handle_command(s)
-    Log.info("Received #{s}")
     tag, verb, args = parse_command(s)
     method = verb_to_method(verb)
-    Log.info("Running #{method}")
     send(method, tag, args)
   end
 
@@ -65,16 +65,20 @@ class ImapTestServer::SocketState
   # to inject some chaos into the system. Muhahaha.
   def verb_to_method(verb)
     verb = verb.downcase.gsub(/\s/, "_")
-    choices = [
-      [95, "imap_#{verb}".to_sym] # ,
-      # [3,  "imap_#{verb}_chaos".to_sym],
-      # [1,  :imap_chaos_respond_no],
-      # [1,  :imap_chaos_respond_bad],
-      # [1,  :imap_chaos_gibberish_tagged],
-      # [1,  :imap_chaos_gibberish_untagged],
-      # [1,  :imap_chaos_soft_disconnect],
-      # [1,  :imap_chaos_hard_disconnect],
-    ]
+    choices = [[200, "imap_#{verb}".to_sym]]
+
+    if self.enable_chaos
+      choices += [
+        [3,  "imap_#{verb}_chaos".to_sym],
+        [1,  :imap_chaos_respond_no],
+        [1,  :imap_chaos_respond_bad],
+        [1,  :imap_chaos_gibberish_tagged],
+        [1,  :imap_chaos_gibberish_untagged],
+        [1,  :imap_chaos_soft_disconnect],
+        [1,  :imap_chaos_hard_disconnect],
+      ]
+    end
+
     choose(choices)
   end
 
@@ -91,7 +95,6 @@ class ImapTestServer::SocketState
 
   # Private: Write a response to the socket.
   def respond(tag, s)
-    Log.info("#{tag} #{s}")
     socket.write("#{tag} #{s}\r\n")
     socket.flush
   end
@@ -147,7 +150,7 @@ class ImapTestServer::SocketState
   end
 
   def imap_examine_chaos(tag, args)
-    self.uid_validity = random(999)
+    self.uid_validity = rand(999)
     imap_examine(tag, args)
   end
 
@@ -161,7 +164,7 @@ class ImapTestServer::SocketState
   end
 
   def imap_status_chaos(tag, args)
-    self.uid_validity = random(999)
+    self.uid_validity = rand(999)
     imap_status(tag, args)
   end
 

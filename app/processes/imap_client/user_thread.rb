@@ -248,6 +248,9 @@ class ImapClient::UserThread
 
     # Transmit to the partner's webhook.
     # TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run
+
+    # Update stats.
+    self.daemon.total_emails_processed += 1
   rescue => e
     Log.exception(e)
     self.stop!

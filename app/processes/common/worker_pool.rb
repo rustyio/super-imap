@@ -71,7 +71,6 @@ module Common::WorkerPool
         next
       end
 
-      Log.info("work_queue: #{work_queue.length}")
       method = "action_#{options[:'$action']}".to_sym
       self.send(method.to_sym, options)
     end
