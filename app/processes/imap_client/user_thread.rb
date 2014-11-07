@@ -30,14 +30,9 @@ class ImapClient::UserThread
     connect
     authenticate
     choose_folder
-    if valid_uid?
-      read_email_by_uid
-    else
-      read_email_by_date
-    end
+    update_uid_validity
     listen_for_emails
   rescue => e
-    print e
     Log.exception(e)
     stop!
   ensure
@@ -85,29 +80,34 @@ class ImapClient::UserThread
 
   # Private: Return true if our knowledge of the server's uid is still
   # valid. See "http://tools.ietf.org/html/rfc4549#section-4.1"
-  def valid_uid?
+  def update_uid_validity
     # Get the latest validity value.
     response = client.status(folder_name.to_s, attrs=['UIDVALIDITY'])
     uid_validity = response['UIDVALIDITY']
 
-    # Check if our knowledge of the server's uid is still valid.
-    is_valid = uid_validity &&
-               user.last_uid &&
-               user.last_uid_validity &&
-               (uid_validity.to_s == user.last_uid_validity.to_s)
-
-    # Update the user with the new validity value.
-    user.update_attributes(:last_uid_validity => uid_validity)
-
-    return is_valid
+    if user.last_uid_validity.to_s != uid_validity.to_s
+      schedule do
+        # Update the user with the new validity value, invalidate the
+        # old last_uid value.
+        user.update_attributes(:last_uid_validity => uid_validity, :last_uid => nil)
+      end
+    end
   end
 
   # Private: Start a loop that alternates between idling and reading
   # email.
   def listen_for_emails
-    while true
+    while running?
+      if user.last_uid.present?
+        read_email_by_uid
+      else
+        read_email_by_date
+      end
+
+      # Maybe we stopped?
+      break if stopping?
+
       wait_for_email
-      read_email_by_uid
     end
   end
 
@@ -149,6 +149,8 @@ class ImapClient::UserThread
          response.respond_to?(:name) &&
          response.name == "EXISTS"
         client.idle_done()
+      elsif stopping?
+        client.idle_done()
       end
     end
   end
@@ -172,7 +174,7 @@ class ImapClient::UserThread
                          :block   => block,
                          :thread  => Thread.current)
 
-    # Put ourselves to sleep.
+    # Put ourselves to sleep. The worker will call Thread.run to wake us back up.
     sleep
   end
 
@@ -181,7 +183,7 @@ class ImapClient::UserThread
   #
   # + uid - The UID of the email.
   def process_uid(uid)
-    responses = client.uid_fetch([@uid], ["INTERNALDATE", "RFC822.SIZE", "UID"])
+    responses = client.uid_fetch([uid], ["INTERNALDATE", "RFC822.SIZE"])
     response = responses.first
 
     # Check for a really old date. If it's old, then we should stop
@@ -200,7 +202,7 @@ class ImapClient::UserThread
     end
 
     # Don't process emails that are significantly older than the last internal date that we've processed.
-    if internal_date < (user.last_internal_date - 1.hour)
+    if user.last_internal_date && internal_date < (user.last_internal_date - 1.hour)
       return
     end
 
@@ -218,7 +220,7 @@ class ImapClient::UserThread
     end
 
     # Load the email body.
-    responses = self.client.uid_fetch([uid], ["ENVELOPE", "RFC822", "UID"])
+    responses = self.client.uid_fetch([uid], ["UID", "ENVELOPE", "RFC822"])
     response = responses.first
     uid = response.attr["UID"]
     raw_eml = response.attr["RFC822"]
@@ -227,7 +229,6 @@ class ImapClient::UserThread
     user.update_attributes(:last_uid           => uid,
                            :last_email_at      => Time.now,
                            :last_internal_date => internal_date)
-
 
     # Get the message_id.
     envelope = response.attr["ENVELOPE"]
@@ -238,7 +239,7 @@ class ImapClient::UserThread
     md5 = Digest::MD5.hexdigest(raw_eml.slice(0, 10000))
 
     # Have we already processed this one?
-    if user.mail_logs.find(:md5 => md5)
+    if user.mail_logs.find_by_md5(md5)
       return
     end
 
@@ -246,10 +247,10 @@ class ImapClient::UserThread
     mail_log = user.mail_logs.create(:message_id => envelope.message_id, :md5 => md5)
 
     # Transmit to the partner's webhook.
-    System::TransmitToWebhook.new(mail_log, raw_eml).delay.run
+    # TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run
   rescue => e
     Log.exception(e)
-    stop!
+    self.stop!
   end
 
   # Private: Logout the user, disconnect the client.

@@ -12,7 +12,7 @@
 #
 #  + The Daemon class contains high level connection logic.
 #  + SocketState holds the state of a socket and contains our IMAP logic.
-#  + GlobalMailbox holds mail for all users.
+#  + Mailboxes holds mail for all users.
 
 require 'socket'
 
@@ -23,22 +23,24 @@ class ImapTestServer::Daemon
   include Common::DbConnection
 
   attr_accessor :port
+  attr_accessor :stats_thread
   attr_accessor :connection_thread
   attr_accessor :new_sockets, :sockets, :socket_states
-  attr_accessor :global_mailbox
+  attr_accessor :mailboxes, :emails_per_minute
 
   def initialize(options = {})
     self.port = (options[:port] || 10143).to_i
     self.new_sockets = Queue.new
     self.sockets = []
     self.socket_states = {}
-    self.global_mailbox = GlobalMailbox.new()
+    self.mailboxes = Mailboxes.new()
     self.emails_per_minute = 60
   end
 
   # Public: Start threads and begin servicing connections.
   def run
     trap_signals
+    start_stats_thread
     start_connection_thread
     start_new_mail_thread
     process_sockets
@@ -53,6 +55,13 @@ class ImapTestServer::Daemon
 
   private
 
+  def start_stats_thread
+    self.stats_thread = wrapped_thread do
+      establish_db_connection
+      stats_thread_runner
+    end
+  end
+
   def start_connection_thread
     self.connection_thread = wrapped_thread do
       establish_db_connection
@@ -64,6 +73,13 @@ class ImapTestServer::Daemon
     self.connection_thread = wrapped_thread do
       establish_db_connection
       new_mail_thread_runner
+    end
+  end
+
+  def stats_thread_runner
+    while running?
+      Log.info("Managing #{sockets.count} connections.")
+      light_sleep 10
     end
   end
 
@@ -117,7 +133,7 @@ class ImapTestServer::Daemon
   end
 
   def process_new_socket(socket)
-    socket_state = ImapTestServer::SocketState.new(global_mailbox, socket)
+    socket_state = ImapTestServer::SocketState.new(self.mailboxes, socket)
     socket_state.handle_connect
 
     # Add to our list of existing sockets.
@@ -157,16 +173,22 @@ class ImapTestServer::Daemon
     sleep_seconds = 5
 
     while running?
-      # What's our chance of generating an email for an individual user?
-      prob_of_email = (1.0 * sleep_seconds / 60) * (emails_per_minute / mailboxes.count)
-
-      self.mailboxes.each do |mailbox|
-        if rand() < prob_of_email
-          mailbox.add_fake_message
-        end
+      if self.mailboxes.count > 0
+        n = (1.0 * sleep_seconds / 60) * emails_per_minute
+        generate_new_mail(n)
       end
-
       light_sleep sleep_seconds
+    end
+  end
+
+  def generate_new_mail(n)
+    # What's our chance of generating an email for an individual user?
+    prob_of_email = n / self.mailboxes.count
+
+    self.mailboxes.each do |mailbox|
+      if rand() < prob_of_email
+        mailbox.add_fake_message
+      end
     end
   end
 end

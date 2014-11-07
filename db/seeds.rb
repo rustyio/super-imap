@@ -18,7 +18,7 @@ def create_user(connection, n)
   connection.users.create(
     :tag            => "User #{n}",
     :email          => "user#{n}@localhost",
-    :login_username => "user#{n}",
+    :login_username => "user#{n}@localhost",
     :login_password => "password").tap do |user|
     create_mail_log(user, 1)
     create_mail_log(user, 2)
@@ -29,8 +29,8 @@ end
 def create_partner_connection(partner, ct)
   partner.connections.create(:connection_type_id => ct.id).tap do |connection|
     create_user(connection, 1)
-    create_user(connection, 2)
-    create_user(connection, 3)
+    # create_user(connection, 2)
+    # create_user(connection, 3)
   end
 end
 

@@ -8,14 +8,13 @@ class ImapTestServer::SocketState
   attr_accessor :username
   attr_accessor :uid_validity
   attr_accessor :last_count
-  attr_accessor :idling
+  attr_accessor :idling, :idle_tag
   attr_accessor :new_email, :inbox
   attr_accessor :mailboxes, :mailbox
 
-  def initialize(global_mailbox, socket)
+  def initialize(mailboxes, socket)
     self.mailboxes = mailboxes
     self.socket = socket
-    self.state = {}
     self.uid_validity = rand(999999)
     self.idling = false
     self.last_count = 0
@@ -50,8 +49,14 @@ class ImapTestServer::SocketState
   private
 
   def parse_command(s)
+    # Get the tag.
     tag, s = /(.+?)\s+(.*)/.match(s).captures
-    verb, s = /(UID SEARCH|UID_FETCH|\w+)\s*(.*)/.match(s).captures
+
+    # Special case for an IDLE done command.
+    return [nil, "DONE", []] if tag == "DONE"
+
+    # Parse the rest of the command.
+    verb, s = /(UID SEARCH|UID FETCH|\w+)\s*(.*)/.match(s).captures
     args = s.split(/\s+/)
     [tag, verb, args]
   end
@@ -86,6 +91,7 @@ class ImapTestServer::SocketState
 
   # Private: Write a response to the socket.
   def respond(tag, s)
+    Log.info("#{tag} #{s}")
     socket.write("#{tag} #{s}\r\n")
     socket.flush
   end
@@ -211,10 +217,88 @@ class ImapTestServer::SocketState
 
   # UID FETCH Command
   # https://tools.ietf.org/html/rfc3501#section-6.4.5
+  # https://tools.ietf.org/html/rfc3501#section-7.4.2
 
   def imap_uid_fetch(tag, args)
-    from_uid, to_uid = args[0].split(":")
-    raise args.join(" ")
+    # Looks like this: 1103963 (INTERNALDATE RFC822.SIZE UID)
+    m = /(\d+)\s\((.*)\)/.match(args.join(' '))
+    uid = m[1].to_i
+    fields = m[2].split
+    mail = mailbox.fetch(uid - self.uid_validity)
+    values = fields.map do |field|
+      case field
+      when "UID"
+        [field, as_integer(uid)]
+      when "INTERNALDATE"
+        [field, as_date(mail.date)]
+      when "ENVELOPE"
+        [field, as_list(
+           as_date(mail.date),
+           as_string(mail.subject),
+           as_address_structure(mail.from),
+           as_address_structure(mail.from),
+           as_address_structure(mail.reply_to),
+           as_address_structure(mail.to),
+           as_string(nil),
+           as_string(nil),
+           as_string(nil),
+           as_string(mail.message_id)
+         )]
+      when "RFC822.SIZE"
+        [field, as_integer(mail.encoded.size)]
+      when "RFC822"
+        [field, as_multiline_string(mail.encoded)]
+      else
+        raise "Unknown field: #{field}"
+      end
+    end
+    values += ["UID", as_integer(uid)] unless fields.include?("RFC822")
+    respond("*", "#{uid} FETCH #{as_list(values)}")
+    respond(tag, "OK FETCH complete")
+  end
+
+  def as_list(*values)
+    s = values.map do |value|
+      if value.instance_of?(Array)
+        value.join(" ")
+      else
+        value
+      end
+    end.join(' ')
+
+    return "(#{s})"
+  end
+
+  def as_address_structure(addresses)
+    # https://tools.ietf.org/html/rfc3501#section-7.4.2
+    return as_string(nil) if addresses.blank?
+
+    values = addresses.map do |address|
+      if !address.instance_of?(Mail::Address)
+        address = Mail::Address.new(address)
+      end
+      as_list(as_string(address.display_name),
+              as_string(nil),
+              as_string(address.local),
+              as_string(address.domain))
+    end
+    as_list(values)
+  end
+
+  def as_date(date)
+    as_string(date.strftime("%a, %b %e %Y %H:%M:%S %z (%Z)"))
+  end
+
+  def as_integer(n)
+    n.to_s
+  end
+
+  def as_string(s)
+    s.nil? ? "NIL" : "\"#{s}\""
+  end
+
+  def as_multiline_string(s)
+    "{#{s.length}}\r\n#{s}"
   end
 
   def imap_uid_fetch_chaos(tag, args)
@@ -226,6 +310,7 @@ class ImapTestServer::SocketState
 
   def imap_idle(tag, args)
     self.idling = true
+    self.idle_tag = tag
     respond("+", "idling")
   end
 
@@ -234,7 +319,7 @@ class ImapTestServer::SocketState
   end
 
   def imap_done(tag, args)
-    respond(tag, "OK IDLE terminated")
+    respond(idle_tag, "OK IDLE terminated")
   end
 
   def imap_done_chaos(tag, args)

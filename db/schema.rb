@@ -128,7 +128,7 @@ ActiveRecord::Schema.define(version: 20141104202256) do
     t.datetime "last_email_at"
     t.integer  "last_uid"
     t.string   "last_uid_validity"
-    t.string   "last_internal_date"
+    t.datetime "last_internal_date"
     t.string   "login_username"
     t.string   "login_password"
     t.string   "oauth1_token"

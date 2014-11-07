@@ -215,6 +215,10 @@ class ImapClient::Daemon
   # options[:thread] - The thread to restart.
   def action_callback(options)
     options[:block].call
+  rescue => e
+    Log.exception(e)
+  ensure
+    Log.info("Continuing Thread")
     options[:thread].run
   end
 end

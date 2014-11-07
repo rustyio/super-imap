@@ -5,12 +5,16 @@ class ImapTestServer::Mailboxes
     self.mailboxes = {}
   end
 
+  def count
+    return self.mailboxes.count
+  end
+
   def find(username)
     self.mailboxes[username] ||= Mailbox.new(username)
   end
 
   def each(&block)
-    mailboxes.keys.copy.each do |username|
+    mailboxes.keys.dup.each do |username|
       yield mailboxes[username]
     end
   end
@@ -51,13 +55,15 @@ class ImapTestServer::Mailboxes
     end
 
     def fetch(uid)
+      email = self.username
       mail = mails.find do |mail|
         mail.uid == uid
       end
 
       Mail.new do
-        from username
-        to username
+        from email
+        to email
+        date mail.date
         message_id mail.message_id
         subject "MySubject"
         body "MyBody"

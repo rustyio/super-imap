@@ -1,10 +1,11 @@
 require 'timeout'
 
 class TransmitToWebhook
-  attr_accessor :mail_log, :raw_eml
+  attr_accessor :mail_log, :envelope, :raw_eml
 
   def initialize(mail_log, envelope, raw_eml)
     self.mail_log = mail_log
+    self.envelope = envelope
     self.raw_eml = raw_eml
   end
 
