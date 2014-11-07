@@ -258,5 +258,7 @@ class ImapClient::UserThread
     client && client.logout
     client && client.disconnect
     self.client = nil
+  rescue => e
+    Log.exception(e)
   end
 end
