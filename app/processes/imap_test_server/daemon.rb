@@ -63,6 +63,9 @@ class ImapTestServer::Daemon
   ensure
     connection_thread && connection_thread.terminate
     sockets.map(&:close)
+
+    Log.info("Generated #{total_emails_generated} emails.")
+    Log.info("Served #{total_emails_fetched} emails.")
   end
 
   private

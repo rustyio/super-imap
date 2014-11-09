@@ -61,10 +61,10 @@ class ImapTestServer::SocketState
   end
 
   # Private: Given an IMAP verb, return a method. This is our chance
-  # to inject some chaos into the system. Muhahaha.
+  # to inject some chaos into the system. (Muhahaha.)
   def verb_to_method(verb)
     verb = verb.downcase.gsub(/\s/, "_")
-    choices = [[200, "imap_#{verb}".to_sym]]
+    choices = [[400, "imap_#{verb}".to_sym]]
 
     if self.enable_chaos
       choices += [
@@ -81,7 +81,11 @@ class ImapTestServer::SocketState
     choose(choices)
   end
 
-  # Private: Choose from a list of weighted choices.
+  # Private: Choose from a list of weighted choices, of the form
+  # [[weight1, choice1], [weight2, choice2], ...]. Weights are
+  # normalized, they do not need to add to 1.0.
+  #
+  # Returns the selected choice.
   def choose(choices)
     r = rand()
     w = 0
@@ -192,8 +196,6 @@ class ImapTestServer::SocketState
       uid + self.uid_validity
     end
 
-    Log.info("UID SEARCH #{args} - #{uids}")
-
     respond("*", %(SEARCH #{uids.join(' ')}))
     respond(tag, %(OK SEARCH completed))
   end
@@ -212,8 +214,6 @@ class ImapTestServer::SocketState
       uid + self.uid_validity
     end
 
-    Log.info("DATE SEARCH #{args} - #{uids}")
-
     respond("*", %(SEARCH #{uids.join(' ')}))
     respond(tag, %(OK SEARCH completed))
   end
@@ -227,8 +227,6 @@ class ImapTestServer::SocketState
   # https://tools.ietf.org/html/rfc3501#section-7.4.2
 
   def imap_uid_fetch(tag, args)
-    Log.info("FETCH #{args}")
-
     # Looks like this: 1103963 (INTERNALDATE RFC822.SIZE UID)
     m = /(\d+)\s\((.*)\)/.match(args.join(' '))
     uid = m[1].to_i
