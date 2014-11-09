@@ -1,9 +1,25 @@
 # TODO
 
++ Make all private methods start with underscore.
++ Create a stress test script.
+
++ Stress Test Logging
+
++ ./temp/stress_test/
++ `generated_emails.csv` - time, username, message_id
++ `processed_emails_$TAG.csv` - time, username, message_id
++ `events.csv` - time, username, event
+
++ Print out unique emails generated vs. unique emails processed
++ Increasing graph of total emails generated vs. total emails processed.
++ Below that, graph of chaos types.
+
 
 # Operations
 
-+ Failure webhook? Tracking?
++ Failure webhook.
+  + User no longer authorized.
+
 + Connection retries... rate limiting.
 
 + Librato metrics.
@@ -19,7 +35,6 @@
 ## Use Cases
 
 1. Connect a user through OAuth.
-2. Wait for incoming messages.
 3. Read the messages.
 4. Fire a webhook to send the message.
    + Obey response code if the user is no longer authorized.

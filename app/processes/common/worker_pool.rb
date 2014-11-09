@@ -61,19 +61,18 @@ module Common::WorkerPool
     # Create a work queue.
     work_queue = Queue.new
     self.work_queues << work_queue
-
     while running?
-      begin
-        # Don't block, otherwise we can't exit.
-        options = work_queue.pop(true)
-      rescue ThreadError => e
-        # Queue is empty.
-        sleep 0.1
-        next
-      end
-
-      method = "action_#{options[:'$action']}".to_sym
-      self.send(method.to_sym, options)
+      _worker_thread_next_action(work_queue)
     end
+  end
+
+  def _worker_thread_next_action(queue)
+    # Don't block, otherwise we can't exit.
+    options = queue.pop(true)
+    method = "action_#{options[:'$action']}".to_sym
+    self.send(method.to_sym, options)
+  rescue ThreadError => e
+    # Queue is empty.
+    sleep 0.1
   end
 end

@@ -31,14 +31,14 @@ class ImapTestServer::Daemon
 
   def initialize(options = {})
     # Config stuff.
-    self.port = (options[:port] || 10143).to_i
-    self.enable_chaos = options[:enable_chaos] || false
-    self.emails_per_minute = options[:email_per_minute] || 500
-    self.max_emails = options[:max_emails] || 1000
+    self.port              = options.fetch(:port)
+    self.enable_chaos      = options.fetch(:enable_chaos)
+    self.emails_per_minute = options.fetch(:emails_per_minute)
+    self.max_emails        = options.fetch(:max_emails)
 
     # Socket stuff.
-    self.new_sockets = Queue.new
-    self.sockets = []
+    self.new_sockets   = Queue.new
+    self.sockets       = []
     self.socket_states = {}
 
     # Mailboxes.
@@ -46,7 +46,7 @@ class ImapTestServer::Daemon
 
     # Stats.
     self.total_emails_generated = 0
-    self.total_emails_fetched = 0
+    self.total_emails_fetched   = 0
   end
 
   # Public: Start threads and begin servicing connections.

@@ -22,18 +22,20 @@ class ImapClient::Daemon
   include Common::LightSleep
   include Common::WrappedThread
   include Common::DbConnection
+  include Common::CsvLog
 
-  attr_accessor :num_worker_threads, :max_user_threads, :max_email_size
+  attr_accessor :stress_test_mode, :num_worker_threads, :max_user_threads, :max_email_size
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
-  attr_accessor :claim_thread, :user_threads
-  attr_accessor :total_emails_processed
+  attr_accessor :claim_thread, :user_threads, :connection_errors
+  attr_accessor :total_emails_processed, :processed_log
 
   def initialize(options = {})
     # Settings.
-    self.num_worker_threads = options[:num_worker_threads] || 5
-    self.max_user_threads   = options[:max_user_threads]   || 500
-    self.max_email_size     = options[:max_email_size]     || 1024 * 1024
+    self.stress_test_mode   = options.fetch(:stress_test_mode)
+    self.num_worker_threads = options.fetch(:num_worker_threads)
+    self.max_user_threads   = options.fetch(:max_user_threads)
+    self.max_email_size     = options.fetch(:max_email_size)
 
     # Load balancing stuff.
     self.server_tag = SecureRandom.hex(10)
@@ -49,6 +51,13 @@ class ImapClient::Daemon
   def run
     trap_signals
     force_class_loading
+
+    # If stress testing, start a log.
+    if self.stress_test_mode
+      start_csv_log_thread
+      self.processed_log = csv_log("./log/stress/processed_emails_#{server_tag}.csv")
+      self.processed_log << ["time", "username", "message_id"]
+    end
 
     # Start our threads.
     set_db_connection_pool_size(self.num_worker_threads + 3)
