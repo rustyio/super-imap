@@ -27,7 +27,7 @@ class ImapTestServer::Daemon
   attr_accessor :connection_thread
   attr_accessor :new_sockets, :sockets, :socket_states
   attr_accessor :mailboxes
-  attr_accessor :total_emails_generated
+  attr_accessor :total_emails_generated, :total_emails_fetched
 
   def initialize(options = {})
     # Config stuff.
@@ -46,6 +46,7 @@ class ImapTestServer::Daemon
 
     # Stats.
     self.total_emails_generated = 0
+    self.total_emails_fetched = 0
   end
 
   # Public: Start threads and begin servicing connections.
@@ -89,7 +90,7 @@ class ImapTestServer::Daemon
 
   def stats_thread_runner
     while running?
-      Log.info("Managing #{sockets.count} connections, generated #{total_emails_generated} emails.")
+      Log.info("Stats (connections = #{sockets.count}, emails_generated = #{total_emails_generated}, emails_fetched = #{total_emails_fetched})")
       light_sleep 10
     end
   end
@@ -129,7 +130,7 @@ class ImapTestServer::Daemon
     options = {
       :enable_chaos => self.enable_chaos
     }
-    socket_state = ImapTestServer::SocketState.new(self.mailboxes, socket, options)
+    socket_state = ImapTestServer::SocketState.new(self, socket, options)
     socket_state.handle_connect
 
     # Add to our list of existing sockets.
@@ -207,7 +208,7 @@ class ImapTestServer::Daemon
     prob_of_email = n / self.mailboxes.count
 
     self.mailboxes.each do |mailbox|
-      if rand() < prob_of_email &&
+      if rand() < prob_of_email
         self.total_emails_generated += 1
         mailbox.add_fake_message
       end

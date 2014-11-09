@@ -1,6 +1,7 @@
 # TODO
 
-+ Why are we processing some emails twice?
++ Turn on multi-server support, measure how many emails we miss.
++ Turn on chaos, measure how many emails we miss.
 
 # Operations
 

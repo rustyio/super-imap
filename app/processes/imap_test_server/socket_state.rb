@@ -4,8 +4,7 @@ class ImapTestServer::SocketState
   NormalDisconnect = Class.new(StandardError)
   ChaosDisconnect = Class.new(StandardError)
 
-  attr_accessor :mailboxes, :mailbox
-  attr_accessor :socket
+  attr_accessor :daemon, :mailbox, :socket
   attr_accessor :enable_chaos
   attr_accessor :username
   attr_accessor :uid_validity
@@ -13,11 +12,11 @@ class ImapTestServer::SocketState
   attr_accessor :idling, :idle_tag
   attr_accessor :new_email, :inbox
 
-  def initialize(mailboxes, socket, options)
-    self.mailboxes = mailboxes
+  def initialize(daemon, socket, options)
+    self.daemon = daemon
     self.socket = socket
     self.enable_chaos = options[:enable_chaos]
-    self.uid_validity = rand(999999)
+    self.uid_validity = rand(999)
     self.idling = false
     self.last_count = 0
   end
@@ -114,7 +113,7 @@ class ImapTestServer::SocketState
 
   def imap_login(tag, args)
     self.username = args[0]
-    self.mailbox = mailboxes.find(username)
+    self.mailbox = self.daemon.mailboxes.find(username)
     respond(tag, "OK Logged in.")
   end
 
@@ -182,6 +181,7 @@ class ImapTestServer::SocketState
   end
 
   def imap_uid_search_by_uid(tag, args)
+
     # Parse the search request.
     from_uid, to_uid = args[args.index("UID") + 1].split(":")
     from_uid = from_uid.to_i - self.uid_validity
@@ -191,6 +191,8 @@ class ImapTestServer::SocketState
     uids = self.mailbox.uid_search(from_uid, to_uid).map do |uid|
       uid + self.uid_validity
     end
+
+    Log.info("UID SEARCH #{args} - #{uids}")
 
     respond("*", %(SEARCH #{uids.join(' ')}))
     respond(tag, %(OK SEARCH completed))
@@ -210,6 +212,8 @@ class ImapTestServer::SocketState
       uid + self.uid_validity
     end
 
+    Log.info("DATE SEARCH #{args} - #{uids}")
+
     respond("*", %(SEARCH #{uids.join(' ')}))
     respond(tag, %(OK SEARCH completed))
   end
@@ -223,6 +227,8 @@ class ImapTestServer::SocketState
   # https://tools.ietf.org/html/rfc3501#section-7.4.2
 
   def imap_uid_fetch(tag, args)
+    Log.info("FETCH #{args}")
+
     # Looks like this: 1103963 (INTERNALDATE RFC822.SIZE UID)
     m = /(\d+)\s\((.*)\)/.match(args.join(' '))
     uid = m[1].to_i
@@ -250,6 +256,7 @@ class ImapTestServer::SocketState
       when "RFC822.SIZE"
         [field, as_integer(mail.encoded.size)]
       when "RFC822"
+        self.daemon.total_emails_fetched += 1
         [field, as_multiline_string(mail.encoded)]
       else
         raise "Unknown field: #{field}"

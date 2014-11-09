@@ -134,7 +134,7 @@ class ImapClient::Daemon
       if server_rhash.size == 0
         light_sleep 1
       else
-        light_sleep 30
+        light_sleep 10
       end
     end
   end
@@ -178,11 +178,11 @@ class ImapClient::Daemon
     # Nothing to do if stopped.
     return if stopping?
 
-    # Nothing to do if already a thread.
-    return if user_threads[user_id].present?
-
     # Are we allowed to create a new user thread?
     return if user_threads.count >= max_user_threads
+
+    # Nothing to do if already a thread.
+    return if user_threads[user_id].present?
 
     # Load the user; preload connection information.
     user = User.find(user_id)
@@ -190,6 +190,7 @@ class ImapClient::Daemon
 
     # Start the thread.
     user_threads[user_id] = wrapped_thread do
+      Log.info("Connecting #{user.email}...")
       ImapClient::UserThread.new(self, user, user_options).run
     end
   end

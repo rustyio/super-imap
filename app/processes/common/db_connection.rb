@@ -10,6 +10,6 @@ module Common::DbConnection
 
   def establish_db_connection
     ActiveRecord::Base.establish_connection(db_config)
-    sleep 1
+    sleep 2
   end
 end

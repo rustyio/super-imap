@@ -250,6 +250,11 @@ class ImapClient::UserThread
     message_id = envelope.message_id || "#{user.email} - #{uid} - #{internal_date}"
     message_id = message_id.slice(0, 255)
 
+    # Have we already processed this one?
+    if user.mail_logs.find_by_message_id(message_id)
+      return
+    end
+
     # Generate the md5.
     md5 = Digest::MD5.hexdigest(raw_eml.slice(0, 10000))
 
@@ -259,7 +264,7 @@ class ImapClient::UserThread
     end
 
     # Create the mail log record.
-    mail_log = user.mail_logs.create(:message_id => envelope.message_id, :md5 => md5)
+    mail_log = user.mail_logs.create(:message_id => message_id, :md5 => md5)
 
     # Transmit to the partner's webhook.
     # TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run

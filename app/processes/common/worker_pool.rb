@@ -31,6 +31,7 @@ module Common::WorkerPool
   #
   # Returns nothing.
   def schedule_work(s, options)
+    raise "No hash specified!" if options[:hash].nil?
     index = worker_rhash.hash(options[:hash] || rand())
     options.merge!(:'$action' => s, :'$time' => Time.now)
     work_queues[index] << options

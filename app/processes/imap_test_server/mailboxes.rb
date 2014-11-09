@@ -1,8 +1,9 @@
 class ImapTestServer::Mailboxes
-  attr_accessor :mailboxes
+  attr_accessor :mailboxes, :mailboxes_mutex
 
   def initialize(options = {})
     self.mailboxes = {}
+    self.mailboxes_mutex = Mutex.new
   end
 
   def count
@@ -10,11 +11,17 @@ class ImapTestServer::Mailboxes
   end
 
   def find(username)
-    self.mailboxes[username] ||= Mailbox.new(username)
+    self.mailboxes_mutex.synchronize do
+      self.mailboxes[username] ||= Mailbox.new(username)
+    end
   end
 
   def each(&block)
-    mailboxes.keys.dup.each do |username|
+    usernames = self.mailboxes_mutex.synchronize do
+      self.mailboxes.keys.dup
+    end
+
+    usernames.each do |username|
       yield mailboxes[username]
     end
   end
