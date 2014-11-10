@@ -74,18 +74,21 @@ class ImapTestServer::Daemon
       light_sleep 1.0
     end
   rescue => e
-    Log.exception(e)
     stop!
+    Log.exception(e)
     raise e
   ensure
     stop!
     connection_thread && connection_thread.terminate
     sockets.map(&:close)
+    close_csv_logs
     Log.info("Generated #{total_emails_generated} emails.")
     Log.info("Served #{total_emails_fetched} emails.")
   end
 
+
   private
+
 
   def start_stats_thread
     self.stats_thread = wrapped_thread do

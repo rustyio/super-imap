@@ -78,6 +78,7 @@ class ImapClient::Daemon
     terminate_worker_pool
     user_threads.values.map(&:terminate)
     user_threads.values.map(&:join)
+    close_csv_logs
   end
 
 
