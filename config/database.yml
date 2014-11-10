@@ -8,6 +8,10 @@ development:
   <<: *default
   database: grimace_development
 
+stress:
+  <<: *default
+  database: grimace_stress
+
 test:
   <<: *default
   database: grimace_test

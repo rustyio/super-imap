@@ -21,6 +21,7 @@ class ImapTestServer::Daemon
   include Common::LightSleep
   include Common::WrappedThread
   include Common::DbConnection
+  include Common::CsvLog
 
   attr_accessor :port, :enable_chaos, :emails_per_minute, :max_emails
   attr_accessor :stats_thread
@@ -28,6 +29,7 @@ class ImapTestServer::Daemon
   attr_accessor :new_sockets, :sockets, :socket_states
   attr_accessor :mailboxes
   attr_accessor :total_emails_generated, :total_emails_fetched
+  attr_accessor :generated_log, :fetched_log, :events_log
 
   def initialize(options = {})
     # Config stuff.
@@ -52,18 +54,33 @@ class ImapTestServer::Daemon
   # Public: Start threads and begin servicing connections.
   def run
     trap_signals
+    start_csv_log_thread
+
+    self.generated_log = csv_log("./log/stress/generated_emails.csv")
+    self.fetched_log = csv_log("./log/stress/fetched_emails.csv")
+    self.events_log = csv_log("./log/stress/events.csv")
+
     start_stats_thread
     start_connection_thread
     start_new_mail_thread
-    process_sockets
+    start_process_sockets_thread
+
+    stop_time = (1.0 * max_emails / emails_per_minute).minutes.from_now
+    while running?
+      if Time.now > stop_time
+        Log.info("Test finished! Shutting down.")
+        stop!
+      end
+      light_sleep 1.0
+    end
   rescue => e
     Log.exception(e)
     stop!
     raise e
   ensure
+    stop!
     connection_thread && connection_thread.terminate
     sockets.map(&:close)
-
     Log.info("Generated #{total_emails_generated} emails.")
     Log.info("Served #{total_emails_fetched} emails.")
   end
@@ -113,7 +130,13 @@ class ImapTestServer::Daemon
   end
 
   # Private: Sends and receives IMAP commands.
-  def process_sockets
+  def start_process_sockets_thread
+    wrapped_thread do
+      process_sockets_runner
+    end
+  end
+
+  def process_sockets_runner
     while running?
       process_new_sockets
       process_incoming_messages
@@ -213,7 +236,9 @@ class ImapTestServer::Daemon
     self.mailboxes.each do |mailbox|
       if rand() < prob_of_email
         self.total_emails_generated += 1
-        mailbox.add_fake_message
+        mailbox.add_fake_message do |message_id|
+          self.generated_log << [Time.now, mailbox.username, message_id]
+        end
       end
     end
   end

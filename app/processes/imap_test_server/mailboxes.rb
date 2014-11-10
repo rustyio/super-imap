@@ -47,6 +47,7 @@ class ImapTestServer::Mailboxes
       self.last_uid += 1
       message_id = "message-#{username}-#{last_uid}-#{rand(999999)}@localhost"
       self.mails << MailStruct.new(last_uid, Time.now, message_id)
+      yield(message_id)
     end
 
     def uid_search(from_uid, to_uid)

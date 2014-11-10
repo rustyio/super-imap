@@ -13,5 +13,6 @@
 
 # Ignore all logfiles and tempfiles.
 /log/stress
+/stress-test-results.pdf
 /log/*.log
 /tmp

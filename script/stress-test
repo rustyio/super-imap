@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Remove old log files.
+rm ./log/stress/*
+
+# Begin the stress test.
+RAILS_ENV=stress LOG_LEVEL=info foreman s \
+         -f Procfile.stress-test \
+         -c imap_client=3,imap_test_server=1
+
+# Print a helpful message at the bottom, in case things failed.
+echo
+echo "If foreman didn't start, you may need to run this first:"
+echo "  RAILS_ENV=stress rake db:drop db:create db:setup db:seed"
+echo
+
+# Generate some plots.
+
+Rscript script/analyze-stress-test.R
+
+echo
+echo Results are in "stress-test-results.pdf"
+echo

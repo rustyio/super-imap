@@ -18,7 +18,7 @@ class ImapClient::Authenticator
   private unless Rails.env.test?
 
   # Private: Connect to greenmail, used for performance testing.
-  def authenticate_greenmail(client)
+  def authenticate_localhost(client)
     authenticate_login(client)
   end
 

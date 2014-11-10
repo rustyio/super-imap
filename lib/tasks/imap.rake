@@ -6,7 +6,7 @@ namespace :imap do
     config = {}
     config[:stress_test_mode]   = (ENV['STRESS_TEST_MODE'] == "true")
     config[:num_worker_threads] = (ENV['NUM_WORKER_THREADS'] || 5).to_i
-    config[:max_user_threads]   = (ENV['MAX_USER_THREADS']   || 5).to_i
+    config[:max_user_threads]   = (ENV['MAX_USER_THREADS']   || 500).to_i
     config[:max_email_size]     = (ENV['MAX_EMAIL_SIZE']     || (1024 * 1024)).to_i
 
     require 'imap_client'

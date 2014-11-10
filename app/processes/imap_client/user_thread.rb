@@ -60,6 +60,7 @@ class ImapClient::UserThread
   # Private: Fetch a list of folders, choose the first one that looks
   # promising.
   def choose_folder
+    # TODO: This should probably live in the connection_type model.
     best_folders = [
       "[Gmail]/All Mail",
       "[Google Mail]/All Mail",
@@ -128,7 +129,7 @@ class ImapClient::UserThread
     uids.each do |uid|
       break if stopping?
       schedule do
-        process_uid(uid)
+        process_uid(uid) unless stopping?
       end
     end
 
@@ -148,7 +149,7 @@ class ImapClient::UserThread
     uids.each do |uid|
       break if stopping?
       schedule do
-        process_uid(uid)
+        process_uid(uid) unless stopping?
       end
     end
 

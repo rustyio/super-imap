@@ -56,7 +56,6 @@ class ImapClient::Daemon
     if self.stress_test_mode
       start_csv_log_thread
       self.processed_log = csv_log("./log/stress/processed_emails_#{server_tag}.csv")
-      self.processed_log << ["time", "username", "message_id"]
     end
 
     # Start our threads.
@@ -188,7 +187,7 @@ class ImapClient::Daemon
     return if stopping?
 
     # Are we allowed to create a new user thread?
-    return if user_threads.count >= max_user_threads
+    return if user_threads.count > max_user_threads
 
     # Nothing to do if already a thread.
     return if user_threads[user_id].present?

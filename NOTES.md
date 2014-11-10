@@ -1,19 +1,6 @@
 # TODO
 
 + Make all private methods start with underscore.
-+ Create a stress test script.
-
-+ Stress Test Logging
-
-+ ./temp/stress_test/
-+ `generated_emails.csv` - time, username, message_id
-+ `processed_emails_$TAG.csv` - time, username, message_id
-+ `events.csv` - time, username, event
-
-+ Print out unique emails generated vs. unique emails processed
-+ Increasing graph of total emails generated vs. total emails processed.
-+ Below that, graph of chaos types.
-
 
 # Operations
 
