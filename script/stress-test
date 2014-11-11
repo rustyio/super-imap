@@ -1,5 +1,28 @@
 #!/usr/bin/env bash
 
+clear
+
+echo
+echo "Did you set up database? You need to run this:"
+echo "$ RAILS_ENV=stress rake db:drop db:create db:setup db:seed"
+echo
+echo "The goal of this stress test is to ensure that:"
+echo
+echo "1. CPU load remains stable."
+echo "2. Memory remains stable."
+echo "3. IO handles are properly closed."
+echo "4. The system actually reads all of the email."
+echo
+echo "Use system tools to monitor #1, #2, and #3."
+echo "View 'stress-test-results.pdf' for #4."
+echo
+echo "By design, the stress test generates bad IMAP responses."
+echo "These will look like exceptions in the imap_client process."
+echo "Do not be alarmed; you can ignore the errors."
+echo
+echo "Press enter to continue, Control-C to exit."
+read
+
 # Remove old log files.
 rm ./log/stress/*
 
@@ -8,16 +31,11 @@ RAILS_ENV=stress LOG_LEVEL=info foreman s \
          -f Procfile.stress-test \
          -c imap_client=3,imap_test_server=1
 
-# Print a helpful message at the bottom, in case things failed.
-echo
-echo "If foreman didn't start, you may need to run this first:"
-echo "  RAILS_ENV=stress rake db:drop db:create db:setup db:seed"
-echo
 
 # Generate some plots.
 
 Rscript script/analyze-stress-test.R
 
 echo
-echo Results are in "stress-test-results.pdf"
+echo "Results are in 'stress-test-results.pdf'."
 echo
