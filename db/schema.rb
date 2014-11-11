@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141104202256) do
+ActiveRecord::Schema.define(version: 20141111204248) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -139,6 +139,7 @@ ActiveRecord::Schema.define(version: 20141104202256) do
     t.string   "oauth2_refresh_token"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "archived",              default: false
   end
 
   add_index "users", ["partner_connection_id"], name: "index_users_on_partner_connection_id", using: :btree

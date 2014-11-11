@@ -3,9 +3,8 @@ class User < ActiveRecord::Base
   has_many :mail_logs, :dependent => :destroy
   alias_method :connection, :partner_connection
 
-  validates :email, :presence => true, :uniqueness => {
-              :case_sensitive => false,
-              :scope => :partner_connection_id }
-
-
+  validates_presence_of :email
+  validates_uniqueness_of :email, :case_sensitive => false,
+                          :scope => :partner_connection_id,
+                          :conditions => -> { where.not(archived: true) }
 end
