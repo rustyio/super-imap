@@ -144,8 +144,14 @@ class ImapClient::Daemon
   def heartbeat_thread_runner
     heartbeat = ImapDaemonHeartbeat.create(:tag => server_tag)
     while running?
-      Log.info("Heartbeat (server_tag = #{server_tag}, work_queue = #{work_queue_length}, user_threads = #{user_threads.count}, total_emails_processed = #{total_emails_processed}).")
+      # Update the heartbeat.
       heartbeat.touch
+
+      # Log Heroku / Librato stats.
+      Log.info("measure$imap_client.work_queue.length=#{work_queue_length}")
+      Log.info("sample$imap_client.user_thread.count=#{user_threads.count}")
+      Log.info("sample$imap_client.total_emails_processed=#{total_emails_processed}")
+
       light_sleep 10
     end
   end

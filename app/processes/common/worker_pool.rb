@@ -71,6 +71,13 @@ module Common::WorkerPool
     options = queue.pop(true)
     method = "action_#{options[:'$action']}".to_sym
     self.send(method.to_sym, options)
+
+    # Log Heroku / Librato stats
+    # Sample to avoid log spam.
+    if rand() <= 0.05
+      latency = Time.now - options[:'$time']
+      Log.info("measure$work_queue.latency=#{latency}")
+    end
   rescue ThreadError => e
     # Queue is empty.
     sleep 0.1
