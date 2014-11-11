@@ -1,32 +1,11 @@
 # TODO
 
-+ Make all private methods start with underscore.
-
-# Operations
-
 + Failure webhook.
   + User no longer authorized.
-
-+ Connection retries... rate limiting.
-
-+ Librato metrics.
-  + Measure latency around the work queues.
-
-## Goals
-
-1. Open source.
-2. Micro-service-ish.
-2. Heroku one click service.
-3. Scaleable.
-
-## Use Cases
-
-1. Connect a user through OAuth.
-3. Read the messages.
-4. Fire a webhook to send the message.
-   + Obey response code if the user is no longer authorized.
-5. Fire a webhook if a user is no longer valid.
-6. Sweep through the entire inbox.
++ Handle response code to archive a user.
++ Archive a user, modify uniqueness check.
++ Disconnect when a user is archived.
++ Heroku one click deployment file.
 
 ## Use Cases:
 
@@ -35,11 +14,6 @@ Connect a User:
 + '/connect?api_key=?success=?&failure=?'
 + Receive a URL.
 + Redirect user to URL.
-
-Fire a webhook. Delayed Job:
-
-+ Thread pool.
-+
 
 ## Topology
 

@@ -1,4 +1,39 @@
-# Production
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/rustyio/grimace)
+
+# Grimace - Tap Into IMAP
+
+Grimace is an open-source microservice for tapping into IMAP.
+Conceptually, it is very simple:
+
+* Connect to an IMAP account on your user's behalf.
+* Wait for a new email message.
+* Trigger a webhook with the contents of the message.
+* **Scale to tens of thousands of users.**
+
+We at [FiveStreet](http://www.fivestreet.com) wrote Grimace to solve
+scaling issues as we grew by over 60x in volume over the past year.
+
+## Data Model
+
+Grimace has:
+
+* **Partner** - One entry per app / environment.
+* **User** - An application's user. Holds user-specific credentials.
+* **Partner Connection** - Holds application-specific credentials.
+* **Connection Type** - Configures an authentication transport
+  mechanism. For example, there are connection types for "Gmail OAuth
+  1.0" and "Gmail OAuth 2.0".
+
+## Security
+
+If you use this code, *PLEASE* ensure that you safeguard your
+passwords, and preferably, make sure your data is encrypted at
+rest. It is a big responsibility to hold the keys to someone's
+email. Treat it with the appropriate amount of caution.
+
+## Development
+
+## Production
 
 Run:
 
@@ -10,19 +45,10 @@ Run:
 
     rake test:all
 
-# Performance Testing
+# Stress Testing
+
+
 
 Run:
 
-    foreman s -f Procfile.performance
-
-## Setting up Greenmail
-
-1. Download Tomcat 8.0 and unzip. http://tomcat.apache.org/download-80.cgi
-2. Download the Greenmail Webapp SAR, place it in TOMCAT_HOME/webapps (http://www.icegreen.com/greenmail/download.html)
-3. Run: chmod 755 bin/*
-4. Run: bin/catalina.sh run
-5. Stop the server.
-6. Move config/tomcat/web.xml into TOMCAT_HOME/webapps/greenmail-webapp-1.4.0/WEB-INF
-7. Run: export JAVA_HOME=`/usr/libexec/java_home`
-8. Run: bin/catalina.sh run
+    script/stress-test

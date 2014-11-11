@@ -1,0 +1,14 @@
+{
+    "name": "Grimace",
+    "description": "Tap into IMAP, trigger webhooks on incoming emails.",
+    "repository": "https://github.com/rustyio/grimace",
+    "logo": "https://node-js-sample.herokuapp.com/node.svg",
+    "keywords": ["IMAP", "client", "ruby"]
+    "success_url": "/admin",
+    "scripts": {
+        "postdeploy": "bundle exec rake db:seed"
+    },
+    "addons": [
+        "heroku-postgresql"
+    ]
+}
