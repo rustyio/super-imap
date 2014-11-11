@@ -3,7 +3,7 @@
 clear
 
 echo
-echo "Did you set up database? You need to run this:"
+echo "Did you set up database? Postgres works best, and you need to run this:"
 echo "$ RAILS_ENV=stress rake db:drop db:create db:setup db:seed"
 echo
 echo "The goal of this stress test is to ensure that:"
@@ -22,9 +22,9 @@ echo "Do not be alarmed; you can ignore the errors."
 echo
 echo "Some useful environment variables to set:"
 echo
+echo "+ LENGTH_OF_TEST    - Total number of minutes to run test."
 echo "+ EMAILS_PER_MINUTE - Rate of fake email generation."
-echo "+ LENGTH_OF_TEST - Total number of minutes to run test."
-echo "+ ENABLE_CHAOS - 'true' if we should generate bad IMAP responses."
+echo "+ ENABLE_CHAOS      - 'true' if we should generate bad IMAP responses."
 echo
 echo "Press enter to continue, Control-C to exit."
 read
