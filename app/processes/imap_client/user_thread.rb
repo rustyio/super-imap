@@ -15,6 +15,7 @@
 require 'net/imap'
 
 class ImapClient::UserThread
+  include Common::LightSleep
   include Common::Stoppable
 
   attr_accessor :daemon, :options
@@ -27,6 +28,7 @@ class ImapClient::UserThread
   end
 
   def run
+    delay_start
     connect
     authenticate
     choose_folder
@@ -34,6 +36,7 @@ class ImapClient::UserThread
     main_loop
   rescue => e
     Log.exception(e)
+    self.daemon.increment_error_count(user.id)
     stop!
   ensure
     stop!
@@ -42,6 +45,15 @@ class ImapClient::UserThread
   end
 
   private unless Rails.env.test?
+
+  # Private: Exponentially backoff based on the number of errors we
+  # are seeing for a given user. At most, wait 5 minutes before trying to connect.
+  def delay_start
+    errors  = self.daemon.error_count(user.id)
+    seconds = (errors ** 3) - 1
+    seconds = [seconds, 300].min
+    light_sleep seconds
+  end
 
   # Private: Connect to the server, set the client.
   def connect
@@ -271,12 +283,14 @@ class ImapClient::UserThread
     # TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run
 
     # Update stats.
+    self.daemon.clear_error_count(user.id)
     self.daemon.processed_log &&
       self.daemon.processed_log << [Time.now, user.email, message_id]
     self.daemon.total_emails_processed += 1
   rescue => e
     Log.exception(e)
-    self.stop!
+    self.daemon.increment_error_count(user.id)
+    stop!
   end
 
   # Private: Logout the user, disconnect the client.

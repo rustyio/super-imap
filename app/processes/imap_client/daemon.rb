@@ -27,7 +27,7 @@ class ImapClient::Daemon
   attr_accessor :stress_test_mode, :num_worker_threads, :max_user_threads, :max_email_size
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
-  attr_accessor :claim_thread, :user_threads, :connection_errors
+  attr_accessor :claim_thread, :user_threads, :error_counts
   attr_accessor :total_emails_processed, :processed_log
 
   def initialize(options = {})
@@ -43,6 +43,7 @@ class ImapClient::Daemon
 
     # User stuff.
     self.user_threads = {}
+    self.error_counts = {}
 
     # Stats.
     self.total_emails_processed = 0
@@ -82,6 +83,24 @@ class ImapClient::Daemon
   end
 
 
+  # Public: Get the number of errors recently experienced by a user
+  # connection.
+  def error_count(user_id)
+    self.error_counts[user_id] ||= 0
+  end
+
+  # Public:
+  def increment_error_count(user_id)
+    self.error_counts[user_id] ||= 0
+    self.error_counts[user_id] += 1
+  end
+
+  # Public:
+  def clear_error_count(user_id)
+    self.error_counts[user_id] = 0
+  end
+
+
   private
 
 
@@ -90,6 +109,7 @@ class ImapClient::Daemon
     # threads. This fixes a "Circular dependency detected while
     # autoloading constant ImapDaemonHeartbeat" error.
     ImapDaemonHeartbeat
+    self.error_counts = {}
   end
 
   def start_heartbeat_thread
