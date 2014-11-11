@@ -1,2 +1,2 @@
 imap_client: rake imap:client STRESS_TEST_MODE=true
-imap_test_server: rake imap:test_server PORT=10143 EMAILS_PER_MINUTE=1000 MAX_EMAILS=5000 ENABLE_CHAOS=true
+imap_test_server: rake imap:test_server

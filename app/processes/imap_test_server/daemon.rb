@@ -23,7 +23,7 @@ class ImapTestServer::Daemon
   include Common::DbConnection
   include Common::CsvLog
 
-  attr_accessor :port, :enable_chaos, :emails_per_minute, :max_emails
+  attr_accessor :port, :enable_chaos, :emails_per_minute, :length_of_test
   attr_accessor :stats_thread
   attr_accessor :connection_thread
   attr_accessor :new_sockets, :sockets, :socket_states
@@ -36,7 +36,7 @@ class ImapTestServer::Daemon
     self.port              = options.fetch(:port)
     self.enable_chaos      = options.fetch(:enable_chaos)
     self.emails_per_minute = options.fetch(:emails_per_minute)
-    self.max_emails        = options.fetch(:max_emails)
+    self.length_of_test    = options.fetch(:length_of_test)
 
     # Socket stuff.
     self.new_sockets   = Queue.new
@@ -65,7 +65,7 @@ class ImapTestServer::Daemon
     start_new_mail_thread
     start_process_sockets_thread
 
-    stop_time = (1.0 * max_emails / emails_per_minute).minutes.from_now
+    stop_time = self.length_of_test.minutes.from_now
     while running?
       if Time.now > stop_time
         Log.info("Test finished! Shutting down.")
@@ -223,7 +223,7 @@ class ImapTestServer::Daemon
   def new_mail_thread_runner
     sleep_seconds = 1
 
-    while running? && self.total_emails_generated < self.max_emails
+    while running?
       if self.mailboxes.count > 0
         n = (1.0 * sleep_seconds / 60) * emails_per_minute
         generate_new_mail(n)
