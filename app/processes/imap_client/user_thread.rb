@@ -31,7 +31,7 @@ class ImapClient::UserThread
     authenticate
     choose_folder
     update_uid_validity
-    listen_for_emails
+    main_loop
   rescue => e
     Log.exception(e)
     stop!
@@ -97,7 +97,7 @@ class ImapClient::UserThread
 
   # Private: Start a loop that alternates between idling and reading
   # email.
-  def listen_for_emails
+  def main_loop
     while running?
       # Read emails until we have read everything there is to
       # read. Then go into idle mode.
