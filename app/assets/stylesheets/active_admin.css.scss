@@ -7,11 +7,20 @@
 // For example, to change the sidebar width:
 // $sidebar-width: 242px;
 
+$body-background-color: #FFF !default;
+$primary-color: #8B1B89 !default;
+$secondary-color: #ffffff !default;
+$text-color: #333333 !default;
+$table-stripe-color: lighten($primary-color, 66%) !default;
+
 // Active Admin's got SASS!
 @import "active_admin/mixins";
 @import "active_admin/base";
 
-// Overriding any non-variable SASS must be done after the fact.
-// For example, to change the default status-tag color:
-//
-//   .status_tag { background: #6090DB; }
+body {
+    font-size: 14px;
+}
+
+th {
+    white-space: nowrap;
+}

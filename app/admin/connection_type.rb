@@ -1,15 +1,25 @@
 ActiveAdmin.register ConnectionType do
   config.sort_order = "identifier_asc"
+  permit_params :identifier, :title, :host, :port, :use_ssl,
+                :oauth1_access_token_path, :oauth1_authorize_path,
+                :oauth1_request_token_path, :oauth1_scope, :oauth1_site,
+                :oauth2_grant_type, :oauth2_scope, :oauth2_site,
+                :oauth2_token_method, :oauth2_token_url
 
   config.filters = false
 
   index do
-    column :identifier
+    column "Connection Type" do |obj|
+      link_to "#{obj.identifier} - #{obj.title}", admin_connection_type_path(obj)
+    end
+    column "Server" do |obj|
+       "#{obj.host}:#{obj.port}"
+    end
     actions
   end
 
   show do |obj|
-    panel "Test" do
+    panel "Details" do
       attributes_table_for obj do
         row :identifier
         row :host

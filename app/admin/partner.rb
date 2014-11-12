@@ -1,22 +1,25 @@
 ActiveAdmin.register Partner do
-  permit_params :name, :success_webhook, :failure_webhook
+  menu :priority => 0
+  permit_params :name, :api_key, :success_webhook, :failure_webhook
 
   breadcrumb do
-    []
+    [
+      link_to("Partners", admin_partners_path)
+    ]
   end
 
   config.filters = false
 
   index do
-    column :name
+    column :name do |partner|
+      link_to partner.name, admin_partner_path(partner)
+    end
+    column :links do |partner|
+      link_to("Connections (#{partner.partner_connections_count})",
+              admin_partner_partner_connections_path(partner))
+    end
+
     actions
-  end
-
-  sidebar :links, :only => :show do
-    partner = Partner.find(params[:id])
-    link_to("Connections (#{partner.partner_connections_count})",
-            admin_partner_partner_connections_path(partner))
-
   end
 
   show do

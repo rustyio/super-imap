@@ -7,7 +7,7 @@ ActiveAdmin.register MailLog do
   config.clear_action_items!
   actions :all, :except => [:edit, :destroy]
 
-  filter :message_id
+  config.filters = false
 
   breadcrumb do
     user = User.find(params[:user_id])
@@ -26,7 +26,9 @@ ActiveAdmin.register MailLog do
 
   index do
     column :created_at
-    column :message_id
+    column "Message ID" do |obj|
+      link_to obj.message_id, admin_user_mail_log_path(obj.user, obj)
+    end
     column "Links" do |obj|
       link_to("Transmit Logs (#{obj.transmit_logs_count})", admin_mail_log_transmit_logs_path(obj))
     end
