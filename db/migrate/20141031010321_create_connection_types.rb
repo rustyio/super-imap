@@ -1,7 +1,7 @@
 class CreateConnectionTypes < ActiveRecord::Migration
   def change
     create_table :connection_types do |t|
-      t.string :identifier
+      t.string :auth_mechanism
       t.string :title
       t.integer :partner_connections_count
       t.string :host

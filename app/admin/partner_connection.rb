@@ -16,7 +16,7 @@ ActiveAdmin.register PartnerConnection do
 
   index do
     column "Name" do |obj|
-      link_to "#{obj.connection_type.identifier} (#{obj.id})", admin_partner_partner_connection_path(obj.partner, obj)
+      link_to "#{obj.connection_type.auth_mechanism} (#{obj.id})", admin_partner_partner_connection_path(obj.partner, obj)
     end
 
     column "Links" do |obj|

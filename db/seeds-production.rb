@@ -1,7 +1,7 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
 ConnectionType.create(
-  :identifier                => 'GMAIL_OAUTH_1',
+  :auth_mechanism            => 'GMAIL_OAUTH_1',
   :title                     => "Google Mail - OAuth 1.0",
   :host                      => "imap.gmail.com",
   :port                      => 993,
@@ -13,7 +13,7 @@ ConnectionType.create(
   :oauth1_access_token_path  => "/accounts/OAuthGetAccessToken")
 
 ConnectionType.create(
-  :identifier          => 'GMAIL_OAUTH_2',
+  :auth_mechanism      => 'GMAIL_OAUTH_2',
   :title               => "Google Mail - OAuth 2.0",
   :host                => "imap.gmail.com",
   :port                => 993,

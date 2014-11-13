@@ -1,6 +1,6 @@
 ActiveAdmin.register ConnectionType do
-  config.sort_order = "identifier_asc"
-  permit_params :identifier, :title, :host, :port, :use_ssl,
+  config.sort_order = "auth_mechanism_asc"
+  permit_params :auth_mechanism, :title, :host, :port, :use_ssl,
                 :oauth1_access_token_path, :oauth1_authorize_path,
                 :oauth1_request_token_path, :oauth1_scope, :oauth1_site,
                 :oauth2_grant_type, :oauth2_scope, :oauth2_site,
@@ -10,7 +10,7 @@ ActiveAdmin.register ConnectionType do
 
   index do
     column "Connection Type" do |obj|
-      link_to "#{obj.identifier} - #{obj.title}", admin_connection_type_path(obj)
+      link_to "#{obj.auth_mechanism} - #{obj.title}", admin_connection_type_path(obj)
     end
     column "Server" do |obj|
        "#{obj.host}:#{obj.port}"
@@ -21,7 +21,7 @@ ActiveAdmin.register ConnectionType do
   show do |obj|
     panel "Details" do
       attributes_table_for obj do
-        row :identifier
+        row :auth_mechanism
         row :host
         row :port
         row :use_ssl
@@ -50,7 +50,7 @@ ActiveAdmin.register ConnectionType do
 
   form do |f|
     f.inputs "Details" do
-      f.input :identifier
+      f.input :auth_mechanism
       f.input :host
       f.input :port
       f.input :use_ssl

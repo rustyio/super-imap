@@ -10,17 +10,16 @@ class ImapClient::Authenticator
   end
 
   def authenticate(client)
-    identifier = user.connection.connection_type.identifier
-    method = "authenticate_#{identifier.downcase}".to_sym
+    auth_mechanism = user.connection.connection_type.auth_mechanism
+    method = "authenticate_#{auth_mechanism.downcase}".to_sym
     return self.send(method, client)
   end
 
   private unless Rails.env.test?
 
-  # Private: Connect to greenmail, used for performance testing.
-  def authenticate_localhost(client)
-    authenticate_login(client)
-  end
+  ###
+  # Google authentication mechanisms.
+  ###
 
   # Private: Connect to Gmail using OAUTH 1.0.
   def authenticate_gmail_oauth_1(client)
@@ -33,11 +32,11 @@ class ImapClient::Authenticator
   end
 
   ###
-  # Generic authentication methods.
+  # Generic authentication mechanisms.
   ###
 
   # Private: Connect via username and password.
-  def authenticate_login(client)
+  def authenticate_plain(client)
     client.login(user.login_username, user.login_password)
   end
 

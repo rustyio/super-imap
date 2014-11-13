@@ -1,11 +1,11 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
 conn_type = ConnectionType.create(
-  :identifier => 'LOCALHOST',
-  :title      => "Fake IMAP",
-  :host       => "localhost",
-  :port       => 10143,
-  :use_ssl    => false)
+  :auth_mechanism => 'SIMPLE',
+  :title          => "Fake IMAP",
+  :host           => "localhost",
+  :port           => 10143,
+  :use_ssl        => false)
 
 def create_user(connection, n)
   connection.users.create(

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141111204248) do
+ActiveRecord::Schema.define(version: 20141113190158) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -50,7 +50,7 @@ ActiveRecord::Schema.define(version: 20141111204248) do
   add_index "admin_users", ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true, using: :btree
 
   create_table "connection_types", force: true do |t|
-    t.string   "identifier"
+    t.string   "auth_mechanism"
     t.string   "title"
     t.integer  "partner_connections_count"
     t.string   "host"
@@ -68,6 +68,7 @@ ActiveRecord::Schema.define(version: 20141111204248) do
     t.string   "oauth2_token_url"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "type"
   end
 
   create_table "imap_daemon_heartbeats", force: true do |t|
@@ -97,6 +98,7 @@ ActiveRecord::Schema.define(version: 20141111204248) do
     t.string   "oauth2_client_secret"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "name"
   end
 
   add_index "partner_connections", ["connection_type_id"], name: "index_partner_connections_on_connection_type_id", using: :btree
@@ -140,6 +142,7 @@ ActiveRecord::Schema.define(version: 20141111204248) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "archived",              default: false
+    t.string   "type"
   end
 
   add_index "users", ["partner_connection_id"], name: "index_users_on_partner_connection_id", using: :btree

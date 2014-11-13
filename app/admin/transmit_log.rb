@@ -19,7 +19,7 @@ ActiveAdmin.register TransmitLog do
       link_to("Partners", admin_partners_path),
       link_to(partner.name, admin_partner_path(partner)),
       link_to("Connections", admin_partner_partner_connections_path(partner)),
-      link_to(connection.connection_type.identifier, admin_partner_partner_connection_path(partner, connection)),
+      link_to(connection.connection_type.auth_mechanism, admin_partner_partner_connection_path(partner, connection)),
       link_to("Users", admin_partner_connection_users_path(connection)),
       link_to(user.email, admin_partner_connection_user_path(connection, user)),
       link_to("Mail Logs", admin_user_mail_logs_path(user)),

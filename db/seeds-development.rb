@@ -1,11 +1,11 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
-conn_type = ConnectionType.create(
-  :identifier => 'LOCALHOST',
-  :title      => "Fake IMAP",
-  :host       => "localhost",
-  :port       => 10143,
-  :use_ssl    => false)
+plain_conn = ConnectionType::Plain.create(
+  :auth_mechanism => 'PLAIN',
+  :title          => "Fake IMAP",
+  :host           => "localhost",
+  :port           => 10143,
+  :use_ssl        => false)
 
 def create_transmit_log(mail_log, n)
   mail_log.transmit_logs.create(:response_code => 200, :response_body => "Response #{n}")
@@ -40,5 +40,5 @@ def create_partner_connection(partner, ct)
 end
 
 Partner.create(:name => "Partner").tap do |partner|
-  create_partner_connection(partner, conn_type)
+  create_partner_connection(partner, plain_conn)
 end
