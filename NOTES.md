@@ -1,11 +1,14 @@
 # TODO
 
++ Create a user with a tag.
+
+
++ Connection API
++ User API
+
 + Failure webhook.
   + User no longer authorized.
 + Handle response code to archive a user.
-+ Archive a user, modify uniqueness check.
-+ Disconnect when a user is archived.
-+ Heroku one click deployment file.
 
 ## Use Cases:
 
@@ -14,6 +17,10 @@ Connect a User:
 + '/connect?api_key=?success=?&failure=?'
 + Receive a URL.
 + Redirect user to URL.
+
+Disconnect a User:
+
++ '/disconnect?api_key=?&uid=?
 
 ## Topology
 

@@ -3,6 +3,7 @@
 # Grimace - Tap Into IMAP
 
 Grimace is an open-source microservice for tapping into IMAP.
+
 Conceptually, it is very simple:
 
 * Connect to an IMAP account on your user's behalf.
@@ -10,8 +11,8 @@ Conceptually, it is very simple:
 * Trigger a webhook with the contents of the message.
 * **Scale to tens of thousands of users.**
 
-We at [FiveStreet](http://www.fivestreet.com) wrote Grimace to solve
-scaling issues as we grew by over 60x in volume over the past year.
+[FiveStreet](http://www.fivestreet.com) built Grimace to solve scaling
+issues as we grew 7000% in weekly volume over the past year.
 
 ## Data Model
 

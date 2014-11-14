@@ -1,5 +1,7 @@
 ActiveAdmin.register PartnerConnection do
   belongs_to :partner
+  config.sort_order = "name_asc"
+
   permit_params :oauth1_consumer_key, :oauth1_consumer_secret,
                 :oauth2_client_id, :oauth2_client_secret
 
@@ -16,7 +18,7 @@ ActiveAdmin.register PartnerConnection do
 
   index do
     column "Name" do |obj|
-      link_to "#{obj.connection_type.auth_mechanism} (#{obj.id})", admin_partner_partner_connection_path(obj.partner, obj)
+      link_to obj.name, admin_partner_partner_connection_path(obj.partner, obj)
     end
 
     column "Links" do |obj|
@@ -31,6 +33,11 @@ ActiveAdmin.register PartnerConnection do
   end
 
   show do |obj|
+    panel "Details" do
+      attributes_table_for obj do
+        row :name
+      end
+    end
     panel "OAuth 1.0" do
       attributes_table_for obj do
         row :oauth1_consumer_key
@@ -46,6 +53,9 @@ ActiveAdmin.register PartnerConnection do
   end
 
   form do |f|
+    f.inputs "Details" do
+      f.input :name
+    end
     f.inputs "OAuth 1.0" do
       f.input :oauth1_consumer_key
       f.input :oauth1_consumer_secret

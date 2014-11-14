@@ -98,7 +98,6 @@ ActiveRecord::Schema.define(version: 20141113190158) do
     t.string   "oauth2_client_secret"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "name"
   end
 
   add_index "partner_connections", ["connection_type_id"], name: "index_partner_connections_on_connection_type_id", using: :btree
