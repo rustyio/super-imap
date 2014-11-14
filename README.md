@@ -27,10 +27,17 @@ Grimace has:
 
 ## Security
 
-If you use this code, *PLEASE* ensure that you safeguard your
-passwords, and preferably, make sure your data is encrypted at
-rest. It is a big responsibility to hold the keys to someone's
-email. Treat it with the appropriate amount of caution.
+If you use this code, *PLEASE* ensure that you use very strong,
+safeguarded passwords, and preferably, make sure your data is
+encrypted at rest. It is a big responsibility to hold the keys to
+someone's email. Treat it with the appropriate amount of caution.
+
+Other security measures:
+
++ SSL is *required* in production.
++ Sessions are not remembered.
++ Passwords are not recoverable by email.
++ Accounts are locked for an hour after three invalid password attempts.
 
 ## Development
 

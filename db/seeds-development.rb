@@ -7,6 +7,31 @@ plain_conn = ConnectionType::Plain.create(
   :port           => 10143,
   :use_ssl        => false)
 
+oauth1_conn = ConnectionType::Oauth1.create(
+  :auth_mechanism            => 'OAUTH1',
+  :title                     => "OAuth 1.0",
+  :host                      => "localhost",
+  :port                      => 10143,
+  :use_ssl                   => false,
+  :oauth1_access_token_path  => "oauth1_access_token_path",
+  :oauth1_authorize_path     => "oauth1_authorize_path",
+  :oauth1_request_token_path => "oauth1_request_token_path",
+  :oauth1_scope              => "oauth1_scope",
+  :oauth1_site               => "oauth1_site")
+
+oauth2_conn = ConnectionType::Oauth2.create(
+  :auth_mechanism      => 'OAUTH2',
+  :title               => "OAuth 2.0",
+  :host                => "localhost",
+  :port                => 10143,
+  :use_ssl             => false,
+  :oauth2_grant_type   => "oauth2_grant_type",
+  :oauth2_scope        => "oauth2_scope",
+  :oauth2_site         => "oauth2_site",
+  :oauth2_token_method => "oauth2_token_method",
+  :oauth2_token_url    => "oauth2_token_url")
+
+
 def create_transmit_log(mail_log, n)
   mail_log.transmit_logs.create(:response_code => 200, :response_body => "Response #{n}")
 end

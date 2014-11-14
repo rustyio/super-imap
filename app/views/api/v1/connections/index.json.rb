@@ -1,4 +1,4 @@
-fields = [:id, :name, :users_count]
+fields = [:auth_mechanism, :users_count]
 
 @connections.map do |user|
   fields.map do |field|

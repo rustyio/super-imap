@@ -1,10 +1,20 @@
 ActiveAdmin.register User do
   belongs_to :partner_connection
   config.sort_order = "email_asc"
+  permit_params :tag, :email,
+                *User::Plain.connection_fields,
+                *User::Oauth1.connection_fields,
+                *User::Oauth2.connection_fields
 
-  # Only allow viewing.
-  config.clear_action_items!
-  actions :all, :except => [:edit, :destroy]
+  controller do
+    alias_method :destroy_user, :destroy
+    def destroy
+      user = User.find(params[:id])
+      user.update_attributes(:archived => true)
+      redirect_to admin_partner_connection_user_path(params[:partner_connection_id], user.id)
+    end
+  end
+
 
   breadcrumb do
     connection = PartnerConnection.find(params[:partner_connection_id])
@@ -13,7 +23,7 @@ ActiveAdmin.register User do
       link_to("Partners", admin_partners_path),
       link_to(partner.name, admin_partner_path(partner)),
       link_to("Connections", admin_partner_partner_connections_path(partner)),
-      link_to(connection.connection_type.auth_mechanism,
+      link_to(connection.auth_mechanism,
               admin_partner_partner_connection_path(partner, connection)),
       link_to("Users",
               admin_partner_connection_users_path(connection))
@@ -21,10 +31,12 @@ ActiveAdmin.register User do
   end
 
   filter :email
+  scope :active
+  scope :archived
 
   index do
     column :email do |obj|
-      link_to obj.email, admin_partner_connection_user_path(obj.connection, obj)
+      link_to "#{obj.email} (#{obj.tag})", admin_partner_connection_user_path(obj.connection, obj)
     end
     column :links do |obj|
       link_to("Mail Logs (#{obj.mail_logs_count})",
@@ -32,7 +44,7 @@ ActiveAdmin.register User do
     end
     column :last_connected_at
     column :last_email_at
-    actions
+    column :archived
   end
 
   show do |obj|
@@ -46,5 +58,23 @@ ActiveAdmin.register User do
         row :archived
       end
     end
+
+    panel "Connection Settings" do
+      attributes_table_for obj do
+        obj.connection_fields.map do |field|
+          row field
+        end
+      end
+    end if obj.connection_fields.present?
+  end
+
+  form do |f|
+    f.inputs "Details" do
+      f.input :tag
+      f.input :email
+    end
+
+    f.inputs "Connection Settings", *f.object.connection_fields
+    f.actions
   end
 end

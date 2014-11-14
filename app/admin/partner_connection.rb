@@ -1,9 +1,9 @@
 ActiveAdmin.register PartnerConnection do
   belongs_to :partner
-  config.sort_order = "name_asc"
 
-  permit_params :oauth1_consumer_key, :oauth1_consumer_secret,
-                :oauth2_client_id, :oauth2_client_secret
+  permit_params :connection_type_id, :oauth1_consumer_key,
+                :oauth1_consumer_secret, :oauth2_client_id,
+                :oauth2_client_secret
 
   breadcrumb do
     partner = Partner.find(params[:partner_id])
@@ -17,8 +17,8 @@ ActiveAdmin.register PartnerConnection do
   config.filters = false
 
   index do
-    column "Name" do |obj|
-      link_to obj.name, admin_partner_partner_connection_path(obj.partner, obj)
+    column "Auth Mechanism" do |obj|
+      link_to obj.auth_mechanism, admin_partner_partner_connection_path(obj.partner, obj)
     end
 
     column "Links" do |obj|
@@ -35,7 +35,7 @@ ActiveAdmin.register PartnerConnection do
   show do |obj|
     panel "Details" do
       attributes_table_for obj do
-        row :name
+        row :auth_mechanism
       end
     end
     panel "OAuth 1.0" do
@@ -54,17 +54,18 @@ ActiveAdmin.register PartnerConnection do
 
   form do |f|
     f.inputs "Details" do
-      f.input :name
-    end
+      f.input :connection_type, :label => "Auth Mechanism"
+    end if f.object.new_record?
+
     f.inputs "OAuth 1.0" do
       f.input :oauth1_consumer_key
       f.input :oauth1_consumer_secret
     end
+
     f.inputs "OAuth 2.0" do
       f.input :oauth2_client_id
       f.input :oauth2_client_secret
     end
     f.actions
   end
-
 end

@@ -1,7 +1,5 @@
 # TODO
 
-+ Create a user with a tag.
-
 
 + Connection API
 + User API
