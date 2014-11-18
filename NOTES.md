@@ -1,8 +1,8 @@
 # TODO
 
-
-+ Connection API
-+ User API
++ Test the Connection API.
++ Test the User API.
++ Add the code to wire up a user.
 
 + Failure webhook.
   + User no longer authorized.

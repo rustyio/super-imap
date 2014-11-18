@@ -10,7 +10,25 @@ class Api::V1::ConnectionsControllerTest < ActionController::TestCase
     get(:index, :api_key => @partner.api_key)
   end
 
-  test "get" do
+  test "create" do
+    auth_mechanism = @connection.connection_type.auth_mechanism
+    @connection.delete
+    post(:create, :api_key => @partner.api_key, :auth_mechanism => auth_mechanism)
+  end
+
+  test "create without auth_mechanism" do
+    post(:create, :api_key => @partner.api_key)
+  end
+
+  test "update" do
+    post(:update, :api_key => @partner.api_key)
+  end
+
+  test "show" do
     get(:show, :api_key => @partner.api_key, :auth_mechanism => @connection.auth_mechanism)
+  end
+
+  test "destroy" do
+    delete(:destroy, :api_key => @partner.api_key, :auth_mechanism => @connection.auth_mechanism)
   end
 end

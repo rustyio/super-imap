@@ -31,7 +31,6 @@ oauth2_conn = ConnectionType::Oauth2.create(
   :oauth2_token_method => "oauth2_token_method",
   :oauth2_token_url    => "oauth2_token_url")
 
-
 def create_transmit_log(mail_log, n)
   mail_log.transmit_logs.create(:response_code => 200, :response_body => "Response #{n}")
 end

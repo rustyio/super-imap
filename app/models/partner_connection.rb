@@ -1,4 +1,6 @@
 class PartnerConnection < ActiveRecord::Base
+  UnknownAuthMechanismError = Class.new(StandardError)
+
   belongs_to :partner, :counter_cache => true
   belongs_to :connection_type, :counter_cache => true
   has_many :users, :dependent => :destroy
@@ -24,10 +26,34 @@ class PartnerConnection < ActiveRecord::Base
     self.connection_type.auth_mechanism
   end
 
+  # Public: Create a partner connection using the specified auth mechanism.
+  def self.for_auth_mechanism(auth_mechanism)
+    conn_type = ConnectionType.find_by_auth_mechanism(auth_mechanism)
+    raise UnknownAuthMechanismError.new("Unknown auth mechanism: #{auth_mechanism}") if conn_type.nil?
+    partner_connection_type = self.connection_type.type.gsub("ConnectionType::", "PartnerConnection::")
+    partner_connection_type = user_type.constantize
+    scoping do
+      partner_connection_type.create(*args, &block)
+    end
+  end
+
   # Public: Narrow down a collection of PartnerConnection objects by
   # the auth_mechanism.
   def self.where_auth_mechanism(auth_mechanism)
     conn_type = ConnectionType.find_by_auth_mechanism(auth_mechanism)
-    where(:connection_type_id => conn_type.id)
+    raise UnknownAuthMechanismError.new("Unknown auth mechanism: #{auth_mechanism}") if conn_type.nil?
+    if conn_type
+      where(:connection_type_id => conn_type.id)
+    else
+      where("true = false")
+    end
+  end
+
+  def self.connection_fields
+    []
+  end
+
+  def connection_fields
+    self.class.connection_fields
   end
 end
