@@ -4,7 +4,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :connections, { :param => :auth_mechanism } do
+      resources :connections, { :param => :code } do
         resources :users
       end
     end

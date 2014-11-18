@@ -51,7 +51,7 @@ ActiveRecord::Schema.define(version: 20141114233206) do
   add_index "admin_users", ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true, using: :btree
 
   create_table "imap_providers", force: true do |t|
-    t.string   "auth_mechanism"
+    t.string   "code"
     t.string   "title"
     t.integer  "partner_connections_count"
     t.string   "host"

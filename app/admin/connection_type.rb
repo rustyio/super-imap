@@ -1,6 +1,6 @@
 ActiveAdmin.register ImapProvider do
-  config.sort_order = "auth_mechanism_asc"
-  permit_params :auth_mechanism, :title, :host, :port, :use_ssl,
+  config.sort_order = "code_asc"
+  permit_params :code, :title, :host, :port, :use_ssl,
                 *ImapProvider::Plain.connection_fields,
                 *ImapProvider::Oauth1.connection_fields,
                 *ImapProvider::Oauth2.connection_fields
@@ -12,7 +12,7 @@ ActiveAdmin.register ImapProvider do
 
   index do
     column "Connection Type" do |obj|
-      link_to "#{obj.title} (#{obj.auth_mechanism})", admin_imap_provider_path(obj)
+      link_to "#{obj.title} (#{obj.code})", admin_imap_provider_path(obj)
     end
 
     column "Server" do |obj|
@@ -23,7 +23,7 @@ ActiveAdmin.register ImapProvider do
   show do |obj|
     panel "Details" do
       attributes_table_for obj do
-        row :auth_mechanism
+        row :code
         row :title
         row :host
         row :port

@@ -1,5 +1,5 @@
 fields = [
-  :auth_mechanism,
+  :code,
   :users_count
 ]
 fields.map do |field|

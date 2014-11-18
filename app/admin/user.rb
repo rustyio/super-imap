@@ -23,7 +23,7 @@ ActiveAdmin.register User do
       link_to("Partners", admin_partners_path),
       link_to(partner.name, admin_partner_path(partner)),
       link_to("Connections", admin_partner_partner_connections_path(partner)),
-      link_to(connection.auth_mechanism,
+      link_to(connection.code,
               admin_partner_partner_connection_path(partner, connection)),
       link_to("Users",
               admin_partner_connection_users_path(connection))

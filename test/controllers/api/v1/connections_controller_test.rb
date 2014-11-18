@@ -11,12 +11,12 @@ class Api::V1::ConnectionsControllerTest < ActionController::TestCase
   end
 
   test "create" do
-    auth_mechanism = @connection.imap_provider.auth_mechanism
+    code = @connection.imap_provider.code
     @connection.delete
-    post(:create, :api_key => @partner.api_key, :auth_mechanism => auth_mechanism)
+    post(:create, :api_key => @partner.api_key, :imap_provider_code => code)
   end
 
-  test "create without auth_mechanism" do
+  test "create without code" do
     post(:create, :api_key => @partner.api_key)
   end
 
@@ -25,10 +25,10 @@ class Api::V1::ConnectionsControllerTest < ActionController::TestCase
   end
 
   test "show" do
-    get(:show, :api_key => @partner.api_key, :auth_mechanism => @connection.auth_mechanism)
+    get(:show, :api_key => @partner.api_key, :imap_provider_code => @connection.code)
   end
 
   test "destroy" do
-    delete(:destroy, :api_key => @partner.api_key, :auth_mechanism => @connection.auth_mechanism)
+    delete(:destroy, :api_key => @partner.api_key, :imap_provider_code => @connection.code)
   end
 end

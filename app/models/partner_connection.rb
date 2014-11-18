@@ -10,7 +10,7 @@ class PartnerConnection < ActiveRecord::Base
 
   # Public: Used by ActiveAdmin.
   def display_name
-    self.auth_mechanism
+    self.code
   end
 
   # Public: Return a collection of users that corresponds to the
@@ -22,13 +22,13 @@ class PartnerConnection < ActiveRecord::Base
     user_type.where(:partner_connection_id => self.id, :type => user_type)
   end
 
-  def auth_mechanism
-    self.imap_provider.auth_mechanism
+  def imap_provider_code
+    self.imap_provider.code
   end
 
   # Public: Create a partner connection using the specified auth mechanism.
-  def self.for_auth_mechanism(auth_mechanism)
-    conn_type = ImapProvider.find_by_auth_mechanism(auth_mechanism)
+  def self.for_imap_provider(imap_provider)
+    conn_type = ImapProvider.find_by_ TODO auth_mechanism(auth_mechanism)
     raise UnknownAuthMechanismError.new("Unknown auth mechanism: #{auth_mechanism}") if conn_type.nil?
     clazz = self.imap_provider.type.gsub("ImapProvider::", "PartnerConnection::").constantize
     scoping do
@@ -38,7 +38,7 @@ class PartnerConnection < ActiveRecord::Base
 
   # Public: Narrow down a collection of PartnerConnection objects by
   # the auth_mechanism.
-  def self.where_auth_mechanism(auth_mechanism)
+  def self.where_imap_provider(auth_mechanism)
     conn_type = ImapProvider.find_by_auth_mechanism(auth_mechanism)
     raise UnknownAuthMechanismError.new("Unknown auth mechanism: #{auth_mechanism}") if conn_type.nil?
     if conn_type

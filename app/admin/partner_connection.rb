@@ -18,7 +18,7 @@ ActiveAdmin.register PartnerConnection do
 
   index do
     column "Auth Mechanism" do |obj|
-      link_to obj.auth_mechanism, admin_partner_partner_connection_path(obj.partner, obj)
+      link_to obj.code, admin_partner_partner_connection_path(obj.partner, obj)
     end
 
     column "Links" do |obj|
@@ -35,7 +35,7 @@ ActiveAdmin.register PartnerConnection do
   show do |obj|
     panel "Details" do
       attributes_table_for obj do
-        row :auth_mechanism
+        row :code
       end
     end
     panel "OAuth 1.0" do

@@ -1,14 +1,14 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
 plain_conn = ImapProvider::Plain.create(
-  :auth_mechanism => 'PLAIN',
+  :code => 'PLAIN',
   :title          => "Fake IMAP",
   :host           => "localhost",
   :port           => 10143,
   :use_ssl        => false)
 
 oauth1_conn = ImapProvider::Oauth1.create(
-  :auth_mechanism            => 'OAUTH1',
+  :code            => 'OAUTH1',
   :title                     => "OAuth 1.0",
   :host                      => "localhost",
   :port                      => 10143,
@@ -20,7 +20,7 @@ oauth1_conn = ImapProvider::Oauth1.create(
   :oauth1_site               => "oauth1_site")
 
 oauth2_conn = ImapProvider::Oauth2.create(
-  :auth_mechanism      => 'OAUTH2',
+  :code      => 'OAUTH2',
   :title               => "OAuth 2.0",
   :host                => "localhost",
   :port                => 10143,

@@ -16,7 +16,7 @@ class Api::V1::ConnectionsController < ApplicationController
 
   def create
     self.connection = self.partner.connections.
-                      where_auth_mechanism(params[:auth_mechanism]).
+                      where_code(params[:code]).
                       build()
     self.connection.update_attributes!(connection_params)
     render :show
@@ -51,7 +51,7 @@ class Api::V1::ConnectionsController < ApplicationController
   end
 
   def load_connection
-    self.connection = self.partner.connections.where_auth_mechanism(params[:auth_mechanism]).first
+    self.connection = self.partner.connections.where_code(params[:code]).first
     raise ConnectionNotFoundError.new unless @connection
   rescue ConnectionNotFoundError => e
     render :status => :not_found, :text => "Connection not found."

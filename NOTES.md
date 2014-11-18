@@ -1,5 +1,8 @@
 # TODO
 
++ Rename auth_mechanism to code.
++ Change method from `for_auth_mechanism` to `for_imap_provider`
+
 + Test the Connection API.
 + Test the User API.
 + Add the code to wire up a user.

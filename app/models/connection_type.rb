@@ -2,7 +2,7 @@ class ImapProvider < ActiveRecord::Base
   has_many :partner_connections
 
   def display_name
-    self.auth_mechanism
+    self.code
   end
 
   def self.connection_fields

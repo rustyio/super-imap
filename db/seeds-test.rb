@@ -1,7 +1,7 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
 plain_conn = ImapProvider::Plain.create(
-  :auth_mechanism => 'PLAIN',
+  :code => 'PLAIN',
   :title          => "Fake IMAP",
   :host           => "localhost",
   :port           => 10143,

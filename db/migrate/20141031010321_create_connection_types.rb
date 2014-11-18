@@ -1,7 +1,7 @@
 class CreateImapProviders < ActiveRecord::Migration
   def change
     create_table :imap_providers do |t|
-      t.string :auth_mechanism
+      t.string :code
       t.string :title
       t.integer :partner_connections_count
       t.string :host
