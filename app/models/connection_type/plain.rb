@@ -1,2 +1,2 @@
-class ConnectionType::Plain < ConnectionType
+class ImapProvider::Plain < ImapProvider
 end

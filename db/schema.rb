@@ -50,7 +50,7 @@ ActiveRecord::Schema.define(version: 20141114233206) do
   add_index "admin_users", ["email"], name: "index_admin_users_on_email", unique: true, using: :btree
   add_index "admin_users", ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true, using: :btree
 
-  create_table "connection_types", force: true do |t|
+  create_table "imap_providers", force: true do |t|
     t.string   "auth_mechanism"
     t.string   "title"
     t.integer  "partner_connections_count"
@@ -91,7 +91,7 @@ ActiveRecord::Schema.define(version: 20141114233206) do
 
   create_table "partner_connections", force: true do |t|
     t.integer  "partner_id"
-    t.integer  "connection_type_id"
+    t.integer  "imap_provider_id"
     t.integer  "users_count",            default: 0
     t.string   "oauth1_consumer_key"
     t.string   "oauth1_consumer_secret"
@@ -101,7 +101,7 @@ ActiveRecord::Schema.define(version: 20141114233206) do
     t.datetime "updated_at"
   end
 
-  add_index "partner_connections", ["connection_type_id"], name: "index_partner_connections_on_connection_type_id", using: :btree
+  add_index "partner_connections", ["imap_provider_id"], name: "index_partner_connections_on_imap_provider_id", using: :btree
   add_index "partner_connections", ["partner_id"], name: "index_partner_connections_on_partner_id", using: :btree
 
   create_table "partners", force: true do |t|

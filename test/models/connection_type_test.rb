@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class ConnectionTypeTest < ActiveSupport::TestCase
+class ImapProviderTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end

@@ -1,4 +1,4 @@
-class ConnectionType::Oauth2 < ConnectionType
+class ImapProvider::Oauth2 < ImapProvider
   def connection_fields
     [
       :oauth2_grant_type, :oauth2_scope, :oauth2_site,

@@ -1,6 +1,6 @@
-class CreateConnectionTypes < ActiveRecord::Migration
+class CreateImapProviders < ActiveRecord::Migration
   def change
-    create_table :connection_types do |t|
+    create_table :imap_providers do |t|
       t.string :auth_mechanism
       t.string :title
       t.integer :partner_connections_count

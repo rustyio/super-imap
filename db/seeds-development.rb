@@ -1,13 +1,13 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
-plain_conn = ConnectionType::Plain.create(
+plain_conn = ImapProvider::Plain.create(
   :auth_mechanism => 'PLAIN',
   :title          => "Fake IMAP",
   :host           => "localhost",
   :port           => 10143,
   :use_ssl        => false)
 
-oauth1_conn = ConnectionType::Oauth1.create(
+oauth1_conn = ImapProvider::Oauth1.create(
   :auth_mechanism            => 'OAUTH1',
   :title                     => "OAuth 1.0",
   :host                      => "localhost",
@@ -19,7 +19,7 @@ oauth1_conn = ConnectionType::Oauth1.create(
   :oauth1_scope              => "oauth1_scope",
   :oauth1_site               => "oauth1_site")
 
-oauth2_conn = ConnectionType::Oauth2.create(
+oauth2_conn = ImapProvider::Oauth2.create(
   :auth_mechanism      => 'OAUTH2',
   :title               => "OAuth 2.0",
   :host                => "localhost",
@@ -56,7 +56,7 @@ def create_user(connection, n)
 end
 
 def create_partner_connection(partner, ct)
-  partner.connections.create(:connection_type_id => ct.id).tap do |connection|
+  partner.connections.create(:imap_provider_id => ct.id).tap do |connection|
     5.times.each do |n|
       create_user(connection, n)
     end

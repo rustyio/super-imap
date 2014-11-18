@@ -1,6 +1,6 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
-conn_type = ConnectionType.create(
+conn_type = ImapProvider.create(
   :auth_mechanism => 'SIMPLE',
   :title          => "Fake IMAP",
   :host           => "localhost",
@@ -16,7 +16,7 @@ def create_user(connection, n)
 end
 
 def create_partner_connection(partner, ct)
-  partner.connections.create(:connection_type_id => ct.id).tap do |connection|
+  partner.connections.create(:imap_provider_id => ct.id).tap do |connection|
     1000.times.each do |n|
       create_user(connection, n)
     end

@@ -1,4 +1,4 @@
-class ConnectionType < ActiveRecord::Base
+class ImapProvider < ActiveRecord::Base
   has_many :partner_connections
 
   def display_name

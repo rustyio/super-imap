@@ -1,4 +1,4 @@
-class ConnectionType::Oauth1 < ConnectionType
+class ImapProvider::Oauth1 < ImapProvider
   def self.connection_fields
     [
       :oauth1_access_token_path, :oauth1_authorize_path,

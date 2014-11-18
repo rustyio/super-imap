@@ -1,6 +1,6 @@
-class AddTypeToUsersAndConnectionTypes < ActiveRecord::Migration
+class AddTypeToUsersAndImapProviders < ActiveRecord::Migration
   def change
-    add_column :connection_types, :type, :string
+    add_column :imap_providers, :type, :string
     add_column :users, :type, :string
   end
 end

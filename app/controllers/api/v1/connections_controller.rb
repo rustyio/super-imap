@@ -1,7 +1,7 @@
 class Api::V1::ConnectionsController < ApplicationController
-  PartnerNotFoundError        = Class.new(StandardError)
-  ConnectionTypeNotFoundError = Class.new(StandardError)
-  ConnectionNotFoundError     = Class.new(StandardError)
+  PartnerNotFoundError      = Class.new(StandardError)
+  ImapProviderNotFoundError = Class.new(StandardError)
+  ConnectionNotFoundError   = Class.new(StandardError)
 
   respond_to :json
   before_action :default_format_json

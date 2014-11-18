@@ -10,7 +10,7 @@ class ImapClient::Authenticator
   end
 
   def authenticate(client)
-    auth_mechanism = user.connection.connection_type.auth_mechanism
+    auth_mechanism = user.connection.imap_provider.auth_mechanism
     method = "authenticate_#{auth_mechanism.downcase}".to_sym
     return self.send(method, client)
   end
@@ -43,7 +43,7 @@ class ImapClient::Authenticator
   # Private: Connect via OAUTH 1.0
   def authenticate_oauth_1(client)
     conn  = user.connection
-    conn_type = conn.connection_type
+    conn_type = conn.imap_provider
 
     consumer = OAuth::Consumer.new(
       conn.oauth1_consumer_key,
@@ -63,7 +63,7 @@ class ImapClient::Authenticator
   # Private: Connect via OAUTH 2.0
   def authenticate_oauth_2(client)
     conn = user.connection
-    conn_type = conn.connection_type
+    conn_type = conn.imap_provider
 
     oauth_client = OAuth2::Client.new(
       conn.oauth2_client_id,

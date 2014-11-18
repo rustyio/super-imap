@@ -1,7 +1,7 @@
 ActiveAdmin.register PartnerConnection do
   belongs_to :partner
 
-  permit_params :connection_type_id, :oauth1_consumer_key,
+  permit_params :imap_provider_id, :oauth1_consumer_key,
                 :oauth1_consumer_secret, :oauth2_client_id,
                 :oauth2_client_secret
 
@@ -24,7 +24,7 @@ ActiveAdmin.register PartnerConnection do
     column "Links" do |obj|
       raw [
         link_to("Connection Type",
-                admin_connection_type_path(obj)),
+                admin_imap_provider_path(obj)),
         link_to("Users (#{obj.users_count})",
                 admin_partner_connection_users_path(obj))
       ].join(", ")
@@ -54,7 +54,7 @@ ActiveAdmin.register PartnerConnection do
 
   form do |f|
     f.inputs "Details" do
-      f.input :connection_type, :label => "Auth Mechanism"
+      f.input :imap_provider, :label => "Auth Mechanism"
     end if f.object.new_record?
 
     f.inputs "OAuth 1.0" do

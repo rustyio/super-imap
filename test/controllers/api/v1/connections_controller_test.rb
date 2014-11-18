@@ -11,7 +11,7 @@ class Api::V1::ConnectionsControllerTest < ActionController::TestCase
   end
 
   test "create" do
-    auth_mechanism = @connection.connection_type.auth_mechanism
+    auth_mechanism = @connection.imap_provider.auth_mechanism
     @connection.delete
     post(:create, :api_key => @partner.api_key, :auth_mechanism => auth_mechanism)
   end

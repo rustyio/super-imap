@@ -221,7 +221,7 @@ class ImapClient::Daemon
 
     # Load the user; preload connection information.
     user = User.find(user_id)
-    user.connection.connection_type
+    user.connection.imap_provider
 
     # Start the thread.
     user_threads[user_id] = wrapped_thread do

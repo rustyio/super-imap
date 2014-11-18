@@ -57,7 +57,7 @@ class ImapClient::UserThread
 
   # Private: Connect to the server, set the client.
   def connect
-    conn_type = user.connection.connection_type
+    conn_type = user.connection.imap_provider
     self.client = Net::IMAP.new(conn_type.host, :port => conn_type.port, :ssl => conn_type.use_ssl)
   end
 
@@ -72,7 +72,7 @@ class ImapClient::UserThread
   # Private: Fetch a list of folders, choose the first one that looks
   # promising.
   def choose_folder
-    # TODO: This should probably live in the connection_type model.
+    # TODO: This should probably live in the imap_provider model.
     best_folders = [
       "[Gmail]/All Mail",
       "[Google Mail]/All Mail",
