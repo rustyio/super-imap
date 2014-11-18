@@ -1,8 +1,8 @@
-class PartnerConnection::Oauth1 < PartnerConnection
+class Oauth2::PartnerConnection < PartnerConnection
   def self.connection_fields
     [
-      :oauth1_consumer_key,
-      :oauth1_consumer_secret
+      :oauth2_client_id,
+      :oauth2_client_secret
     ]
   end
 

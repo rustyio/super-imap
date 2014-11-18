@@ -36,17 +36,12 @@ class PartnerConnection < ActiveRecord::Base
     end
   end
 
-  # Public: Narrow down a collection of PartnerConnection objects by
-  # the auth_mechanism.
-  def self.where_imap_provider(auth_mechanism)
-    conn_type = ImapProvider.find_by_auth_mechanism(auth_mechanism)
-    raise UnknownAuthMechanismError.new("Unknown auth mechanism: #{auth_mechanism}") if conn_type.nil?
-    if conn_type
-      where(:imap_provider_id => conn_type.id)
-    else
-      where("true = false")
-    end
-  end
+  # BACKHERE
+  # def self.create(*args, &block)
+  #   @klass.create(*args, &block)
+  #   scoping { @klass.create(*args, &block) }
+  # end
+
 
   def self.connection_fields
     []

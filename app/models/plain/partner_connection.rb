@@ -1,4 +1,4 @@
-class PartnerConnection::Plain < PartnerConnection
+class Plain::PartnerConnection < PartnerConnection
   def self.connection_fields
     []
   end
