@@ -1,5 +1,5 @@
 fields = [
-  :code,
+  :imap_provider_code,
   :users_count
 ]
 fields.map do |field|

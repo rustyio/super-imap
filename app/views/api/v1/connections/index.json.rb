@@ -1,4 +1,8 @@
-fields = [:code, :users_count]
+fields = [
+  :imap_provider_code,
+  :users_count
+]
+
 
 @connections.map do |user|
   fields.map do |field|

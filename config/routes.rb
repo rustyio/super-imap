@@ -4,8 +4,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :connections, { :param => :code } do
-        resources :users
+      resources :connections, { :param => :imap_provider_code } do
+        resources :users, { :param => :tag }
       end
     end
   end

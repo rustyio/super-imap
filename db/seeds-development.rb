@@ -56,7 +56,7 @@ def create_user(connection, n)
 end
 
 def create_partner_connection(partner, imap_provider)
-  partner.connections.where(:imap_provider_id => imap_provider).create.tap do |connection|
+  partner.connections.create(:imap_provider_id => imap_provider.id).tap do |connection|
     5.times.each do |n|
       create_user(connection, n)
     end

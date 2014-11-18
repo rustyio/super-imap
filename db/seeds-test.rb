@@ -1,11 +1,11 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
-plain_conn = ImapProvider::Plain.create(
-  :code => 'PLAIN',
-  :title          => "Fake IMAP",
-  :host           => "localhost",
-  :port           => 10143,
-  :use_ssl        => false)
+plain_provider = Plain::ImapProvider.create(
+  :code    => 'PLAIN',
+  :title   => "Fake IMAP",
+  :host    => "localhost",
+  :port    => 10143,
+  :use_ssl => false)
 
 def create_transmit_log(mail_log, n)
   mail_log.transmit_logs.create(:response_code => 200, :response_body => "Response #{n}")
@@ -31,8 +31,8 @@ def create_user(connection, n)
   end
 end
 
-def create_partner_connection(partner, ct)
-  partner.connections.create(:imap_provider_id => ct.id).tap do |connection|
+def create_partner_connection(partner, imap_provider)
+  connection = partner.connections.create(:imap_provider_id => imap_provider.id).tap do |connection|
     5.times.each do |n|
       create_user(connection, n)
     end
@@ -40,5 +40,5 @@ def create_partner_connection(partner, ct)
 end
 
 Partner.create(:name => "Partner").tap do |partner|
-  create_partner_connection(partner, plain_conn)
+  create_partner_connection(partner, plain_provider)
 end

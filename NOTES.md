@@ -1,14 +1,5 @@
 # TODO
 
-+ Fake out our own version of STI.
-  + Validation.
-  + Connection Fields.
-
-+ Behavior:
-  + Based on the value of a certain field, we run certain code.
-  +
-
-
 + Test the Connection API.
 + Test the User API.
 + Add the code to wire up a user.

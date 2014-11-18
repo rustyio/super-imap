@@ -1,34 +1,44 @@
 class Api::V1::UsersController < ApplicationController
-  PartnerNotFoundError    = Class.new(StandardError)
-  ConnectionNotFoundError = Class.new(StandardError)
-  UserNotFoundError       = Class.new(StandardError)
+  PartnerNotFoundError      = Class.new(StandardError)
+  ImapProviderNotFoundError = Class.new(StandardError)
+  ConnectionNotFoundError   = Class.new(StandardError)
+  UserNotFoundError         = Class.new(StandardError)
 
   respond_to :json
   before_action :default_format_json
-  before_action :load_context
+  before_action :load_partner
+  before_action :load_imap_provider
+  before_action :load_connection
+  before_action :load_user, :only => [:update, :show, :destroy]
 
-  attr_accessor :partner, :connection
+  attr_accessor :partner, :imap_provider, :connection, :user
 
   def index
     @users = self.connection.users.order(:email)
   end
 
   def create
-    @user = self.connection.users.create(params)
+    self.user = self.connection.new_typed_user
+    self.user.update_attributes!(user_params)
     render :show
+  rescue ActiveRecord::RecordInvalid => e
+    render :status => :bad_request, :text => e.to_s
+  end
+
+  def update
+    self.user.update_attributes!(user_params)
+    render :show
+  rescue ActiveRecord::RecordInvalid => e
+    render :status => :bad_request, :text => e.to_s
   end
 
   def show
-    @user = self.connection.users.find_by_tag(params[:id])
-    raise UserNotFoundError.new unless @user
-  rescue UserNotFoundError => e
-    render :status => :not_found, :text => "User not found. Check the tag."
+    # pass
   end
 
   def destroy
-    @user = self.connection.users.find_by_tag(params[:id])
-    @user.update_attributes(:archived => true)
-    render :no_content
+    self.user.toggle!(:archived)
+    render :status => :no_content, :text => "Archived user."
   end
 
   private
@@ -37,25 +47,42 @@ class Api::V1::UsersController < ApplicationController
     request.format = "json" unless params[:format]
   end
 
-  def load_context
-    load_partner
-    load_connection
-  rescue PartnerNotFoundError => e
-    render :status => :not_found, :text => "Partner not found. Check your api_key."
-  rescue ConnectionNotFoundError => e
-    render :status => :not_found, :text => "Connection not found."
-  end
-
   def load_partner
     api_key = params[:api_key]
     self.partner = Partner.find_by_api_key(params[:api_key])
-    raise PartnerNotFoundError.new("Missing or invalid api_key parameter.") unless self.partner
+    if partner.nil?
+      render :status => :not_found, :text => "Partner not found. Check your api_key."
+    end
+  end
+
+  def load_imap_provider
+    code = params[:connection_imap_provider_code]
+    self.imap_provider = ImapProvider.find_by_code(code)
+    if self.imap_provider.nil?
+      render :status => :not_found, :text => "Imap Provider not found for '#{code}'."
+    end
   end
 
   def load_connection
-    # Look up the connection.
-    conn_id = params[:connection_id]
-    self.connection = self.partner.connections.where(:id => conn_id).first
-    raise ConnectionNotFoundError.new unless self.connection
+    self.connection = self.partner.connections.find_by_imap_provider_id(self.imap_provider.id)
+    if self.connection.nil?
+      render :status => :not_found, :text => "Connection not found."
+    end
+  end
+
+  def load_user
+    tag = params[:tag]
+    self.user = self.connection.users.find_by_tag(tag)
+    if self.user.nil?
+      render :status => :not_found, :text => "User not found for '#{tag}'."
+    end
+  end
+
+  def user_params
+    if self.user
+      params.permit([:tag, :email] + self.user.connection_fields)
+    else
+      params.permit([:tag, :email])
+    end
   end
 end
