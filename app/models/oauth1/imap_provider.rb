@@ -1,12 +1,8 @@
 class Oauth1::ImapProvider < ImapProvider
-  def self.connection_fields
-    [
-      :oauth1_access_token_path, :oauth1_authorize_path,
-      :oauth1_request_token_path, :oauth1_scope, :oauth1_site
-    ]
-  end
-
-  connection_fields.each do |field|
-    validates_presence_of field
-  end
+  include ConnectionFields
+  connection_field :oauth1_access_token_path, :required => true
+  connection_field :oauth1_authorize_path, :required => true
+  connection_field :oauth1_request_token_path, :required => true
+  connection_field :oauth1_scope, :required => true
+  connection_field :oauth1_site, :required => true
 end

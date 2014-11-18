@@ -1,9 +1,19 @@
 ActiveAdmin.register PartnerConnection do
   belongs_to :partner
 
-  permit_params :imap_provider_id, :oauth1_consumer_key,
-                :oauth1_consumer_secret, :oauth2_client_id,
-                :oauth2_client_secret
+  permit_params :imap_provider_id,
+                *Plain::PartnerConnection.connection_fields,
+                *Oauth1::PartnerConnection.connection_fields,
+                *Oauth2::PartnerConnection.connection_fields
+
+  controller do
+    def create
+      imap_provider = ImapProvider.find(params[:partner_connection][:imap_provider_id])
+      new_type = imap_provider.type.gsub("::ImapProvider", "::PartnerConnection")
+      params[:partner_connection].merge!(:type => new_type)
+      super
+    end
+  end
 
   breadcrumb do
     partner = Partner.find(params[:partner_id])
@@ -18,7 +28,7 @@ ActiveAdmin.register PartnerConnection do
 
   index do
     column "Auth Mechanism" do |obj|
-      link_to obj.code, admin_partner_partner_connection_path(obj.partner, obj)
+      link_to obj.imap_provider_code, admin_partner_partner_connection_path(obj.partner, obj)
     end
 
     column "Links" do |obj|
@@ -35,21 +45,16 @@ ActiveAdmin.register PartnerConnection do
   show do |obj|
     panel "Details" do
       attributes_table_for obj do
-        row :code
+        row :imap_provider_code
       end
     end
-    panel "OAuth 1.0" do
+    panel "Connection Settings" do
       attributes_table_for obj do
-        row :oauth1_consumer_key
-        row :oauth1_consumer_secret
+        obj.connection_fields.map do |field|
+          row field
+        end
       end
-    end
-    panel "OAuth 2.0" do
-      attributes_table_for obj do
-        row :oauth2_client_id
-        row :oauth2_client_secret
-      end
-    end
+    end if obj.connection_fields.present?
   end
 
   form do |f|
@@ -57,15 +62,10 @@ ActiveAdmin.register PartnerConnection do
       f.input :imap_provider, :label => "Auth Mechanism"
     end if f.object.new_record?
 
-    f.inputs "OAuth 1.0" do
-      f.input :oauth1_consumer_key
-      f.input :oauth1_consumer_secret
+    if !f.object.new_record? && f.object.connection_fields.present?
+      f.inputs "Connection Settings", *f.object.connection_fields
     end
 
-    f.inputs "OAuth 2.0" do
-      f.input :oauth2_client_id
-      f.input :oauth2_client_secret
-    end
     f.actions
   end
 end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141114233206) do
+ActiveRecord::Schema.define(version: 20141118170010) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -50,6 +50,12 @@ ActiveRecord::Schema.define(version: 20141114233206) do
   add_index "admin_users", ["email"], name: "index_admin_users_on_email", unique: true, using: :btree
   add_index "admin_users", ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true, using: :btree
 
+  create_table "imap_daemon_heartbeats", force: true do |t|
+    t.string   "tag"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "imap_providers", force: true do |t|
     t.string   "code"
     t.string   "title"
@@ -70,12 +76,6 @@ ActiveRecord::Schema.define(version: 20141114233206) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "type"
-  end
-
-  create_table "imap_daemon_heartbeats", force: true do |t|
-    t.string   "tag"
-    t.datetime "created_at"
-    t.datetime "updated_at"
   end
 
   create_table "mail_logs", force: true do |t|
@@ -99,6 +99,7 @@ ActiveRecord::Schema.define(version: 20141114233206) do
     t.string   "oauth2_client_secret"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "type"
   end
 
   add_index "partner_connections", ["imap_provider_id"], name: "index_partner_connections_on_imap_provider_id", using: :btree

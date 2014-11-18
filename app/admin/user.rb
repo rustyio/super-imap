@@ -2,9 +2,9 @@ ActiveAdmin.register User do
   belongs_to :partner_connection
   config.sort_order = "email_asc"
   permit_params :tag, :email,
-                *User::Plain.connection_fields,
-                *User::Oauth1.connection_fields,
-                *User::Oauth2.connection_fields
+                *Plain::User.connection_fields,
+                *Oauth1::User.connection_fields,
+                *Oauth2::User.connection_fields
 
   controller do
     alias_method :destroy_user, :destroy
@@ -23,7 +23,7 @@ ActiveAdmin.register User do
       link_to("Partners", admin_partners_path),
       link_to(partner.name, admin_partner_path(partner)),
       link_to("Connections", admin_partner_partner_connections_path(partner)),
-      link_to(connection.code,
+      link_to(connection.imap_provider_code,
               admin_partner_partner_connection_path(partner, connection)),
       link_to("Users",
               admin_partner_connection_users_path(connection))
@@ -56,6 +56,7 @@ ActiveAdmin.register User do
         row :last_connected_at
         row :last_email_at
         row :archived
+        row :type
       end
     end
 
@@ -71,10 +72,12 @@ ActiveAdmin.register User do
   form do |f|
     f.inputs "Details" do
       f.input :tag
-      f.input :email
     end
 
-    f.inputs "Connection Settings", *f.object.connection_fields
+    if !f.object.new_record? && f.object.connection_fields.present?
+      f.inputs "Connection Settings", *f.object.connection_fields
+    end
+
     f.actions
   end
 end

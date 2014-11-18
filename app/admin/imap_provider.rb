@@ -1,9 +1,9 @@
 ActiveAdmin.register ImapProvider do
   config.sort_order = "code_asc"
   permit_params :code, :title, :host, :port, :use_ssl,
-                *ImapProvider::Plain.connection_fields,
-                *ImapProvider::Oauth1.connection_fields,
-                *ImapProvider::Oauth2.connection_fields
+                *Plain::ImapProvider.connection_fields,
+                *Oauth1::ImapProvider.connection_fields,
+                *Oauth2::ImapProvider.connection_fields
 
   config.filters = false
 

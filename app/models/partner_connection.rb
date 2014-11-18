@@ -1,5 +1,5 @@
 class PartnerConnection < ActiveRecord::Base
-  UnknownAuthMechanismError = Class.new(StandardError)
+  include ConnectionFields
 
   belongs_to :partner, :counter_cache => true
   belongs_to :imap_provider, :counter_cache => true
@@ -7,47 +7,19 @@ class PartnerConnection < ActiveRecord::Base
 
   validates_presence_of :imap_provider_id
   validates_uniqueness_of :imap_provider_id, :scope => :partner_id
+  before_validation :fix_type
+
+  def fix_type
+    new_type = self.imap_provider.type.gsub("::ImapProvider", "::PartnerConnection")
+    self.type = new_type
+  end
 
   # Public: Used by ActiveAdmin.
   def display_name
-    self.code
-  end
-
-  # Public: Return a collection of users that corresponds to the
-  # connection type. For example, 'ImapProvider::Plain' gives a
-  # collection of 'User::Plain' records.
-  def users
-    user_type = self.imap_provider.type.gsub("ImapProvider::", "User::")
-    user_type = user_type.constantize
-    user_type.where(:partner_connection_id => self.id, :type => user_type)
+    self.imap_provider_code
   end
 
   def imap_provider_code
     self.imap_provider.code
-  end
-
-  # Public: Create a partner connection using the specified auth mechanism.
-  def self.for_imap_provider(imap_provider)
-    conn_type = ImapProvider.find_by_ TODO auth_mechanism(auth_mechanism)
-    raise UnknownAuthMechanismError.new("Unknown auth mechanism: #{auth_mechanism}") if conn_type.nil?
-    clazz = self.imap_provider.type.gsub("ImapProvider::", "PartnerConnection::").constantize
-    scoping do
-      clazz.create(*args, &block)
-    end
-  end
-
-  # BACKHERE
-  # def self.create(*args, &block)
-  #   @klass.create(*args, &block)
-  #   scoping { @klass.create(*args, &block) }
-  # end
-
-
-  def self.connection_fields
-    []
-  end
-
-  def connection_fields
-    self.class.connection_fields
   end
 end

@@ -1,5 +1,5 @@
 class Plain::User < User
-  def self.connection_fields
-    [:login_username, :login_password]
-  end
+  include ConnectionFields
+  connection_field :login_username
+  connection_field :login_password
 end

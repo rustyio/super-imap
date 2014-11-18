@@ -1,12 +1,8 @@
-class Oauth23::ImapProvider < ImapProvider
-  def connection_fields
-    [
-      :oauth2_grant_type, :oauth2_scope, :oauth2_site,
-      :oauth2_token_method, :oauth2_token_url
-    ]
-  end
-
-  connection_fields.each do |field|
-    validates_presence_of field
-  end
+class Oauth2::ImapProvider < ImapProvider
+  include ConnectionFields
+  connection_field :oauth2_grant_type, :required => true
+  connection_field :oauth2_scope, :required => true
+  connection_field :oauth2_site, :required => true
+  connection_field :oauth2_token_method, :required => true
+  connection_field :oauth2_token_url, :required => true
 end

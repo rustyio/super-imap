@@ -20,6 +20,8 @@ gem 'activeadmin', github: 'activeadmin'
 gem 'devise'
 gem 'strip_attributes'
 gem 'newrelic_rpm', group: :production
+gem 'pry', group: :development
+gem 'pry-byebug', group: :development
 
 gem 'oauth', '~> 0.4.7'
 gem 'oauth2', '~> 0.9.3'

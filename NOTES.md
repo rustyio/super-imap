@@ -1,7 +1,13 @@
 # TODO
 
-+ Rename auth_mechanism to code.
-+ Change method from `for_auth_mechanism` to `for_imap_provider`
++ Fake out our own version of STI.
+  + Validation.
+  + Connection Fields.
+
++ Behavior:
+  + Based on the value of a certain field, we run certain code.
+  +
+
 
 + Test the Connection API.
 + Test the User API.
