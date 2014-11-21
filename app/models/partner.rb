@@ -9,6 +9,10 @@ class Partner < ActiveRecord::Base
 
   # Validations
   validates :name, :presence => true
+  validates :success_url, :presence => true
+  validates :failure_url, :presence => true
+  validates :success_webhook, :presence => true
+  validates :failure_webhook, :presence => true
 
   def ensure_api_key
     self.api_key ||= SecureRandom.hex(10)

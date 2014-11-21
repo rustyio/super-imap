@@ -1,6 +1,8 @@
 ActiveAdmin.register Partner do
   menu :priority => 0
-  permit_params :name, :api_key, :success_webhook, :failure_webhook
+  permit_params :name, :api_key,
+                :success_url, :failure_url,
+                :success_webhook, :failure_webhook
 
   breadcrumb do
     [
@@ -28,6 +30,8 @@ ActiveAdmin.register Partner do
       row :api_key
       row :success_webhook
       row :failure_webhook
+      row :success_url
+      row :failure_url
     end
   end
 
@@ -36,6 +40,12 @@ ActiveAdmin.register Partner do
       f.input :name
       f.input :api_key
     end
+
+    f.inputs "Client Side Redirects" do
+      f.input :success_url
+      f.input :failure_url
+    end
+
     f.inputs "Webhooks" do
       f.input :success_webhook
       f.input :failure_webhook

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141121152941) do
+ActiveRecord::Schema.define(version: 20141121182537) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -117,6 +117,8 @@ ActiveRecord::Schema.define(version: 20141121152941) do
     t.integer  "partner_connections_count", default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "success_url"
+    t.string   "failure_url"
   end
 
   create_table "transmit_logs", force: true do |t|

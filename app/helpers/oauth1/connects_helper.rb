@@ -29,9 +29,9 @@ module Oauth1::ConnectsHelper
       :oauth1_token_secret => oauth1_access_token.params[:oauth_token_secret])
 
     redirect_to partner.success_url
-  # rescue => e
-    # Log.exception(e)
-    # redirect_to partner.failure_url
+  rescue => e
+    Log.exception(e)
+    redirect_to partner.failure_url
   end
 
   def oauth1_email
