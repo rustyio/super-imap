@@ -1,2 +1,2 @@
-imap_client: rake imap:client STRESS_TEST_MODE=true
 imap_test_server: rake imap:test_server
+imap_client: rake imap:client STRESS_TEST_MODE=true

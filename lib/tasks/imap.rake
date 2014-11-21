@@ -19,7 +19,7 @@ namespace :imap do
 
     # Read environment variables.
     config = {}
-    config[:port]              = (ENV['PORT']              || 10143).to_i
+    config[:port]              = ImapProvider.first.port
     config[:length_of_test]    = (ENV['LENGTH_OF_TEST']    || 1).to_i
     config[:emails_per_minute] = (ENV['EMAILS_PER_MINUTE'] || 500).to_i
     config[:enable_chaos]      = (ENV['ENABLE_CHAOS'] == "true")

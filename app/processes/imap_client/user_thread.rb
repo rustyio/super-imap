@@ -280,7 +280,9 @@ class ImapClient::UserThread
     mail_log = user.mail_logs.create(:message_id => message_id, :sha1 => sha1)
 
     # Transmit to the partner's webhook.
-    # TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run
+    unless self.daemon.stress_test_mode
+      TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run
+    end
 
     # Update stats.
     self.daemon.clear_error_count(user.id)

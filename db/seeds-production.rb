@@ -1,4 +1,4 @@
-Oauth1::ImapProvider.create(
+Oauth1::ImapProvider.create!(
   :code                      => 'GMAIL_OAUTH_1',
   :title                     => "Google Mail - OAuth 1.0",
   :host                      => "imap.gmail.com",
@@ -10,7 +10,7 @@ Oauth1::ImapProvider.create(
   :oauth1_authorize_path     => "/accounts/OAuthAuthorizeToken",
   :oauth1_access_token_path  => "/accounts/OAuthGetAccessToken")
 
-Oauth2::ImapProvider.create(
+Oauth2::ImapProvider.create!(
   :code                   => 'GMAIL_OAUTH2',
   :title                  => "Google Mail - OAuth 2.0",
   :host                   => "imap.gmail.com",

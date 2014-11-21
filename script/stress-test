@@ -33,7 +33,8 @@ read
 rm ./log/stress/*
 
 # Begin the stress test.
-RAILS_ENV=stress LOG_LEVEL=info foreman s \
+RAILS_ENV=stress LOG_LEVEL=info \
+         foreman s \
          -f Procfile.stress-test \
          -c imap_client=3,imap_test_server=1
 

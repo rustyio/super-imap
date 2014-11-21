@@ -1,20 +1,12 @@
 # TODO
 
++ Disconnect a user.
+
++ Migration code?
+
 + Failure webhook.
   + User no longer authorized.
 + Handle response code to archive a user.
-
-## Use Cases:
-
-Connect a User:
-
-+ '/connect?api_key=?success=?&failure=?'
-+ Receive a URL.
-+ Redirect user to URL.
-
-Disconnect a User:
-
-+ '/disconnect?api_key=?&uid=?
 
 ## Topology
 
