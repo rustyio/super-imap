@@ -26,7 +26,8 @@ module Oauth1::ConnectsHelper
     self.user.update_attributes!(
       :email               => oauth1_email,
       :oauth1_token        => oauth1_access_token.params[:oauth_token],
-      :oauth1_token_secret => oauth1_access_token.params[:oauth_token_secret])
+      :oauth1_token_secret => oauth1_access_token.params[:oauth_token_secret],
+      :connected_at        => Time.now)
 
     redirect_to partner.success_url
   rescue => e

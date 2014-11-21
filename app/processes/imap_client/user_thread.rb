@@ -65,7 +65,7 @@ class ImapClient::UserThread
   def authenticate
     ImapClient::Authenticator.new(user).authenticate(client)
     schedule do
-      user.update_attributes(:last_connected_at => Time.now)
+      user.update_attributes(:last_login_at => Time.now)
     end
   end
 
@@ -268,16 +268,16 @@ class ImapClient::UserThread
       return
     end
 
-    # Generate the md5.
-    md5 = Digest::MD5.hexdigest(raw_eml.slice(0, 10000))
+    # Generate the SHA1.
+    sha1 = Digest::SHA1.hexdigest(raw_eml.slice(0, 10000))
 
     # Have we already processed this one?
-    if user.mail_logs.find_by_md5(md5)
+    if user.mail_logs.find_by_sha1(sha1)
       return
     end
 
     # Create the mail log record.
-    mail_log = user.mail_logs.create(:message_id => message_id, :md5 => md5)
+    mail_log = user.mail_logs.create(:message_id => message_id, :sha1 => sha1)
 
     # Transmit to the partner's webhook.
     # TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run

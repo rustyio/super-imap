@@ -1,22 +1,5 @@
 # TODO
 
-+ Add a success_url and failure_url to partner.
-  + Include a message in parameters.
-
-+ Add the code to wire up a user.
-  + Everything in one controller?
-  + Separate controllers?
-  + Separate helpers?
-  + Call logic in the view?
-  + Call logic in the model?
-  + oauth1_helper.rb
-  + oauth2_helper.rb
-
-+ Convert from MD5 to SHA1.
-
-+ Add a "connected_at" parameter.
-+ Change "last_connected_at" to "last_login_at"
-
 + Failure webhook.
   + User no longer authorized.
 + Handle response code to archive a user.

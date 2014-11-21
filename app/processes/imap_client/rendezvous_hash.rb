@@ -14,7 +14,7 @@ class ImapClient::RendezvousHash
   # Return the highest priority item.
   def hash(object_tag)
     priority = site_tags.map do |site_tag|
-      h = Digest::MD5.hexdigest("#{site_tag} - #{object_tag}")
+      h = Digest::SHA1.hexdigest("#{site_tag} - #{object_tag}")
       [h, site_tag]
     end.sort
 

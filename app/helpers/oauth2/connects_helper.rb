@@ -39,7 +39,8 @@ module Oauth2::ConnectsHelper
 
     user.update_attributes!(
       :email                => oauth2_email,
-      :oauth2_refresh_token => oauth2_token.refresh_token)
+      :oauth2_refresh_token => oauth2_token.refresh_token,
+      :connected_at         => Time.now)
 
     redirect_to partner.success_url
   rescue => e

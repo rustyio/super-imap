@@ -15,12 +15,12 @@ class TransmitToWebhook
     # Assemble the payload.
     data = {
       :timestamp => Time.now.to_i,
-      :md5       => mail_log.md5,
+      :sha1      => mail_log.sha1,
       :user_tag  => user.tag,
       :envelope  => envelope,
       :rfc822    => raw_eml
     }
-    data[:signature] = calculate_signature(partner.api_key, data[:md5], data[:timestamp])
+    data[:signature] = calculate_signature(partner.api_key, data[:sha1], data[:timestamp])
 
     # Post the data
     begin

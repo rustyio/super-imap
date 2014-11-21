@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141121182537) do
+ActiveRecord::Schema.define(version: 20141121184010) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -84,11 +84,11 @@ ActiveRecord::Schema.define(version: 20141121182537) do
 
   create_table "mail_logs", force: true do |t|
     t.integer  "user_id"
-    t.string   "md5",                 limit: 32
     t.string   "message_id"
     t.integer  "transmit_logs_count",            default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "sha1",                limit: 40
   end
 
   add_index "mail_logs", ["user_id"], name: "index_mail_logs_on_user_id", using: :btree
@@ -136,7 +136,6 @@ ActiveRecord::Schema.define(version: 20141121182537) do
     t.string   "email"
     t.string   "tag"
     t.integer  "mail_logs_count",       default: 0
-    t.datetime "last_connected_at"
     t.datetime "last_email_at"
     t.integer  "last_uid"
     t.string   "last_uid_validity"
@@ -150,6 +149,8 @@ ActiveRecord::Schema.define(version: 20141121182537) do
     t.datetime "updated_at"
     t.boolean  "archived",              default: false
     t.string   "type"
+    t.datetime "connected_at"
+    t.datetime "last_login_at"
   end
 
   add_index "users", ["partner_connection_id"], name: "index_users_on_partner_connection_id", using: :btree
