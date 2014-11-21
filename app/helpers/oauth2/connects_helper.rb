@@ -37,15 +37,15 @@ module Oauth2::ConnectsHelper
       params[:code],
       :redirect_uri => callback_users_connect_url())
 
-    user.update_attributes(
+    user.update_attributes!(
       :email                => oauth2_email,
       :oauth2_refresh_token => oauth2_token.refresh_token)
 
     redirect_to partner.success_url
-  rescue BadRequestError
+  rescue => e
+    Log.exception(e)
     redirect_to partner.failure_url
   end
-
 
   def oauth2_email
     method = "#{imap_provider.code.downcase}_email".to_sym

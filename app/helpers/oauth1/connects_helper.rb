@@ -1,9 +1,5 @@
 module Oauth1::ConnectsHelper
-  def oauth1_load_user
-  end
-
-  def oauth1_validate_signature
-  end
+  attr_accessor :oauth1_access_token
 
   def oauth1_new_helper
     consumer = OAuth::Consumer.new(
@@ -14,14 +10,38 @@ module Oauth1::ConnectsHelper
       :authorize_path     => imap_provider.oauth1_authorize_path,
       :access_token_path  => imap_provider.oauth1_access_token_path)
 
-    callback = "#{https}://#{hostname}/oauth/gmail_response"
     request_token = consumer.get_request_token(
-      {:oauth_callback => callback },
-      {:scope => "https://www.googleapis.com/auth/userinfo.email https://mail.google.com/"}
-    )
+      {:oauth_callback => callback_users_connect_url() },
+      {:scope => imap_provider.oauth1_scope })
 
+    session[:oauth1_request_token] = Marshal.dump(request_token)
+
+    redirect_to request_token.authorize_url
   end
 
   def oauth1_callback_helper
+    request_token  = Marshal.load(session[:oauth1_request_token])
+    self.oauth1_access_token = request_token.get_access_token(:oauth_verifier => params[:oauth_verifier])
+
+    self.user.update_attributes!(
+      :email               => oauth1_email,
+      :oauth1_token        => oauth1_access_token.params[:oauth_token],
+      :oauth1_token_secret => oauth1_access_token.params[:oauth_token_secret])
+
+    redirect_to partner.success_url
+  # rescue => e
+    # Log.exception(e)
+    # redirect_to partner.failure_url
+  end
+
+  def oauth1_email
+    method = "#{imap_provider.code.downcase}_email".to_sym
+    send(method)
+  end
+
+  def gmail_oauth1_email
+    # Get the google email address.
+    data = JSON.parse(self.oauth1_access_token.get("https://www.googleapis.com/userinfo/email?alt=json").body)
+    return data["data"]["email"]
   end
 end

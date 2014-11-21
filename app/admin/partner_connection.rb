@@ -27,8 +27,8 @@ ActiveAdmin.register PartnerConnection do
   config.filters = false
 
   index do
-    column "Auth Mechanism" do |obj|
-      link_to obj.imap_provider_code, admin_partner_partner_connection_path(obj.partner, obj)
+    column "Imap Provider" do |obj|
+      link_to obj.imap_provider.title, admin_partner_partner_connection_path(obj.partner, obj)
     end
 
     column "Links" do |obj|
@@ -59,7 +59,8 @@ ActiveAdmin.register PartnerConnection do
 
   form do |f|
     f.inputs "Details" do
-      f.input :imap_provider, :label => "Auth Mechanism"
+      f.input :imap_provider, :label => "Auth Mechanism",
+              :as => :select, :collection => ImapProvider.pluck(:title, :id)
     end if f.object.new_record?
 
     if !f.object.new_record? && f.object.connection_fields.present?

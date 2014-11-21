@@ -35,8 +35,13 @@ ActiveAdmin.register User do
   scope :archived
 
   index do
+    column :tag do |obj|
+      link_to obj.tag, admin_partner_connection_user_path(obj.connection, obj)
+    end
     column :email do |obj|
-      link_to "#{obj.email} (#{obj.tag})", admin_partner_connection_user_path(obj.connection, obj)
+      if obj.email
+        link_to obj.email, admin_partner_connection_user_path(obj.connection, obj)
+      end
     end
     column :links do |obj|
       link_to("Mail Logs (#{obj.mail_logs_count})",

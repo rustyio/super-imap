@@ -15,6 +15,9 @@
 
 + Convert from MD5 to SHA1.
 
++ Add a "connected_at" parameter.
++ Change "last_connected_at" to "last_login_at"
+
 + Failure webhook.
   + User no longer authorized.
 + Handle response code to archive a user.
