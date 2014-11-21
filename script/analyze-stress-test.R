@@ -39,6 +39,12 @@ events$time <- as.POSIXct(events$time)
 ## Split out chaotic events.
 chaotic.events <- events[grepl("chaos", events$event),]
 
+## Hack, make sure we have at least one chaotic event, otherwise we'll
+## get errors.
+if (nrow(chaotic.events) == 0) {
+    chaotic.events <- data.frame(time=min(generated$time), email=NA, event=NA, total=NA)
+}
+
 ## Add count columns.
 generated$count <- 1
 fetched$count <- 1

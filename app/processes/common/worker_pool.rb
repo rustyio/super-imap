@@ -74,7 +74,7 @@ module Common::WorkerPool
 
     # Log Heroku / Librato stats
     # Sample to avoid log spam.
-    if rand() <= 0.05
+    if rand() <= 0.02
       latency = Time.now - options[:'$time']
       Log.info("measure$work_queue.latency=#{latency}")
     end

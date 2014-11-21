@@ -24,7 +24,8 @@ class ImapClient::Daemon
   include Common::DbConnection
   include Common::CsvLog
 
-  attr_accessor :stress_test_mode, :num_worker_threads, :max_user_threads, :max_email_size
+  attr_accessor :stress_test_mode, :chaos_mode
+  attr_accessor :num_worker_threads, :max_user_threads, :max_email_size
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
   attr_accessor :claim_thread, :user_threads, :error_counts
@@ -33,6 +34,7 @@ class ImapClient::Daemon
   def initialize(options = {})
     # Settings.
     self.stress_test_mode   = options.fetch(:stress_test_mode)
+    self.chaos_mode         = options.fetch(:enable_chaos)
     self.num_worker_threads = options.fetch(:num_worker_threads)
     self.max_user_threads   = options.fetch(:max_user_threads)
     self.max_email_size     = options.fetch(:max_email_size)

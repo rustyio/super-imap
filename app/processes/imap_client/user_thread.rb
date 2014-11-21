@@ -35,7 +35,7 @@ class ImapClient::UserThread
     update_uid_validity
     main_loop
   rescue => e
-    Log.exception(e)
+    log_exception(e)
     self.daemon.increment_error_count(user.id)
     stop!
   ensure
@@ -290,7 +290,7 @@ class ImapClient::UserThread
       self.daemon.processed_log << [Time.now, user.email, message_id]
     self.daemon.total_emails_processed += 1
   rescue => e
-    Log.exception(e)
+    log_exception(e)
     self.daemon.increment_error_count(user.id)
     stop!
   end
@@ -301,6 +301,24 @@ class ImapClient::UserThread
     client && client.disconnect
     self.client = nil
   rescue => e
-    Log.exception(e)
+    log_exception(e)
+  end
+
+
+  def log_exception(e)
+    imap_exceptions = [
+      Net::IMAP::Error,
+      Net::IMAP::ResponseParseError,
+      IOError,
+      EOFError,
+      Errno::EPIPE
+    ]
+
+    # Minimally log imap exceptions when stress testing.
+    if imap_exceptions.include?(e.class) && self.daemon.chaos_mode
+      Log.error("#{e.class} - #{e.to_s}")
+    else
+      Log.exception(e)
+    end
   end
 end
