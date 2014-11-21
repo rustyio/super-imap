@@ -27,8 +27,8 @@ class ImapClient::Authenticator
   end
 
   # Private: Connect to Gmail using OAUTH 2.0.
-  def authenticate_gmail_oauth_2(client)
-    return authenticate_oauth_2(client)
+  def authenticate_gmail_oauth2(client)
+    return authenticate_oauth2(client)
   end
 
   ###
@@ -61,7 +61,7 @@ class ImapClient::Authenticator
   end
 
   # Private: Connect via OAUTH 2.0
-  def authenticate_oauth_2(client)
+  def authenticate_oauth2(client)
     conn = user.connection
     conn_type = conn.imap_provider
 

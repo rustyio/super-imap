@@ -19,7 +19,6 @@ class User < ActiveRecord::Base
                           :scope => :partner_connection_id,
                           :conditions => -> { where.not(archived: true) }
 
-  validates_presence_of :email
   validates_uniqueness_of :email, :case_sensitive => false,
                           :scope => :partner_connection_id,
                           :conditions => -> { where.not(archived: true) }
@@ -34,16 +33,16 @@ class User < ActiveRecord::Base
     timestamp ||= Time.now.to_i
     data = "#{self.id} - #{timestamp} - #{self.connection.partner.api_key}"
     {
-      :user_id => id,
-      :ts      => timestamp,
-      :sig     => Digest::SHA1.hexdigest(data).slice(0, 10)
+      'user_id' => id,
+      'ts'      => timestamp,
+      'sig'     => Digest::SHA1.hexdigest(data).slice(0, 10)
     }
   end
 
   # Public: Verify a timestamp signature.
   def valid_signature?(params)
-    (Time.at(params[:ts].to_i) > 30.minutes.ago) &&
-      params[:sig] == signed_request_params(params[:ts])[:sig]
+    (Time.at(params['ts'].to_i) > 30.minutes.ago) &&
+      params['sig'] == signed_request_params(params['ts'])['sig']
   end
 
   private

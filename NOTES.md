@@ -1,5 +1,9 @@
 # TODO
 
++ Add oauth2 params to imap_provider table.
++ Add a success_url and failure_url to partner.
+  + Include a message in parameters.
+
 + Add the code to wire up a user.
   + Everything in one controller?
   + Separate controllers?

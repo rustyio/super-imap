@@ -1,4 +1,10 @@
 module Plain::ConnectsHelper
+  def plain_load_user
+  end
+
+  def plain_validate_signature
+  end
+
   def plain_new_helper
     render :plain_
   end

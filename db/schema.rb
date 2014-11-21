@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141118170010) do
+ActiveRecord::Schema.define(version: 20141121152941) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -76,6 +76,10 @@ ActiveRecord::Schema.define(version: 20141118170010) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "type"
+    t.string   "oauth2_authorize_url"
+    t.string   "oauth2_response_type"
+    t.string   "oauth2_access_type"
+    t.string   "oauth2_approval_prompt"
   end
 
   create_table "mail_logs", force: true do |t|

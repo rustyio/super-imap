@@ -12,13 +12,11 @@ Rails.application.routes.draw do
 
   namespace :users do
     resource :connect, :only => [:new] do
-      get :success
-      get :failure
+      get :callback
     end
 
     resource :disconnect, :only => [:new] do
-      get :success
-      get :failure
+      get :callback
     end
   end
 end
