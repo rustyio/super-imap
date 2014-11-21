@@ -6,11 +6,29 @@ class ImapProvider < ActiveRecord::Base
     self.code
   end
 
-  def partner_connection_class
-    raise "Must override #partner_connection_class in #{self.class.to_s}."
+  # Public: Single Table Inheritance helper. Returns the correct
+  # inherited class depending on the ImapProvider class.
+  #
+  # Usage:
+  #
+  #     imap_provider = Oauth1::ImapProvider.new
+  #     imap_provider.class_for(User) => Oauth1::User
+  #
+  # Returns a class.
+  def class_for(c)
+    (self.class.parent_name + "::" + c.base_class.name).constantize
   end
 
-  def user_class
-    raise "Must override #user_class in #{self.class.to_s}."
+  # Public: Single Table Inheritance helper. Returns the name of a
+  # helper method depending on the ImapProvider class.
+  #
+  # Usage:
+  #
+  #     imap_provider = Oauth1::ImapProvider.new
+  #     imap_provider.helper_for(:connects, :new) => :oauth1_new_connects_helper
+  #
+  # Returns a symbol.
+  def helper_for(action)
+    "#{self.class.parent_name.underscore}_#{action}_helper".to_sym
   end
 end

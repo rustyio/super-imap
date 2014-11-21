@@ -1,8 +1,15 @@
 # TODO
 
-+ Test the Connection API.
-+ Test the User API.
 + Add the code to wire up a user.
+  + Everything in one controller?
+  + Separate controllers?
+  + Separate helpers?
+  + Call logic in the view?
+  + Call logic in the model?
+  + oauth1_helper.rb
+  + oauth2_helper.rb
+
++ Convert from MD5 to SHA1.
 
 + Failure webhook.
   + User no longer authorized.

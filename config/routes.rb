@@ -9,4 +9,16 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  namespace :users do
+    resource :connect, :only => [:new] do
+      get :success
+      get :failure
+    end
+
+    resource :disconnect, :only => [:new] do
+      get :success
+      get :failure
+    end
+  end
 end

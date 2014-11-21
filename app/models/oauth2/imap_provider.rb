@@ -6,12 +6,4 @@ class Oauth2::ImapProvider < ImapProvider
   connection_field :oauth2_site, :required => true
   connection_field :oauth2_token_method, :required => true
   connection_field :oauth2_token_url, :required => true
-
-  def partner_connection_class
-    Oauth2::PartnerConnection
-  end
-
-  def user_class
-    Oauth2::User
-  end
 end

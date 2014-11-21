@@ -10,7 +10,7 @@ class ImapClient::Authenticator
   end
 
   def authenticate(client)
-    code = user.connection.imap_provider.code
+    code = user.imap_provider.code
     method = "authenticate_#{code.downcase}".to_sym
     return self.send(method, client)
   end

@@ -1,9 +1,4 @@
 class Api::V1::UsersController < ApplicationController
-  PartnerNotFoundError      = Class.new(StandardError)
-  ImapProviderNotFoundError = Class.new(StandardError)
-  ConnectionNotFoundError   = Class.new(StandardError)
-  UserNotFoundError         = Class.new(StandardError)
-
   respond_to :json
   before_action :default_format_json
   before_action :load_partner

@@ -18,7 +18,7 @@ class Partner < ActiveRecord::Base
   # imap_provider. In other words, if this is an Oauth1::ImapProvider,
   # then return an Oauth1::ImapProvider.
   def new_typed_connection(imap_provider)
-    connection = imap_provider.partner_connection_class.new
+    connection = imap_provider.class_for(PartnerConnection).new
     self.connections << connection
     connection
   end

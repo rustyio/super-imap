@@ -57,6 +57,13 @@ ActiveAdmin.register User do
         row :last_email_at
         row :archived
         row :type
+        row "Links" do
+          link_to("Connect", new_users_connect_path(obj.signed_request_params)) +
+            ", " +
+            link_to("Disconnect", new_users_disconnect_path(obj.signed_request_params))
+          # [
+          # ].join(", ")
+        end
       end
     end
 

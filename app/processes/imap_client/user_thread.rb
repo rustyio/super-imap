@@ -57,7 +57,7 @@ class ImapClient::UserThread
 
   # Private: Connect to the server, set the client.
   def connect
-    conn_type = user.connection.imap_provider
+    conn_type = user.imap_provider
     self.client = Net::IMAP.new(conn_type.host, :port => conn_type.port, :ssl => conn_type.use_ssl)
   end
 
