@@ -1,6 +1,8 @@
 # TODO
 
 + Disconnect a user.
+  + Delete connection information.
+  + Stop trying to connect.
 
 + Migration code?
 
