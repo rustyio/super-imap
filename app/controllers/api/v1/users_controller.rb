@@ -32,7 +32,7 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def destroy
-    self.user.toggle!(:archived)
+    self.user.update_attributes(:archived => true)
     render :status => :no_content, :text => "Archived user."
   end
 
@@ -75,9 +75,9 @@ class Api::V1::UsersController < ApplicationController
 
   def user_params
     if self.user
-      params.permit([:tag, :email] + self.user.connection_fields)
+      params.permit([:tag, :email, :archived] + self.user.connection_fields)
     else
-      params.permit([:tag, :email])
+      params.permit([:tag, :email, :archived])
     end
   end
 end

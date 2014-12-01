@@ -65,9 +65,9 @@ end
 
 Partner.create!(
   :name            => "Partner",
-  :success_webhook => "ignored",
-  :failure_webhook => "ignored",
-  :success_url     => "ignored",
-  :failure_url     => "ignored").tap do |partner|
+  :success_webhook => "/success.html",
+  :failure_webhook => "/failure.html",
+  :success_url     => "/success.html",
+  :failure_url     => "/failure.html").tap do |partner|
   create_partner_connection(partner, plain_provider)
 end

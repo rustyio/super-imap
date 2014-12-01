@@ -6,15 +6,27 @@ ActiveAdmin.register User do
                 *Oauth1::User.connection_fields,
                 *Oauth2::User.connection_fields
 
-  controller do
-    alias_method :destroy_user, :destroy
-    def destroy
-      user = User.find(params[:id])
-      user.update_attributes(:archived => true)
-      redirect_to admin_partner_connection_user_path(params[:partner_connection_id], user.id)
+  actions :all, :except => [:destroy]
+
+  action_item :only => :show do
+    if user.archived
+      link_to('Restore User', restore_admin_partner_connection_user_path(params[:partner_connection_id], user.id))
+    else
+      link_to('Archive User', archive_admin_partner_connection_user_path(params[:partner_connection_id], user.id))
     end
   end
 
+  member_action :archive, :method => :get do
+    user = User.find(params[:id])
+    user.update_attributes!(:archived => true)
+    redirect_to({:action => :show}, {:notice => "User archived!"})
+  end
+
+  member_action :restore, :method => :get do
+    user = User.find(params[:id])
+    user.update_attributes!(:archived => false)
+    redirect_to({:action => :show}, {:notice => "User restored!"})
+  end
 
   breadcrumb do
     connection = PartnerConnection.find(params[:partner_connection_id])
@@ -60,7 +72,6 @@ ActiveAdmin.register User do
         row :tag
         row :last_connected_at
         row :last_email_at
-        row :archived
         row :type
         row "Links" do
           link_to("Connect", new_users_connect_path(obj.signed_request_params)) +
@@ -69,6 +80,7 @@ ActiveAdmin.register User do
           # [
           # ].join(", ")
         end
+        row :archived
       end
     end
 

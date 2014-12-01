@@ -28,10 +28,10 @@ ActiveAdmin.register Partner do
     attributes_table do
       row :name
       row :api_key
-      row :success_webhook
-      row :failure_webhook
       row :success_url
       row :failure_url
+      row :success_webhook
+      row :failure_webhook
     end
   end
 
