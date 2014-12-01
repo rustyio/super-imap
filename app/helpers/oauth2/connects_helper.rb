@@ -42,10 +42,10 @@ module Oauth2::ConnectsHelper
       :oauth2_refresh_token => oauth2_token.refresh_token,
       :connected_at         => Time.now)
 
-    redirect_to partner.success_url
+    redirect_to_success_url
   rescue => e
     Log.exception(e)
-    redirect_to partner.failure_url
+    redirect_to_failure_url
   end
 
   def oauth2_email

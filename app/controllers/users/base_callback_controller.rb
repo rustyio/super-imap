@@ -10,6 +10,10 @@ class Users::BaseCallbackController < ApplicationController
       session[key] = value
     end
 
+    # Set up the callback URLs.
+    session[:success_url] = params[:success_url] || partner.success_url
+    session[:failure_url] = params[:failure_url] || partner.failure_url
+
     apply_helper
   end
 
@@ -54,5 +58,13 @@ class Users::BaseCallbackController < ApplicationController
 
   def imap_provider
     self.user.connection.imap_provider
+  end
+
+  def redirect_to_success_url
+    redirect_to session[:success_url]
+  end
+
+  def redirect_to_failure_url
+    redirect_to session[:failure_url]
   end
 end

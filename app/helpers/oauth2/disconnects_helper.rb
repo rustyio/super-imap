@@ -11,6 +11,6 @@ module Oauth2::DisconnectsHelper
       :oauth2_refresh_token => nil )
 
     # Redirect.
-    redirect_to partner.success_url
+    redirect_to_success_url
   end
 end
