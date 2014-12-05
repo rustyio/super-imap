@@ -22,7 +22,7 @@ class ImapClient::Authenticator
   ###
 
   # Private: Connect to Gmail using OAUTH 1.0.
-  def authenticate_gmail_oauth_1(client)
+  def authenticate_gmail_oauth1(client)
     return authenticate_oauth_1(client)
   end
 

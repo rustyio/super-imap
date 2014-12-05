@@ -1,5 +1,5 @@
 Oauth1::ImapProvider.create!(
-  :code                      => 'GMAIL_OAUTH_1',
+  :code                      => 'GMAIL_OAUTH1',
   :title                     => "Google Mail - OAuth 1.0",
   :host                      => "imap.gmail.com",
   :port                      => 993,
