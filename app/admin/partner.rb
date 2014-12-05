@@ -2,7 +2,7 @@ ActiveAdmin.register Partner do
   menu :priority => 0
   permit_params :name, :api_key,
                 :success_url, :failure_url,
-                :success_webhook, :failure_webhook
+                :new_mail_webhook
 
   breadcrumb do
     [
@@ -30,8 +30,7 @@ ActiveAdmin.register Partner do
       row :api_key
       row :success_url
       row :failure_url
-      row :success_webhook
-      row :failure_webhook
+      row :new_mail_webhook
     end
   end
 
@@ -47,8 +46,7 @@ ActiveAdmin.register Partner do
     end
 
     f.inputs "Webhooks" do
-      f.input :success_webhook
-      f.input :failure_webhook
+      f.input :new_mail_webhook
     end
     f.actions
   end

@@ -85,13 +85,12 @@ class ImapClient::Daemon
   end
 
 
-  # Public: Get the number of errors recently experienced by a user
-  # connection.
+  # Public: Returns the number of errors for a user.
   def error_count(user_id)
     self.error_counts[user_id] ||= 0
   end
 
-  # Public:
+  # Public: Increment the error count for a user
   def increment_error_count(user_id)
     self.error_counts[user_id] ||= 0
     self.error_counts[user_id] += 1

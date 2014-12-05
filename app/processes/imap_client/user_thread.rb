@@ -47,7 +47,8 @@ class ImapClient::UserThread
   private unless Rails.env.test?
 
   # Private: Exponentially backoff based on the number of errors we
-  # are seeing for a given user. At most, wait 5 minutes before trying to connect.
+  # are seeing for a given user. At most, wait 5 minutes before trying
+  # to connect.
   def delay_start
     errors  = self.daemon.error_count(user.id)
     seconds = (errors ** 3) - 1
@@ -206,8 +207,9 @@ class ImapClient::UserThread
     sleep
   end
 
-  # Private: Read and act on a single email. Keep in mind that this is
-  # *not* run in a user thread, but rather in a worker thread.
+  # Private: Read and act on a single email. This is *not* run in a
+  # user thread, but rather in a worker thread; that's why we rescue
+  # exceptions rather than letting them bubble up.
   #
   # + uid - The UID of the email.
   def process_uid(uid)
@@ -291,7 +293,6 @@ class ImapClient::UserThread
     self.daemon.total_emails_processed += 1
   rescue => e
     log_exception(e)
-    self.daemon.increment_error_count(user.id)
     stop!
   end
 

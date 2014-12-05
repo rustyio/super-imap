@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141121184010) do
+ActiveRecord::Schema.define(version: 20141205024759) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -112,8 +112,7 @@ ActiveRecord::Schema.define(version: 20141121184010) do
   create_table "partners", force: true do |t|
     t.string   "api_key"
     t.string   "name"
-    t.string   "success_webhook"
-    t.string   "failure_webhook"
+    t.string   "new_mail_webhook"
     t.integer  "partner_connections_count", default: 0
     t.datetime "created_at"
     t.datetime "updated_at"

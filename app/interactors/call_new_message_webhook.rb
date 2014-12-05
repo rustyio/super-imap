@@ -1,6 +1,6 @@
 require 'timeout'
 
-class TransmitToWebhook
+class CallNewMessageWebhook
   attr_accessor :mail_log, :envelope, :raw_eml
 
   def initialize(mail_log, envelope, raw_eml)
@@ -27,7 +27,7 @@ class TransmitToWebhook
       transmit_log = mail_log.transmit_logs.create()
 
       # Post the data.
-      webhook = RestClient::Resource.new(partner.success_webhook)
+      webhook = RestClient::Resource.new(partner.new_mail_webhook)
       response = Timeout::timeout(30) do
         webhook.post(data.to_json, :content_type => :json, :accept => :json)
       end
@@ -38,7 +38,12 @@ class TransmitToWebhook
 
       # Check the error code.
       code = response.code.to_i
-      if ![200, 201, 202, 204].include?(code)
+      if [200, 201, 202, 204].include?(code)
+        # Success!
+      elsif code == 403 # Forbidden.
+        # The server understood the request but refused it. Mark the user as archived.
+        user.update_attributes!(:archived => true)
+      else
         # We didn't see one of the expected response codes, so raise
         # an error, which will try again.
         raise FailedWebhookError.new("Failed webhook #{code} - #{response.to_s}")
