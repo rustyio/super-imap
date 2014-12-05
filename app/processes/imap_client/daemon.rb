@@ -181,7 +181,7 @@ class ImapClient::Daemon
   def claim_thread_runner
     while running?
       User.select(:id, :email, :archived).find_each do |user|
-        if !user.archived && server_rhash.hash(user.id) == server_tag
+        if server_rhash.hash(user.id) == server_tag && !user.archived && user.connected_at
           schedule_work(:connect_user, :hash => user.id, :user_id => user.id)
         else
           schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)

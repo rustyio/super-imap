@@ -12,7 +12,8 @@ def create_user(connection, n)
     :tag            => "User #{n}",
     :email          => "user#{n}@localhost",
     :login_username => "user#{n}@localhost",
-    :login_password => "password")
+    :login_password => "password",
+    :connected_at   => Time.now)
 end
 
 def create_partner_connection(partner, imap_provider)
