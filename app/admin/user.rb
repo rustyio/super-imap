@@ -99,7 +99,11 @@ ActiveAdmin.register User do
     end
 
     if !f.object.new_record? && f.object.connection_fields.present?
-      f.inputs "Connection Settings", *f.object.connection_fields
+      f.inputs "Connection Settings" do
+        f.object.connection_fields.each do |field|
+          f.input field, :input_html => { :value => f.object.send(field) }
+        end
+      end
     end
 
     f.actions

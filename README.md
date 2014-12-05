@@ -35,6 +35,7 @@ someone's email. Treat it with the appropriate amount of caution.
 Other security measures:
 
 + SSL is *required* in production.
++ Secure data (e.g. passwords and other credentials) are never exposed via the web interface.
 + Sessions are not remembered.
 + Passwords are not recoverable by email.
 + Accounts are locked for an hour after three invalid password attempts.
