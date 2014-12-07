@@ -16,8 +16,8 @@ module ConnectionFields
 
       # Maybe obscure the actual value.
       if options[:secure]
-        define_method(field) do |secure = true|
-          if secure && self[field].present?
+        define_method(field) do |secure = false|
+          if !secure && self[field].present?
             self[field][0..3] + ("•" * (self[field].length - 4))
           else
             super()
