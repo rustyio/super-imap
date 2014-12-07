@@ -1,6 +1,7 @@
 GIT
   remote: git://github.com/activeadmin/activeadmin.git
   revision: 0becbef0918a38b91ad120aba7c2f6641e9b5440
+  ref: 0becbef0
   specs:
     activeadmin (1.0.0.pre)
       arbre (~> 1.0, >= 1.0.2)
@@ -67,6 +68,11 @@ GEM
     coffee-script-source (1.8.0)
     columnize (0.8.9)
     debugger-linecache (1.2.0)
+    delayed_job (4.0.4)
+      activesupport (>= 3.0, < 4.2)
+    delayed_job_active_record (4.0.2)
+      activerecord (>= 3.0, < 4.2)
+      delayed_job (>= 3.0, < 4.1)
     devise (3.4.1)
       bcrypt (~> 3.0)
       orm_adapter (~> 0.1)
@@ -84,7 +90,7 @@ GEM
     foreman (0.75.0)
       dotenv (~> 0.11.1)
       thor (~> 0.19.1)
-    formtastic (3.0.0)
+    formtastic (3.1.2)
       actionpack (>= 3.2.13)
     formtastic_i18n (0.1.1)
     has_scope (0.6.0.rc)
@@ -101,7 +107,7 @@ GEM
     jquery-rails (3.1.2)
       railties (>= 3.0, < 5.0)
       thor (>= 0.14, < 2.0)
-    jquery-ui-rails (5.0.2)
+    jquery-ui-rails (5.0.3)
       railties (>= 3.2.16)
     json (1.8.1)
     jwt (1.0.0)
@@ -161,7 +167,7 @@ GEM
       thor (>= 0.18.1, < 2.0)
     raindrops (0.13.0)
     rake (10.3.2)
-    ransack (1.5.0)
+    ransack (1.5.1)
       actionpack (>= 3.0)
       activerecord (>= 3.0)
       activesupport (>= 3.0)
@@ -215,16 +221,17 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activeadmin!
+  activeadmin (= 1.0.0.pre)!
   coffee-rails (~> 4.0.0)
-  devise
+  delayed_job_active_record (~> 4.0.2)
+  devise (~> 3.4.1)
   foreman
   jbuilder (~> 2.0)
   jquery-rails
   newrelic_rpm
   oauth (~> 0.4.7)
   oauth2 (~> 0.9.3)
-  pg
+  pg (~> 0.17.1)
   pry
   pry-byebug
   rails (= 4.1.6)
@@ -234,7 +241,7 @@ DEPENDENCIES
   sdoc (~> 0.4.0)
   spring
   sqlite3
-  strip_attributes
+  strip_attributes (~> 1.5.1)
   turbolinks
   uglifier (>= 1.3.0)
-  unicorn
+  unicorn (~> 4.8.3)
