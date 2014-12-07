@@ -17,8 +17,8 @@ gem 'strip_attributes'          , '~>1.5.1'
 gem 'activeadmin'               , '1.0.0.pre', :github => 'activeadmin', :ref => '0becbef0'
 gem 'oauth'                     , '~> 0.4.7'
 gem 'oauth2'                    , '~> 0.9.3'
+gem 'rails_stdout_logging'
 
-gem 'rails_stdout_logging'      , :group => [:production, :staging]
 gem 'rails_12factor'            ,   :group => :production
 gem 'newrelic_rpm'              ,     :group => :production
 
