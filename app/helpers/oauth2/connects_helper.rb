@@ -6,8 +6,8 @@ module Oauth2::ConnectsHelper
   def oauth2_new_helper
     # Construct the client.
     client = OAuth2::Client.new(
-      connection.oauth2_client_id,
-      connection.oauth2_client_secret,
+      connection.oauth2_client_id_secure,
+      connection.oauth2_client_secret_secure,
       :site          => imap_provider.oauth2_site,
       :authorize_url => imap_provider.oauth2_authorize_url)
 
@@ -28,8 +28,8 @@ module Oauth2::ConnectsHelper
     # Exchange the code for a refresh token.
     # https://developers.google.com/accounts/docs/OAuth2WebServer
     client = OAuth2::Client.new(
-      connection.oauth2_client_id,
-      connection.oauth2_client_secret,
+      connection.oauth2_client_id_secure,
+      connection.oauth2_client_secret_secure,
       :site        => imap_provider.oauth2_site,
       :token_url   => imap_provider.oauth2_token_url)
 

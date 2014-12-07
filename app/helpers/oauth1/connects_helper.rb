@@ -3,8 +3,8 @@ module Oauth1::ConnectsHelper
 
   def oauth1_new_helper
     consumer = OAuth::Consumer.new(
-      connection.oauth1_consumer_key,
-      connection.oauth1_consumer_secret,
+      connection.oauth1_consumer_key_secure,
+      connection.oauth1_consumer_secret_secure,
       :site               => imap_provider.oauth1_site,
       :request_token_path => imap_provider.oauth1_request_token_path,
       :authorize_path     => imap_provider.oauth1_authorize_path,

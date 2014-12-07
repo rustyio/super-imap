@@ -24,6 +24,10 @@ module ConnectionFields
           end
         end
 
+        define_method("#{field}_secure".to_sym) do
+          self.send(field, true)
+        end
+
         define_method("#{field}=".to_sym) do |value|
           if value != self.send(field)
             super(value)
