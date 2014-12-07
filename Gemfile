@@ -10,7 +10,6 @@ gem 'jquery-rails'
 gem 'turbolinks'
 gem 'jbuilder'     , '~> 2.0'
 gem 'pg'
-gem 'rails_stdout_logging'
 gem 'unicorn'
 gem 'devise'
 gem 'strip_attributes'
@@ -18,6 +17,7 @@ gem 'activeadmin'  , github: 'activeadmin'
 gem 'oauth'        , '~> 0.4.7'
 gem 'oauth2'       , '~> 0.9.3'
 
+gem 'rails_stdout_logging', :group => [:production, :staging]
 gem 'rails_12factor',   :group => :production
 gem 'newrelic_rpm',     :group => :production
 
