@@ -8,6 +8,10 @@ class CallUserConnectedWebhook < BaseWebhook
   def run
     partner = mail_log.user.partner_connection.partner
 
+    if partner.user_connected_webhook.blank?
+      return false
+    end
+
     # Assemble the payload.
     data = {
       :timestamp          => Time.now.to_i,
