@@ -1,4 +1,5 @@
 class Api::V1::UsersController < ApplicationController
+  layout "blank"
   respond_to :json
   before_action :default_format_json
   before_action :load_partner
