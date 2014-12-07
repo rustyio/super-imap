@@ -45,7 +45,7 @@ class Api::V1::UsersController < ApplicationController
   end
 
   def load_partner
-    api_key = headers[:api_key] || params[:api_key]
+    api_key = request.headers['x-api-key'] || params[:api_key]
     self.partner = Partner.find_by_api_key(api_key)
     if partner.nil?
       render :status => :not_found, :text => "Partner not found. Check your api_key."
