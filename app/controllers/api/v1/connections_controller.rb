@@ -1,6 +1,7 @@
 class Api::V1::ConnectionsController < ApplicationController
   layout "blank"
   respond_to :json
+  skip_before_action :verify_authenticity_token
   before_action :default_format_json
   before_action :load_partner
   before_action :load_imap_provider, :only => [:create, :update, :show, :destroy]
