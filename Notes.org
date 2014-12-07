@@ -1,24 +1,6 @@
 * Clean up Grimace git history.
 
-* Create an AdminUsers page.
-
-* Update LeadParser
-
-** Implement GrimaceController
-*** Implement link action
-- Creates the grimace user.
-- Redirects to link url.
-- Passes redirect urls.
-*** Implement new_mail action
-- Handle the incoming .eml.
-- Return 403 if user is archived.
-
-** Update LinkUserToGmail
-*** Call GrimaceWrapper#ensure_user
-*** Call GrimaceWrapper#update_user
-
-
-* Clean Up Old Code
+* Remove Old Code
 ** Remove GmailOauthLinksController
 ** Remove GmailOauthUnlinksController
 ** Remove GmailOauthResponsesController
@@ -28,3 +10,5 @@
 ** Remove MaybeResetContextIOWebhook
 ** Remove ProcessContextIOMessage
 ** Remove ContextIO fields from PartnerUser
+** Remove LinkUserToGmail
+** Remove UnlinkUserFromGmail
