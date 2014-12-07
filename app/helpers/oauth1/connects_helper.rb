@@ -29,6 +29,8 @@ module Oauth1::ConnectsHelper
       :oauth1_token_secret => oauth1_access_token.params[:oauth_token_secret],
       :connected_at        => Time.now)
 
+    CallUserConnectedWebhook.new(user).delay.run
+
     redirect_to_success_url
   rescue => e
     Log.exception(e)

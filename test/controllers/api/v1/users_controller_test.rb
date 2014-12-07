@@ -25,7 +25,7 @@ class Api::V1::UsersControllerTest < ActionController::TestCase
 
     user = User.find_by_tag("TAG")
     assert_equal "LOGIN_USERNAME", user.login_username
-    assert_equal "LOGIN_PASSWORD", user.login_password
+    assert_equal "LOGIN_PASSWORD", user.login_password_secure
   end
 
   test "create without tag and email" do

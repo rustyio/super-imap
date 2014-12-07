@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141205024759) do
+ActiveRecord::Schema.define(version: 20141207191800) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -118,6 +118,8 @@ ActiveRecord::Schema.define(version: 20141205024759) do
     t.datetime "updated_at"
     t.string   "success_url"
     t.string   "failure_url"
+    t.string   "user_connected_webhook"
+    t.string   "user_disconnected_webhook"
   end
 
   create_table "transmit_logs", force: true do |t|

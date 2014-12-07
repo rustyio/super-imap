@@ -1,6 +1,6 @@
 require 'timeout'
 
-class CallNewMessageWebhook
+class CallNewMailWebhook < BaseWebhook
   attr_accessor :mail_log, :envelope, :raw_eml
 
   def initialize(mail_log, envelope, raw_eml)
@@ -14,11 +14,12 @@ class CallNewMessageWebhook
 
     # Assemble the payload.
     data = {
-      :timestamp => Time.now.to_i,
-      :sha1      => mail_log.sha1,
-      :user_tag  => user.tag,
-      :envelope  => envelope,
-      :rfc822    => raw_eml
+      :timestamp          => Time.now.to_i,
+      :sha1               => mail_log.sha1,
+      :user_tag           => user.tag,
+      :imap_provider_code => user.connection.imap_provider_code,
+      :envelope           => envelope,
+      :rfc822             => raw_eml
     }
     data[:signature] = calculate_signature(partner.api_key, data[:sha1], data[:timestamp])
 
@@ -36,27 +37,25 @@ class CallNewMessageWebhook
       transmit_log.update_attributes(:response_code => response.code.to_i,
                                      :response_body => response.to_s.slice(0, 1024))
 
-      # Check the error code.
-      code = response.code.to_i
-      if [200, 201, 202, 204].include?(code)
-        # Success!
-      elsif code == 403 # Forbidden.
-        # The server understood the request but refused it. Mark the user as archived.
-        user.update_attributes!(:archived => true)
-      else
-        # We didn't see one of the expected response codes, so raise
-        # an error, which will try again.
-        raise FailedWebhookError.new("Failed webhook #{code} - #{response.to_s}")
-      end
+      return true
     rescue RestClient::Exception => e
-      transmit_log.update_attributes(:response_code => e.response.code,
-                                     :response_body => "#{e.to_s} #{e.response.to_s}".slice(0, 1024))
+      # Received some kind of failure response code. Log it.
+      response = e.response
+      transmit_log.update_attributes(:response_code => response.code.to_i,
+                                     :response_body => response.to_s.slice(0, 1024))
+
+      if response.code == 403
+        # The server understood the request but refused it. Mark the
+        # user as archived.
+        user.update_attributes!(:archived => true)
+        return false
+      else
+        raise e
+      end
+    rescue => e
+      transmit_log.update_attributes(:response_code => "ERROR"
+                                     :response_body => e.to_s.slice(0, 1024))
       raise e
     end
-  end
-
-  def calculate_signature(api_key, uid, timestamp)
-    digest = OpenSSL::Digest.new('sha256')
-    return OpenSSL::HMAC.hexdigest(digest, api_key, "#{timestamp}#{uid}")
   end
 end

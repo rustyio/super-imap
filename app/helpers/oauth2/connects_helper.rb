@@ -42,6 +42,8 @@ module Oauth2::ConnectsHelper
       :oauth2_refresh_token => oauth2_token.refresh_token,
       :connected_at         => Time.now)
 
+    CallUserConnectedWebhook.new(user).delay.run
+
     redirect_to_success_url
   rescue => e
     Log.exception(e)

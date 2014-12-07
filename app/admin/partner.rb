@@ -2,7 +2,9 @@ ActiveAdmin.register Partner do
   menu :priority => 0
   permit_params :name, :api_key,
                 :success_url, :failure_url,
-                :new_mail_webhook
+                :new_mail_webhook,
+                :user_connected_webhook,
+                :user_disconnected_webhook
 
   breadcrumb do
     [
@@ -24,20 +26,34 @@ ActiveAdmin.register Partner do
     actions
   end
 
-  show do
-    attributes_table do
-      row :name
-      row :api_key
-      row :success_url
-      row :failure_url
-      row :new_mail_webhook
+  show do |obj|
+    panel "Connection Settings" do
+      attributes_table_for obj do
+        row :name
+        row :api_key
+      end
+    end
+
+    panel "Client Side Redirects" do
+      attributes_table_for obj do
+        row :success_url
+        row :failure_url
+      end
+    end
+
+    panel "Webhooks" do
+      attributes_table_for obj do
+        row :user_connected_webhook
+        row :user_disconnected_webhook
+        row :new_mail_webhook
+      end
     end
   end
 
   form do |f|
     f.inputs "Details" do
       f.input :name
-      f.input :api_key
+      f.input :api_key unless f.object.new_record?
     end
 
     f.inputs "Client Side Redirects" do
@@ -46,6 +62,8 @@ ActiveAdmin.register Partner do
     end
 
     f.inputs "Webhooks" do
+      f.input :user_connected_webhook
+      f.input :user_disconnected_webhook
       f.input :new_mail_webhook
     end
     f.actions

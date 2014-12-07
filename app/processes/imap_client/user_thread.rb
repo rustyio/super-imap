@@ -283,7 +283,7 @@ class ImapClient::UserThread
 
     # Transmit to the partner's webhook.
     unless self.daemon.stress_test_mode
-      TransmitToWebhook.new(mail_log, envelope, raw_eml).delay.run
+      CallNewMailWebhook.new(mail_log, envelope, raw_eml).delay.run
     end
 
     # Update stats.
