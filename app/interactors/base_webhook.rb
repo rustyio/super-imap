@@ -1,3 +1,6 @@
+require 'timeout'
+require 'net/imap'
+
 class BaseWebhook
   private unless Rails.env.test?
 

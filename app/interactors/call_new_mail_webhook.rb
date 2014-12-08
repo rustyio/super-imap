@@ -1,5 +1,3 @@
-require 'timeout'
-
 class CallNewMailWebhook < BaseWebhook
   attr_accessor :mail_log, :envelope, :raw_eml
 
@@ -10,7 +8,8 @@ class CallNewMailWebhook < BaseWebhook
   end
 
   def run
-    partner = mail_log.user.partner_connection.partner
+    user = mail_log.user
+    partner = user.partner_connection.partner
 
     if partner.new_mail_webhook.blank?
       return false
@@ -38,27 +37,26 @@ class CallNewMailWebhook < BaseWebhook
       end
 
       # Update the transmit log record.
-      transmit_log.update_attributes(:response_code => response.code.to_i,
-                                     :response_body => response.to_s.slice(0, 1024))
+      transmit_log.update_attributes!(:response_code => response.code.to_i,
+                                      :response_body => response.to_s.slice(0, 1024))
 
       return true
-    rescue RestClient::Exception => e
-      # Received some kind of failure response code. Log it.
+    rescue RestClient::Forbidden => e
       response = e.response
-      transmit_log.update_attributes(:response_code => response.code.to_i,
-                                     :response_body => response.to_s.slice(0, 1024))
+      transmit_log.update_attributes!(:response_code => response.code.to_i,
+                                      :response_body => response.to_s.slice(0, 1024))
 
-      if response.code == 403
-        # The server understood the request but refused it. Mark the
-        # user as archived.
-        user.update_attributes!(:archived => true)
-        return false
-      else
-        raise e
-      end
+      # The server understood the request but refused it. Mark the
+      # user as archived.
+      user.update_attributes!(:archived => true)
+    rescue RestClient::Exception => e
+      response = e.response
+      transmit_log.update_attributes!(:response_code => response.code.to_i,
+                                      :response_body => response.to_s.slice(0, 1024))
+      raise e
     rescue => e
-      transmit_log.update_attributes(:response_code => "ERROR"
-                                     :response_body => e.to_s.slice(0, 1024))
+      transmit_log.update_attributes!(:response_code => "ERROR",
+                                      :response_body => e.to_s.slice(0, 1024))
       raise e
     end
   end

@@ -123,6 +123,7 @@ GEM
     multi_json (1.10.1)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
+    netrc (0.7.9)
     newrelic_rpm (3.9.6.257)
     oauth (0.4.7)
     oauth2 (0.9.4)
@@ -177,6 +178,8 @@ GEM
       json (~> 1.4)
     responders (1.0.0)
       railties (>= 3.2, < 5)
+    rest_client (1.8.2)
+      netrc (~> 0.7.7)
     sass (3.2.19)
     sass-rails (4.0.4)
       railties (>= 4.0.0, < 5.0)
@@ -237,6 +240,7 @@ DEPENDENCIES
   rails (= 4.1.6)
   rails_12factor
   rails_stdout_logging
+  rest_client (~> 1.8.2)
   sass-rails (~> 4.0.3)
   sdoc (~> 0.4.0)
   spring

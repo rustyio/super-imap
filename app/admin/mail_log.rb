@@ -5,7 +5,7 @@ ActiveAdmin.register MailLog do
 
   # Only allow viewing.
   config.clear_action_items!
-  actions :all, :except => [:edit, :destroy]
+  actions :all, :except => [:new, :edit, :destroy]
 
   config.filters = false
 

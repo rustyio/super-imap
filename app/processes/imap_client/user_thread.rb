@@ -290,6 +290,7 @@ class ImapClient::UserThread
     self.daemon.clear_error_count(user.id)
     self.daemon.processed_log &&
       self.daemon.processed_log << [Time.now, user.email, message_id]
+
     self.daemon.total_emails_processed += 1
   rescue => e
     log_exception(e)

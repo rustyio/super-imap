@@ -4,7 +4,8 @@ module Oauth1::DisconnectsHelper
     self.user.update_attributes!(
       :email               => nil,
       :oauth1_token        => nil,
-      :oauth1_token_secret => nil)
+      :oauth1_token_secret => nil,
+      :connected_at        => nil)
 
     CallUserDisconnectedWebhook.new(user).delay.run
 
