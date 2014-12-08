@@ -4,8 +4,8 @@
 
 Grimace triggers a webhook when new email arrives in an IMAP inbox. It
 is an open-source (MIT Licensed), cloud-based microservice written in
-Ruby / Rails. Grimace is an alternative to (and a subset of)
-Context.io.
+Ruby / Rails. Grimace is an alternative to Context.io and contains a
+subset of Context.io Lite API functionality.
 
 The workflow is as follows:
 
