@@ -11,8 +11,8 @@ class Users::BaseCallbackController < ApplicationController
     end
 
     # Set up the callback URLs.
-    session[:success_url] = params[:success_url] || partner.success_url
-    session[:failure_url] = params[:failure_url] || partner.failure_url
+    session[:success_url] = params[:success] || partner.success_url
+    session[:failure_url] = params[:failure] || partner.failure_url
 
     apply_helper
   end

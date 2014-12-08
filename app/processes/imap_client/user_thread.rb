@@ -271,7 +271,7 @@ class ImapClient::UserThread
     end
 
     # Generate the SHA1.
-    sha1 = Digest::SHA1.hexdigest(raw_eml.slice(0, 10000))
+    sha1 = Digest::SHA1.hexdigest(raw_eml)
 
     # Have we already processed this one?
     if user.mail_logs.find_by_sha1(sha1)
