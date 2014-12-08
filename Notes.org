@@ -1,14 +1,3 @@
-* Rename LinkUserToGmail to ConnectUserToContextIo.
-* Implement the ConnectUserToGrimace Interactor
-* Update the CreateUser and UpdateUser interactors to use ConnectUserToGrimace
-* Configure stress test to optionally track code coverage.
-
-* Grimace guide:
-- Install.
-- Set up.
-- Integration.
-- Sample code (GrimaceWrapper -> GrimaceClient)
-
 * Restart Grimace git history.
 
 * Migrate existing ContextIO users to Grimace.
