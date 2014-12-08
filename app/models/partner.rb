@@ -14,9 +14,9 @@ class Partner < ActiveRecord::Base
     self.api_key ||= SecureRandom.hex(10)
   end
 
-  # Public: Create a new user that bases it's type on the provided
-  # imap_provider. In other words, if this is an Oauth1::ImapProvider,
-  # then return an Oauth1::ImapProvider.
+  # Public: Create a new connection that bases it's type on the
+  # provided imap_provider. In other words, if this is an
+  # Oauth1::ImapProvider, then return an Oauth1::ImapProvider.
   def new_typed_connection(imap_provider)
     connection = imap_provider.class_for(PartnerConnection).new
     self.connections << connection
