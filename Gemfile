@@ -18,15 +18,15 @@ gem 'activeadmin'               , '1.0.0.pre', :github => 'activeadmin', :ref =>
 gem 'rest_client'               , '~>1.8.2'
 gem 'oauth'                     , '~> 0.4.7'
 gem 'oauth2'                    , '~> 0.9.3'
-gem 'rails_stdout_logging'
 
-gem 'rails_12factor'            ,   :group => :production
-gem 'newrelic_rpm'              ,     :group => :production
+gem 'rails_stdout_logging'      , :group => [:staging, :production]
+gem 'rails_12factor'            , :group => :production
+gem 'newrelic_rpm'              , :group => :production
 
-gem 'spring'                    ,           :group => :development
-gem 'sqlite3'                   ,          :group => :development
-gem 'foreman'                   ,          :group => :development
-gem 'pry'                       ,              :group => :development
-gem 'pry-byebug'                ,       :group => :development
+gem 'spring'                    , :group => :development
+gem 'sqlite3'                   , :group => :development
+gem 'foreman'                   , :group => :development
+gem 'pry'                       , :group => :development
+gem 'pry-byebug'                , :group => :development
 
 gem 'sdoc'                      , '~> 0.4.0', :group => :doc

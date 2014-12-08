@@ -1,10 +1,13 @@
-* Deploy LeadParser Grimace integration code to staging and test.
-- Link up a LeadParser user to Gmail via the web link.
-- Link up a LeadParser user to Gmail via the API.
-- Test sending an email to a Grimace user, verify it arrives on LeadParser.
-
-* Grimace integration test scripts.
+* Rename LinkUserToGmail to ConnectUserToContextIo.
+* Implement the ConnectUserToGrimace Interactor
+* Update the CreateUser and UpdateUser interactors to use ConnectUserToGrimace
 * Configure stress test to optionally track code coverage.
+
+* Grimace guide:
+- Install.
+- Set up.
+- Integration.
+- Sample code (GrimaceWrapper -> GrimaceClient)
 
 * Restart Grimace git history.
 
@@ -20,5 +23,5 @@
 - Remove MaybeResetContextIOWebhook
 - Remove ProcessContextIOMessage
 - Remove ContextIO fields from PartnerUser
-- Remove LinkUserToGmail
+- Remove LinkUserToGmail / ConnectUserToContextIo
 - Remove UnlinkUserFromGmail
