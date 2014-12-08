@@ -1,14 +1,24 @@
-* Clean up Grimace git history.
+* Deploy LeadParser Grimace integration code to staging and test.
+- Link up a LeadParser user to Gmail via the web link.
+- Link up a LeadParser user to Gmail via the API.
+- Test sending an email to a Grimace user, verify it arrives on LeadParser.
+
+* Grimace integration test scripts.
+* Configure stress test to optionally track code coverage.
+
+* Restart Grimace git history.
+
+* Migrate existing ContextIO users to Grimace.
 
 * Remove Old Code
-** Remove GmailOauthLinksController
-** Remove GmailOauthUnlinksController
-** Remove GmailOauthResponsesController
-** Remove GmailOauthCredentials
-** Remove ContextIOWrapper
-** Remove ContextIOController
-** Remove MaybeResetContextIOWebhook
-** Remove ProcessContextIOMessage
-** Remove ContextIO fields from PartnerUser
-** Remove LinkUserToGmail
-** Remove UnlinkUserFromGmail
+- Remove GmailOauthLinksController
+- Remove GmailOauthUnlinksController
+- Remove GmailOauthResponsesController
+- Remove GmailOauthCredentials
+- Remove ContextIOWrapper
+- Remove ContextIOController
+- Remove MaybeResetContextIOWebhook
+- Remove ProcessContextIOMessage
+- Remove ContextIO fields from PartnerUser
+- Remove LinkUserToGmail
+- Remove UnlinkUserFromGmail
