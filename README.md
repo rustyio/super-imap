@@ -1,24 +1,18 @@
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/rustyio/super_imap)
 
-# SuperIMAP - A scalable inbound mail processor.
+# SuperIMAP Overview
 
-SuperIMAP triggers a webhook when new email arrives in an IMAP
-inbox. SuperIMAP is an alternative to Context.io and contains a subset
-of Context.io Lite API functionality. SuperIMAP is written in Ruby on
-Rails and is open source under the MIT license.
+SuperIMAP is an inbound mail processor - it triggers a webhook event when
+new email arrives in an IMAP inbox. SuperIMAP is useful when you want your application to react to email sent to your users.
 
-The workflow is as follows:
+[FiveStreet](http://www.fivestreet.com) built SuperIMAP to solve
+scaling issues as we grew 7000% in weekly email volume over the past
+year. SuperIMAP can scale to tens of thousands of users. SuperIMAP is
+an alternative to Context.io and contains a subset of Context.io Lite
+API functionality. SuperIMAP is written in Ruby on Rails and is open
+source under the MIT license.
 
-+ Connect to an IMAP account on your user's behalf. (Yes, SuperIMAP
-  handles the OAuth authentication dance for you.)
-+ Wait for a new email message.
-+ Trigger a webhook to your application with the contents of the email message.
-
-[FiveStreet](http://www.fivestreet.com) built SuperIMAP to solve scaling
-issues as we grew 7000% in weekly email volume over the past
-year. SuperIMAP can scale to tens of thousands of users.
-
-SuperIMAP currently supports the following authentication methods:
+The following IMAP authentication methods are supported:
 
 + Gmail OAuth 1.0
 + Gmail OAuth 2.0
