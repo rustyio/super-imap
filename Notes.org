@@ -1,5 +1,6 @@
-* Restart Grimace git history.
-
+* Rename to SuperIMAP
+* Deploy Electric with SuperImap changes to staging
+* Connect and test with Electric users
 * Migrate existing ContextIO users to Grimace.
 
 * Remove Old Code

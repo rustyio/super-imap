@@ -1,24 +1,24 @@
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/rustyio/grimace)
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/rustyio/super_imap)
 
-# Grimace - A scalable IMAP listener.
+# SuperIMAP - A scalable inbound mail processor.
 
-Grimace triggers a webhook when new email arrives in an IMAP
-inbox. Grimace is an alternative to Context.io and contains a subset
-of Context.io Lite API functionality. Grimace is written in Ruby on
+SuperIMAP triggers a webhook when new email arrives in an IMAP
+inbox. SuperIMAP is an alternative to Context.io and contains a subset
+of Context.io Lite API functionality. SuperIMAP is written in Ruby on
 Rails and is open source under the MIT license.
 
 The workflow is as follows:
 
-+ Connect to an IMAP account on your user's behalf. (Yes, Grimace
++ Connect to an IMAP account on your user's behalf. (Yes, SuperIMAP
   handles the OAuth authentication dance for you.)
 + Wait for a new email message.
 + Trigger a webhook to your application with the contents of the email message.
 
-[FiveStreet](http://www.fivestreet.com) built Grimace to solve scaling
+[FiveStreet](http://www.fivestreet.com) built SuperIMAP to solve scaling
 issues as we grew 7000% in weekly email volume over the past
-year. Grimace can scale to tens of thousands of users.
+year. SuperIMAP can scale to tens of thousands of users.
 
-Grimace currently supports the following authentication methods:
+SuperIMAP currently supports the following authentication methods:
 
 + Gmail OAuth 1.0
 + Gmail OAuth 2.0
@@ -41,13 +41,13 @@ Other security measures:
 
 ## Data Model
 
-Grimace has:
+SuperIMAP has:
 
 * **IMAP Providers** - Configures an authentication transport
   mechanism. For example, there are connection types for "Plain",
   "Gmail OAuth 1.0" and "Gmail OAuth 2.0".
 * **Partners** - Create a partner for each application / environment
-  that will use Grimace.
+  that will use SuperIMAP.
 * **Partner Connection** - Defines a connection between a partner and
   a given IMAP Provider. Holds, for example, an application's OAuth
   keys.
@@ -56,7 +56,7 @@ Grimace has:
 Users are uniquely identified by a combination of `imap_provider_code`
 and `tag`. The tag is chosen by the partner.
 
-## Using Grimace In Your App
+## Using SuperIMAP
 
 First, configure a new partner with a Gmail OAuth 2.0 connection:
 
@@ -80,7 +80,7 @@ Finally, write code in your app to create and connect users as follows:
 ```ruby
     require 'rest-client'
 
-    url = "https://my-grimace-host.com/api/v1/connections/GMAIL_OAUTH2/users"
+    url = "https://my-app.com/api/v1/connections/GMAIL_OAUTH2/users"
     users = RestClient::Resource.new(url, :headers => {
       :'x-api-key'  => "$API_KEY$",
       :content_type => :json,
@@ -105,7 +105,7 @@ Finally, write code in your app to create and connect users as follows:
 ```
 
 ```ruby
-    url = "https://my-grimace-host.com/api/v1/connections/GMAIL_OAUTH2/users"
+    url = "https://my-host.com/api/v1/connections/GMAIL_OAUTH2/users"
     users = RestClient::Resource.new(url, :headers => {
       :'x-api-key'  => "$API_KEY$",
       :content_type => :json,
@@ -142,7 +142,7 @@ All webhooks are signed. You can validate the signature as follows:
 
     # Calculate expected signature.
     digest    = OpenSSL::Digest.new('sha256')
-    api_key   = Rails.application.config.grimace_api_key
+    api_key   = Rails.application.config.super_imap_api_key
     sha1      = json_params['sha1']
     timestamp = json_params['timestamp']
     expected_signature = OpenSSL::HMAC.hexdigest(digest, api_key, "#{timestamp}#{sha1}")
@@ -186,11 +186,11 @@ applies to OAuth connections at the moment.
 + `imap_provider_code` - The IMAP provider code (e.g. "GMAIL_OAUTH2")
 + `user_tag` - The user's tag.
 
-## Running Grimace
+## Running SuperIMAP
 
 #### Architecture
 
-Grimace consists of 3 different processes:
+SuperIMAP consists of 3 different processes:
 
 + 'web' - Serves the admin interface and the API.
 + 'imap_client' - Handles the task of connecting to IMAP providers and listening for email.
@@ -205,7 +205,7 @@ is configured to handle 500 users. You can change this, and other settings, thro
 
 #### Scaling
 
-To scale Grimace, you will mainly want to increase the number of IMAP
+To scale SuperIMAP, you will mainly want to increase the number of IMAP
 Client processes. The IMAP Client processes automatically publish a
 heartbeat every 10 seconds. Other instances look for this heartbeat
 and re-calculate which neighboring processes are alive based on any
@@ -223,14 +223,14 @@ remaining instances (assuming they are still below the
 `MAX_USER_THREADS` threshold.)
 
 There is no "master" process that decides which IMAP Client process
-should handle a given user. Grimace uses a
+should handle a given user. SuperIMAP uses a
 [Rendezvous Hash](http://en.wikipedia.org/wiki/Rendezvous_hashing) to
 allow IMAP Client instances to agree on how to evenly assign users
 without any central coordination.
 
 #### Operations
 
-Grimace publishes some useful monitoring information in the logs.
+SuperIMAP publishes some useful monitoring information in the logs.
 This includes:
 
 + `imap_client.user_thread.count` - The size of the imap client work queue. Backups may indicate that your servers are overloaded.
@@ -243,7 +243,7 @@ Librato Add-On in Heroku. See
 https://devcenter.heroku.com/articles/librato#custom-log-based-metrics
 for more information.
 
-Apart from keeping an eye on these metrics, Grimace should need no other regular metrics.
+Apart from keeping an eye on these metrics, SuperIMAP should need no other regular metrics.
 
 You may also want to keep an eye out for any failing Delayed Job tasks. You can view these from the Admin site.
 
@@ -284,13 +284,13 @@ Then run all tests:
 
 #### Stress Testing
 
-The stress test exercises the multi-threaded aspects of Grimace, as
-well as the error recovery code. To do this, we point the Grimace IMAP
+The stress test exercises the multi-threaded aspects of SuperIMAP, as
+well as the error recovery code. To do this, we point the SuperIMAP IMAP
 client code against a local IMAP server and generate a bunch of fake emails
 for many users.
 
 Additionally, the IMAP server generates 'chaotic' events; it will
-intentionally generate incorrect or gibberish responses. The Grimace
+intentionally generate incorrect or gibberish responses. The SuperIMAP
 IMAP client code is expected to recover gracefully while using a
 minimal amount of system resources.
 
@@ -323,13 +323,13 @@ preferred because it won't normally appear in HTTP logs.)
     # Access the API curl:
     curl -H "Accept: json" \
          -H "x-api-key:APIKEY" \
-         https://my-grimace-host.com/api/v1/connections
+         https://my-host.com/api/v1/connections
 ```
 
 
 ```ruby
     # Access the API using the rest-client gem:
-    url = "https://my-grimace-host.com/api/v1"
+    url = "https://my-host.com/api/v1"
     resource = RestClient::Resource.new(url, :headers => {
       :'x-api-key'  => "$API_KEY$",
       :content_type => :json,

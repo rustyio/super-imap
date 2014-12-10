@@ -6,12 +6,12 @@ default: &default
 
 development:
   <<: *default
-  database: grimace_development
+  database: super_imap_development
 
 stress:
   <<: *default
-  database: grimace_stress
+  database: super_imap_stress
 
 test:
   <<: *default
-  database: grimace_test
+  database: super_imap_test
