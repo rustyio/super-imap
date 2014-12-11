@@ -59,6 +59,7 @@ ActiveAdmin.register User do
       link_to("Mail Logs (#{obj.mail_logs_count})",
               admin_user_mail_logs_path(obj))
     end
+    column :connected_at
     column :last_connected_at
     column :last_email_at
     column :archived
@@ -68,8 +69,8 @@ ActiveAdmin.register User do
     panel "Details" do
       attributes_table_for obj do
         row :id
-        row :email
         row :tag
+        row :connected_at
         row :last_connected_at
         row :last_email_at
         row :type
