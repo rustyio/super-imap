@@ -228,7 +228,7 @@ PLATFORMS
 
 DEPENDENCIES
   activeadmin (= 1.0.0.pre)!
-  airbrake
+  airbrake (~> 4.1.0)
   coffee-rails (~> 4.0.0)
   delayed_job_active_record (~> 4.0.2)
   devise (~> 3.4.1)
