@@ -60,7 +60,7 @@ ActiveAdmin.register User do
               admin_user_mail_logs_path(obj))
     end
     column :connected_at
-    column :last_connected_at
+    column :last_login_at
     column :last_email_at
     column :archived
   end
@@ -71,7 +71,7 @@ ActiveAdmin.register User do
         row :id
         row :tag
         row :connected_at
-        row :last_connected_at
+        row :last_login_at
         row :last_email_at
         row :type
         row "Links" do
