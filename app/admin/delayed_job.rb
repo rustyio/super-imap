@@ -25,7 +25,8 @@ ActiveAdmin.register DelayedJob do
         row :id
         row :queue
         row :created_at
-        row :failed_at if obj.failed_at
+        row :failed_at if obj.attempts > 0
+        row :attempts if obj.attempts > 0
       end
     end
 
@@ -35,7 +36,7 @@ ActiveAdmin.register DelayedJob do
 
     panel "Last Error" do
       pre obj.last_error
-    end if obj.failed_at
+    end if obj.attempts > 0
 end
 
   # form do |f|
