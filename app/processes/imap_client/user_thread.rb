@@ -29,11 +29,11 @@ class ImapClient::UserThread
 
   def run
     delay_start
-    connect
-    authenticate
-    choose_folder
-    update_uid_validity
-    main_loop
+    connect             if running?
+    authenticate        if running?
+    choose_folder       if running?
+    update_uid_validity if running?
+    main_loop           if running?
   rescue => e
     log_exception(e)
     self.daemon.increment_error_count(user.id)
@@ -68,6 +68,20 @@ class ImapClient::UserThread
     schedule do
       user.update_attributes!(:last_login_at => Time.now)
     end
+  rescue OAuth::Error => e
+    # If we encounter an OAuth error during authentication, then the
+    # credentials are probably invalid. We don't want to log every
+    # occurrance of this, and we don't want to discard any information
+    # or disconnect the user, so we'll just back off from reconnecting
+    # again.
+    Log.error("#{e.class} - #{e.to_s}")
+    self.daemon.increment_error_count(user.id)
+    stop!
+  rescue OAuth2::Error => e
+    # Ditto for OAuth 2.0
+    Log.error("#{e.class} - #{e.to_s}")
+    self.daemon.increment_error_count(user.id)
+    stop!
   end
 
   # Private: Fetch a list of folders, choose the first one that looks
