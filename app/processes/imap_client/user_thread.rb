@@ -74,12 +74,10 @@ class ImapClient::UserThread
     # occurrance of this, and we don't want to discard any information
     # or disconnect the user, so we'll just back off from reconnecting
     # again.
-    Log.error("#{e.class} - #{e.to_s}")
     self.daemon.increment_error_count(user.id)
     stop!
   rescue OAuth2::Error => e
     # Ditto for OAuth 2.0
-    Log.error("#{e.class} - #{e.to_s}")
     self.daemon.increment_error_count(user.id)
     stop!
   end
