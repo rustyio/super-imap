@@ -66,7 +66,7 @@ class ImapClient::UserThread
   def authenticate
     ImapClient::Authenticator.new(user).authenticate(client)
     schedule do
-      user.update_attributes(:last_login_at => Time.now)
+      user.update_attributes!(:last_login_at => Time.now)
     end
   end
 
@@ -103,7 +103,7 @@ class ImapClient::UserThread
       schedule do
         # Update the user with the new validity value, invalidate the
         # old last_uid value.
-        user.update_attributes(:last_uid_validity => uid_validity, :last_uid => nil)
+        user.update_attributes!(:last_uid_validity => uid_validity, :last_uid => nil)
       end
     end
   end
@@ -214,31 +214,40 @@ class ImapClient::UserThread
   # + uid - The UID of the email.
   def process_uid(uid)
     responses = client.uid_fetch([uid], ["INTERNALDATE", "RFC822.SIZE"])
-    response = responses.first
+    response = responses && responses.first
+
+    # If there was no response, then skip this message.
+    if response.nil?
+      user.update_attributes!(:last_uid => uid)
+      return
+    end
 
     # Check for a really old date. If it's old, then we should stop
     # counting on our UID knowledge and go back to loading UIDs by
     # date.
     internal_date = Time.parse(response.attr["INTERNALDATE"])
     if internal_date < 4.days.ago
-      user.update_attributes(:last_uid => nil, :last_uid_validity => nil)
+      user.update_attributes!(:last_uid => nil, :last_uid_validity => nil)
       stop!
       return
     end
 
     # Don't process emails that arrived before this user was created.
     if internal_date < user.created_at
+      user.update_attributes!(:last_uid => uid)
       return
     end
 
     # Don't process emails that are significantly older than the last internal date that we've processed.
     if user.last_internal_date && internal_date < (user.last_internal_date - 1.hour)
+      user.update_attributes!(:last_uid => uid)
       return
     end
 
     # Skip emails that are too big.
     message_size = (response.attr["RFC822.SIZE"] || 0).to_i
     if message_size > self.options[:max_email_size]
+      user.update_attributes!(:last_uid => uid)
       return
     end
 
@@ -256,9 +265,9 @@ class ImapClient::UserThread
     raw_eml = response.attr["RFC822"]
 
     # Update the user.
-    user.update_attributes(:last_uid           => uid,
-                           :last_email_at      => Time.now,
-                           :last_internal_date => internal_date)
+    user.update_attributes!(:last_uid           => uid,
+                            :last_email_at      => Time.now,
+                            :last_internal_date => internal_date)
 
     # Get the message_id.
     envelope = response.attr["ENVELOPE"]
