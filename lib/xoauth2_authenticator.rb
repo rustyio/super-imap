@@ -14,3 +14,14 @@ class Net::IMAP
 
   add_authenticator 'XOAUTH2', XOAuth2Authenticator
 end
+
+class Net::SMTP
+  def auth_xoauth2(email_address, access_token)
+    res = critical {
+      auth_string = "user=#{email_address}\x01auth=Bearer #{access_token}\x01\x01"
+      get_response('AUTH XOAUTH2 ' + base64_encode(auth_string))
+    }
+    check_auth_response res
+    res
+  end
+end

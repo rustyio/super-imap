@@ -11,8 +11,8 @@ class ImapProvider < ActiveRecord::Base
   #
   # Usage:
   #
-  #     imap_provider = Oauth1::ImapProvider.new
-  #     imap_provider.class_for(User) => Oauth1::User
+  #     imap_provider = Oauth2::ImapProvider.new
+  #     imap_provider.class_for(User) => Oauth2::User
   #
   # Returns a class.
   def class_for(c)
@@ -24,8 +24,8 @@ class ImapProvider < ActiveRecord::Base
   #
   # Usage:
   #
-  #     imap_provider = Oauth1::ImapProvider.new
-  #     imap_provider.helper_for(:connects, :new) => :oauth1_new_connects_helper
+  #     imap_provider = Oauth2::ImapProvider.new
+  #     imap_provider.helper_for(:connects, :new) => :oauth2_new_connects_helper
   #
   # Returns a symbol.
   def helper_for(action)

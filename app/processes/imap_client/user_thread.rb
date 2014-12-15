@@ -59,12 +59,14 @@ class ImapClient::UserThread
   # Private: Connect to the server, set the client.
   def connect
     conn_type = user.imap_provider
-    self.client = Net::IMAP.new(conn_type.host, :port => conn_type.port, :ssl => conn_type.use_ssl)
+    self.client = Net::IMAP.new(conn_type.imap_host,
+                                :port => conn_type.imap_port,
+                                :ssl  => conn_type.imap_use_ssl)
   end
 
   # Private: Authenticate a user to the server.
   def authenticate
-    ImapClient::Authenticator.new(user).authenticate(client)
+    user.connection.imap_provider.authenticate_imap(client, user)
     schedule do
       user.update_attributes!(:last_login_at => Time.now)
     end
@@ -285,6 +287,15 @@ class ImapClient::UserThread
     envelope = response.attr["ENVELOPE"]
     message_id = envelope.message_id || "#{user.email} - #{uid} - #{internal_date}"
     message_id = message_id.slice(0, 255)
+
+    # Is this a tracer? If so, update the TracerLog.
+    if m = /^TRACER: (.+)$/.match(envelope.subject)
+      tracer_uid = m[1]
+      tracer = TracerLog.find_by_uid(tracer_uid) || TracerLog.new(:uid => tracer_uid)
+      tracer.update_attributes!(:detected_at => Time.now)
+      user.update_attributes!(:last_uid => uid)
+      return
+    end
 
     # Have we already processed this one?
     if user.mail_logs.find_by_message_id(message_id)

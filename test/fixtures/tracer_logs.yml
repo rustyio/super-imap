@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 
+  uid: MyString
+  detected_at: 2014-12-15 14:46:52
+
+two:
+  user_id: 
+  uid: MyString
+  detected_at: 2014-12-15 14:46:52

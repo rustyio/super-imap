@@ -3,7 +3,6 @@ ActiveAdmin.register PartnerConnection do
 
   permit_params :imap_provider_id,
                 *Plain::PartnerConnection.connection_fields,
-                *Oauth1::PartnerConnection.connection_fields,
                 *Oauth2::PartnerConnection.connection_fields
 
   controller do

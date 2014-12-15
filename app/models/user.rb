@@ -7,9 +7,11 @@ class User < ActiveRecord::Base
   # Scopes.
   scope :active, proc { where(:archived => false) }
   scope :archived, proc { where(:archived => true) }
+  scope :tracer, proc { where(:enable_tracer => true) }
 
   # Relations.
   has_many :mail_logs, :dependent => :destroy
+  has_many :tracer_logs, :dependent => :destroy
   belongs_to :partner_connection, :counter_cache => true
   alias_method :connection, :partner_connection
 

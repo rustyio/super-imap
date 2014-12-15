@@ -1,6 +1,5 @@
 class Users::ConnectsController < Users::BaseCallbackController
   include Plain::ConnectsHelper
-  include Oauth1::ConnectsHelper
   include Oauth2::ConnectsHelper
 
   # The new and callback actions are contained in

@@ -1,11 +1,11 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
 plain_provider = Plain::ImapProvider.create!(
-  :code    => 'PLAIN',
-  :title   => "Fake IMAP",
-  :host    => "localhost",
-  :port    => 10143,
-  :use_ssl => false)
+  :code         => 'PLAIN',
+  :title        => "Fake IMAP",
+  :imap_host    => "localhost",
+  :imap_port    => 10143,
+  :imap_use_ssl => false)
 
 def create_transmit_log(mail_log, n)
   mail_log.transmit_logs.create!(:response_code => 200, :response_body => "Response #{n}")

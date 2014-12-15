@@ -1,8 +1,9 @@
 ActiveAdmin.register ImapProvider do
   config.sort_order = "code_asc"
-  permit_params :code, :title, :host, :port, :use_ssl,
+  permit_params :code, :title,
+                :imap_host, :imap_port, :imap_use_ssl,
+                :smtp_host, :smtp_port, :smtp_domain, :smtp_enable_starttls_auto,
                 *Plain::ImapProvider.connection_fields,
-                *Oauth1::ImapProvider.connection_fields,
                 *Oauth2::ImapProvider.connection_fields
 
   config.filters = false
@@ -15,8 +16,12 @@ ActiveAdmin.register ImapProvider do
       link_to "#{obj.title} (#{obj.code})", admin_imap_provider_path(obj)
     end
 
-    column "Server" do |obj|
-       "#{obj.host}:#{obj.port}"
+    column "IMAP Server" do |obj|
+       "#{obj.imap_host}:#{obj.imap_port}"
+    end
+
+    column "SMTP Server" do |obj|
+       "#{obj.smtp_host}:#{obj.smtp_port}"
     end
   end
 
@@ -25,10 +30,24 @@ ActiveAdmin.register ImapProvider do
       attributes_table_for obj do
         row :code
         row :title
-        row :host
-        row :port
-        row :use_ssl
         row :type
+      end
+    end
+
+    panel "IMAP Settings" do
+      attributes_table_for obj do
+        row :imap_host
+        row :imap_port
+        row :imap_use_ssl
+      end
+    end
+
+    panel "SMTP Settings" do
+      attributes_table_for obj do
+        row :smtp_host
+        row :smtp_port
+        row :smtp_domain
+        row :smtp_enable_starttls_auto
       end
     end
 

@@ -1,11 +1,11 @@
 AdminUser.new(:email => "admin@example.com", :password => "password").save
 
 imap_provider = Plain::ImapProvider.create!(
-  :code    => 'PLAIN',
-  :title   => "Fake IMAP",
-  :host    => "localhost",
-  :port    => 10143,
-  :use_ssl => false)
+  :code         => 'PLAIN',
+  :title        => "Fake IMAP",
+  :imap_host    => "localhost",
+  :imap_port    => 10143,
+  :imap_use_ssl => false)
 
 def create_user(connection, n)
   connection.users.create!(

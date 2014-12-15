@@ -24,7 +24,7 @@ class PartnerConnection < ActiveRecord::Base
 
   # Public: Create a new user that bases it's type on the
   # PartnerConnection type. In other words, if this is an
-  # Oauth1::PartnerConnection, then return an Oauth1::User.
+  # Oauth2::PartnerConnection, then return an Oauth2::User.
   def new_typed_user
     user = self.imap_provider.class_for(User).new
     self.users << user

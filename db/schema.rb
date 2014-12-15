@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141207200312) do
+ActiveRecord::Schema.define(version: 20141215212628) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -76,14 +76,9 @@ ActiveRecord::Schema.define(version: 20141207200312) do
     t.string   "code"
     t.string   "title"
     t.integer  "partner_connections_count"
-    t.string   "host"
-    t.integer  "port"
-    t.boolean  "use_ssl"
-    t.string   "oauth1_access_token_path"
-    t.string   "oauth1_authorize_path"
-    t.string   "oauth1_request_token_path"
-    t.string   "oauth1_scope"
-    t.string   "oauth1_site"
+    t.string   "imap_host"
+    t.integer  "imap_port"
+    t.boolean  "imap_use_ssl"
     t.string   "oauth2_grant_type"
     t.string   "oauth2_scope"
     t.string   "oauth2_site"
@@ -96,6 +91,10 @@ ActiveRecord::Schema.define(version: 20141207200312) do
     t.string   "oauth2_response_type"
     t.string   "oauth2_access_type"
     t.string   "oauth2_approval_prompt"
+    t.string   "smtp_host"
+    t.integer  "smtp_port"
+    t.string   "smtp_domain"
+    t.boolean  "smtp_enable_starttls_auto"
   end
 
   create_table "mail_logs", force: true do |t|
@@ -112,9 +111,7 @@ ActiveRecord::Schema.define(version: 20141207200312) do
   create_table "partner_connections", force: true do |t|
     t.integer  "partner_id"
     t.integer  "imap_provider_id"
-    t.integer  "users_count",            default: 0
-    t.string   "oauth1_consumer_key"
-    t.string   "oauth1_consumer_secret"
+    t.integer  "users_count",          default: 0
     t.string   "oauth2_client_id"
     t.string   "oauth2_client_secret"
     t.datetime "created_at"
@@ -138,6 +135,17 @@ ActiveRecord::Schema.define(version: 20141207200312) do
     t.string   "user_disconnected_webhook"
   end
 
+  create_table "tracer_logs", force: true do |t|
+    t.integer  "user_id"
+    t.string   "uid",         limit: 20
+    t.datetime "detected_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "tracer_logs", ["uid"], name: "index_tracer_logs_on_uid", using: :btree
+  add_index "tracer_logs", ["user_id"], name: "index_tracer_logs_on_user_id", using: :btree
+
   create_table "transmit_logs", force: true do |t|
     t.integer  "mail_log_id"
     t.integer  "response_code"
@@ -159,8 +167,6 @@ ActiveRecord::Schema.define(version: 20141207200312) do
     t.datetime "last_internal_date"
     t.string   "login_username"
     t.string   "login_password"
-    t.string   "oauth1_token"
-    t.string   "oauth1_token_secret"
     t.string   "oauth2_refresh_token"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -168,6 +174,7 @@ ActiveRecord::Schema.define(version: 20141207200312) do
     t.string   "type"
     t.datetime "connected_at"
     t.datetime "last_login_at"
+    t.boolean  "enable_tracer",         default: false
   end
 
   add_index "users", ["partner_connection_id"], name: "index_users_on_partner_connection_id", using: :btree

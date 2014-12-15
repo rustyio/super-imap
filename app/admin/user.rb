@@ -1,9 +1,8 @@
 ActiveAdmin.register User do
   belongs_to :partner_connection
   config.sort_order = "email_asc"
-  permit_params :tag, :email,
+  permit_params :tag, :enable_tracer,
                 *Plain::User.connection_fields,
-                *Oauth1::User.connection_fields,
                 *Oauth2::User.connection_fields
 
   actions :all, :except => [:destroy]
@@ -45,6 +44,7 @@ ActiveAdmin.register User do
   filter :email
   scope :active
   scope :archived
+  scope :tracer
 
   index do
     column :tag do |obj|
@@ -62,6 +62,9 @@ ActiveAdmin.register User do
     column :connected_at
     column :last_login_at
     column :last_email_at
+    column :tracer do |obj|
+      "YES" if obj.enable_tracer
+    end
     column :archived do |obj|
       "YES" if obj.archived
     end
@@ -83,6 +86,7 @@ ActiveAdmin.register User do
           # [
           # ].join(", ")
         end
+        row :enable_tracer
         row :archived
       end
     end
@@ -99,6 +103,7 @@ ActiveAdmin.register User do
   form do |f|
     f.inputs "Details" do
       f.input :tag
+      f.input :enable_tracer
     end
 
     if !f.object.new_record? && f.object.connection_fields.present?

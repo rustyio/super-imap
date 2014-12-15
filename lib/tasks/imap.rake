@@ -8,6 +8,7 @@ namespace :imap do
     config[:num_worker_threads] = (ENV['NUM_WORKER_THREADS'] || 5).to_i
     config[:max_user_threads]   = (ENV['MAX_USER_THREADS']   || 500).to_i
     config[:max_email_size]     = (ENV['MAX_EMAIL_SIZE']     || (1024 * 1024)).to_i
+    config[:tracer_interval]    = (ENV['TRACER_INTERVAL']    || 10 * 60).to_i
     config[:enable_chaos]       = (ENV['ENABLE_CHAOS']       || "true") == "true"
 
     require 'imap_client'
@@ -20,7 +21,7 @@ namespace :imap do
 
     # Read environment variables.
     config = {}
-    config[:port]              = ImapProvider.first.port
+    config[:port]              = ImapProvider.first.imap_port
     config[:length_of_test]    = (ENV['LENGTH_OF_TEST']    || 1).to_i
     config[:emails_per_minute] = (ENV['EMAILS_PER_MINUTE'] || 500).to_i
     config[:enable_chaos]      = (ENV['ENABLE_CHAOS']      || "true") == "true"

@@ -1,6 +1,5 @@
 class Users::DisconnectsController < Users::BaseCallbackController
   include Plain::DisconnectsHelper
-  include Oauth1::DisconnectsHelper
   include Oauth2::DisconnectsHelper
 
   # The new and callback actions are contained in

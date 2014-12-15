@@ -25,10 +25,11 @@ class ImapClient::Daemon
   include Common::CsvLog
 
   attr_accessor :stress_test_mode, :chaos_mode
-  attr_accessor :num_worker_threads, :max_user_threads, :max_email_size
+  attr_accessor :num_worker_threads, :max_user_threads, :max_email_size, :tracer_interval
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
   attr_accessor :claim_thread, :user_threads, :error_counts
+  attr_accessor :tracer_thread, :tracer_emails_processed
   attr_accessor :total_emails_processed, :processed_log
 
   def initialize(options = {})
@@ -38,6 +39,7 @@ class ImapClient::Daemon
     self.num_worker_threads = options.fetch(:num_worker_threads)
     self.max_user_threads   = options.fetch(:max_user_threads)
     self.max_email_size     = options.fetch(:max_email_size)
+    self.tracer_interval    = options.fetch(:tracer_interval)
 
     # Load balancing stuff.
     self.server_tag = SecureRandom.hex(10)
@@ -62,11 +64,12 @@ class ImapClient::Daemon
     end
 
     # Start our threads.
-    set_db_connection_pool_size(self.num_worker_threads + 3)
+    set_db_connection_pool_size(self.num_worker_threads + 4)
     start_worker_pool(num_worker_threads)
     start_heartbeat_thread
     start_discovery_thread
     start_claim_thread
+    start_tracer_thread
 
     # Sleep until we are stopped.
     light_sleep
@@ -140,6 +143,13 @@ class ImapClient::Daemon
     end
   end
 
+  def start_tracer_thread
+    self.tracer_thread = wrapped_thread do
+      establish_db_connection
+      tracer_thread_runner
+    end
+  end
+
   # Private: Creates/updates an ImapDaemonHeartbeat record in the
   # database every 10 seconds.
   def heartbeat_thread_runner
@@ -188,6 +198,24 @@ class ImapClient::Daemon
         end
       end
       light_sleep 10
+    end
+  end
+
+  # Private: Schedule a tracer emails to random tracer users.
+  def tracer_thread_runner
+    while running?
+      # Get a random user assigned to this server.
+      user = User.where(:enable_tracer => true, :archived => false).select(:id).all.select do |user|
+        server_rhash.hash(user.id)
+      end.shuffle.first
+
+      # If we found a user, schedule a tracer email.
+      if user
+        user.reload
+        ScheduleTracerEmail.new(user).delay.run
+      end
+
+      light_sleep self.tracer_interval
     end
   end
 
