@@ -62,7 +62,9 @@ ActiveAdmin.register User do
     column :connected_at
     column :last_login_at
     column :last_email_at
-    column :archived
+    column :archived do |obj|
+      "YES" if obj.archived
+    end
   end
 
   show do |obj|
