@@ -15,14 +15,16 @@ class CallNewMailWebhook < BaseWebhook
       return false
     end
 
-    # Assemble the payload.
+    # Assemble the payload. We use the Mail class to decode and then
+    # re-encode the raw_eml to fix any potential character encoding
+    # issues.
     data = {
       :timestamp          => Time.now.to_i,
       :sha1               => mail_log.sha1,
       :user_tag           => user.tag,
       :imap_provider_code => user.connection.imap_provider_code,
       :envelope           => envelope,
-      :rfc822             => raw_eml
+      :rfc822             => Mail.new(raw_eml).encoded
     }
     data[:signature] = calculate_signature(partner.api_key, data[:sha1], data[:timestamp])
 
