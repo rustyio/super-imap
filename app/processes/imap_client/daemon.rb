@@ -206,8 +206,8 @@ class ImapClient::Daemon
   def tracer_thread_runner
     while running?
       # Get a random user assigned to this server.
-      user = User.where(:enable_tracer => true, :archived => false).where("connected_at IS NOT NULL").select(:id).all.select do |user|
-        server_rhash.hash(user.id)
+      user = User.where(:enable_tracer => true, :archived => false).select(:id, :connected_at).all.select do |user|
+        server_rhash.hash(user.id) == server_tag && user.connected_at
       end.shuffle.first
 
       # If we found a user, schedule a tracer email.
