@@ -283,6 +283,11 @@ class ImapClient::UserThread
                             :last_email_at      => Time.now,
                             :last_internal_date => internal_date)
 
+    # Get the message_id.
+    envelope = response.attr["ENVELOPE"]
+    message_id = envelope.message_id || "#{user.email} - #{uid} - #{internal_date}"
+    message_id = message_id.slice(0, 255)
+
     # Is this a tracer? If so, update the TracerLog.
     if m = /^TRACER: (.+)$/.match(envelope.subject)
       tracer_uid = m[1]
@@ -292,11 +297,6 @@ class ImapClient::UserThread
       self.daemon.total_emails_processed += 1
       return
     end
-
-    # Get the message_id.
-    envelope = response.attr["ENVELOPE"]
-    message_id = envelope.message_id || "#{user.email} - #{uid} - #{internal_date}"
-    message_id = message_id.slice(0, 255)
 
     # Have we already processed this one?
     if user.mail_logs.find_by_message_id(message_id)
