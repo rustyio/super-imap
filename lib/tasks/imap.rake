@@ -9,6 +9,7 @@ namespace :imap do
     config[:max_user_threads]   = (ENV['MAX_USER_THREADS']   || 500).to_i
     config[:max_email_size]     = (ENV['MAX_EMAIL_SIZE']     || (1024 * 1024)).to_i
     config[:tracer_interval]    = (ENV['TRACER_INTERVAL']    || 10 * 60).to_i
+    config[:num_tracers]        = (ENV['NUM_TRACERS']        || 3).to_i
     config[:enable_chaos]       = (ENV['ENABLE_CHAOS']       || "true") == "true"
 
     require 'imap_client'

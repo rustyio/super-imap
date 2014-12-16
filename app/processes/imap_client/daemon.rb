@@ -25,7 +25,7 @@ class ImapClient::Daemon
   include Common::CsvLog
 
   attr_accessor :stress_test_mode, :chaos_mode
-  attr_accessor :num_worker_threads, :max_user_threads, :max_email_size, :tracer_interval
+  attr_accessor :num_worker_threads, :max_user_threads, :max_email_size, :tracer_interval, :num_tracers
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
   attr_accessor :claim_thread, :user_threads, :error_counts
@@ -40,6 +40,7 @@ class ImapClient::Daemon
     self.max_user_threads   = options.fetch(:max_user_threads)
     self.max_email_size     = options.fetch(:max_email_size)
     self.tracer_interval    = options.fetch(:tracer_interval)
+    self.num_tracers        = options.fetch(:num_tracers)
 
     # Load balancing stuff.
     self.server_tag = SecureRandom.hex(10)
@@ -212,7 +213,7 @@ class ImapClient::Daemon
       # If we found a user, schedule a tracer email.
       if user
         user.reload
-        ScheduleTracerEmail.new(user).delay.run
+        ScheduleTracerEmails.new(user, self.num_tracers).delay.run
       end
 
       light_sleep self.tracer_interval

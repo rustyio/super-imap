@@ -9,6 +9,7 @@ ActiveAdmin.register TracerLog do
 
 
   index do
+    column :user
     column :uid do |obj|
       link_to obj.uid, admin_tracer_log_path(obj)
     end
