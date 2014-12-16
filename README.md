@@ -241,6 +241,24 @@ Apart from keeping an eye on these metrics, SuperIMAP should need no other regul
 
 You may also want to keep an eye out for any failing Delayed Job tasks. You can view these from the Admin site.
 
+#### Tracer Emails
+
+SuperIMAP has the ability to give you useful monitoring information
+through "tracer emails". The system will send a specially formatted
+email to an account, wait for the incoming email, and log the
+results. The logs can be accessed through the "Tracer Logs" tab.
+
+To enable Tracer Emails, navigate to a user and check the "Enable
+Tracer" checkbox. It is recommended that you create a few dummy email
+addresses to use for tracer emails.
+
+By default, a cluster of three tracers are sent every ten minutes from
+each `imap_client` instance to a random tracer-enabled user managed by
+that instance.
+
+Keep in mind that this could generate a lot of email. Three emails
+every ten minutes works out to over 4,000 emails per day.
+
 #### Development Environment
 
 Run this once:
