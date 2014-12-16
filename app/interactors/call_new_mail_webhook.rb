@@ -24,7 +24,7 @@ class CallNewMailWebhook < BaseWebhook
       :user_tag           => user.tag,
       :imap_provider_code => user.connection.imap_provider_code,
       :envelope           => envelope,
-      :rfc822             => Mail.new(raw_eml).encoded
+      :rfc822             => Mail.new(raw_eml).encoded.force_encoding('UTF-8')
     }
     data[:signature] = calculate_signature(partner.api_key, data[:sha1], data[:timestamp])
 
