@@ -47,8 +47,10 @@ class CallNewMailWebhook < BaseWebhook
                                       :response_body => response.to_s.slice(0, 1024))
 
       # The server understood the request but refused it. Mark the
-      # user as archived.
-      user.update_attributes!(:archived => true)
+      # user as archived, but only if it's not a tracer user.
+      if !user.enable_tracer
+        user.update_attributes!(:archived => true)
+      end
     rescue RestClient::Exception => e
       response = e.response
       transmit_log.update_attributes!(:response_code => response.code.to_i,

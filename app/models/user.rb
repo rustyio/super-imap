@@ -19,12 +19,12 @@ class User < ActiveRecord::Base
   validates_presence_of :tag
   validates_uniqueness_of :tag, :case_sensitive => false,
                           :scope      => :partner_connection_id,
-                          :conditions => -> { where.not(archived: true) }
+                          :conditions => -> { where.not(:archived => true) }
 
   validates_uniqueness_of :email, :case_sensitive => false,
                           :scope      => :partner_connection_id,
                           :allow_nil  => true,
-                          :conditions => -> { where.not(archived: true) }
+                          :conditions => -> { where.not(:archived => true) }
 
   def imap_provider
     self.connection.imap_provider

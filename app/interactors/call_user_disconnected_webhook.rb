@@ -29,8 +29,10 @@ class CallUserDisconnectedWebhook < BaseWebhook
       end
     rescue RestClient::Forbidden => e
       # The server understood the request but refused it. Mark the
-      # user as archived.
-      user.update_attributes!(:archived => true)
+      # user as archived, but only if it's not a tracer user.
+      if !user.enable_tracer
+        user.update_attributes!(:archived => true)
+      end
     end
   end
 end
