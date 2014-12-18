@@ -279,7 +279,14 @@ class ImapClient::UserThread
 
     # Load the email body.
     responses = self.client.uid_fetch([uid], ["UID", "ENVELOPE", "RFC822"])
-    response = responses.first
+    response = responses && responses.first
+
+    # If there was no response, then skip this message.
+    if response.nil?
+      user.update_attributes!(:last_uid => uid)
+      return
+    end
+
     uid = response.attr["UID"]
     raw_eml = response.attr["RFC822"]
 
