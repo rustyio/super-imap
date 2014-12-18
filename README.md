@@ -196,6 +196,8 @@ is configured to handle 500 users. You can change this, and other settings, thro
 + `MAX_USER_THREADS` - Change the maximum number of user threads. Default is 500.
 + `NUM_WORKER_THREADS` - Change the number of worker threads. Default is 5.
 + `MAX_EMAIL_SIZE` - Change the maximum email size. Default is 1 MiB (1,048,576 bytes).
++ `TRACER_INTERVAL` - Interval, in seconds, between outgoing tracer emails. Default is 600 seconds (10 minutes).
++ `NUM_TRACERS` - Number of tracers to send at the end of each tracer interval. Default is 3.
 
 #### Scaling
 
