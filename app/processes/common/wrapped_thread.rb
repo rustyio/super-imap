@@ -10,8 +10,5 @@ module Common::WrappedThread
         stop!
       end
     end
-  rescue => e
-    Log.exception(e)
-    stop!
   end
 end

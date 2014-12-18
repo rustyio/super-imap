@@ -11,6 +11,8 @@ class MyLogger
     if defined?(Airbrake)
       Airbrake.notify(exception)
     end
+  rescue => e
+    print e.to_s
   end
 
   def clean_backtrace(exception)
