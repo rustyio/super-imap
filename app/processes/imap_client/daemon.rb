@@ -114,6 +114,7 @@ class ImapClient::Daemon
     # threads. This fixes a "Circular dependency detected while
     # autoloading constant ImapDaemonHeartbeat" error.
     ImapDaemonHeartbeat
+    CallNewMailWebhook
     self.error_counts = {}
   end
 
