@@ -257,7 +257,7 @@ each `imap_client` instance to a random tracer-enabled user managed by
 that instance.
 
 Keep in mind that this could generate a lot of email. Three emails
-every ten minutes works out to over 4,000 emails per day.
+every ten minutes works out to over 432 emails per day.
 
 #### Development Environment
 
