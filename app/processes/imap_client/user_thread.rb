@@ -355,11 +355,20 @@ class ImapClient::UserThread
 
   # Private: Logout the user, disconnect the client.
   def disconnect
-    client && client.logout
-    client && client.disconnect
+    begin
+      client && client.logout
+    rescue => e
+      # Ignore errors.
+    end
+
+    begin
+      client && client.disconnect
+    rescue => e
+      # Ignore errors.
+    end
+
+    # The client is no longer connected.
     self.client = nil
-  rescue => e
-    log_exception(e)
   end
 
 
