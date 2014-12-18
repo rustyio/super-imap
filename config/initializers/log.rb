@@ -27,7 +27,17 @@ class MyLogger
     end
   end
 
+  def libreto(mode, key, value)
+    source = ENV['DYNO']
+    if source
+      info("source=#{source} #{mode}\##{key}=#{value}")
+    else
+      info("#{mode}\##{key}=#{value}")
+    end
+  end
+
   private
+
   def method_missing(method, *args, &block)
     Rails.logger.send(method, *args, &block)
   end
