@@ -70,7 +70,12 @@ module Common::WorkerPool
     # Don't block, otherwise we can't exit.
     options = queue.pop(true)
     method = "action_#{options[:'$action']}".to_sym
-    self.send(method.to_sym, options)
+
+    begin
+      self.send(method.to_sym, options)
+    rescue => e
+      Log.exception(e)
+    end
 
     # Log Heroku / Librato stats
     # Sample to avoid log spam.

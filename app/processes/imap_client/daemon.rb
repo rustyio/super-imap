@@ -259,6 +259,8 @@ class ImapClient::Daemon
       Log.info("Connecting #{user.email}...")
       ImapClient::UserThread.new(self, user, user_options).run
     end
+  rescue => e
+    Log.exception(e)
   end
 
   # Private: Disconnect a user and destroy the user thread.
@@ -272,6 +274,8 @@ class ImapClient::Daemon
     # Tell the thread to stop.
     thread = user_threads.delete(user_id)
     thread.terminate
+  rescue => e
+    Log.exception(e)
   end
 
   # Private: Run a function, then restart a user thread.
