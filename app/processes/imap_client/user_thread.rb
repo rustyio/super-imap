@@ -373,7 +373,7 @@ class ImapClient::UserThread
     ]
 
     # Minimally log imap exceptions when stress testing.
-    if imap_exceptions.include?(e.class) && self.daemon.chaos_mode
+    if imap_exceptions.include?(e.class) && self.daemon.stress_test_mode
       Log.error("#{e.class} - #{e.to_s}")
     else
       Log.exception(e)
