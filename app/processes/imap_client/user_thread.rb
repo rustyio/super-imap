@@ -82,6 +82,11 @@ class ImapClient::UserThread
     # Ditto for OAuth 2.0
     self.daemon.increment_error_count(user.id)
     stop!
+  rescue Net::IMAP::NoResponseError => e
+    # Ditto, some servers trigger this exception when an agent is not
+    # authorized.
+    self.daemon.increment_error_count(user.id)
+    stop!
   end
 
   # Private: Fetch a list of folders, choose the first one that looks
