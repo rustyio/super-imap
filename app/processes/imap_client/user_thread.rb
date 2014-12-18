@@ -202,6 +202,10 @@ class ImapClient::UserThread
         client.idle_done()
       end
     end
+  rescue Net::IMAP::Error => e
+    # Recover gracefully.
+    self.daemon.increment_error_count(user.id)
+    stop!
   end
 
   # Private: Schedule a block of code to run in a worker thread
