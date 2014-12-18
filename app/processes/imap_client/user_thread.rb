@@ -13,6 +13,7 @@
 #  + When terminated, or on error, disconnect ourselves.
 
 require 'net/imap'
+require 'timeout'
 
 class ImapClient::UserThread
   include Common::LightSleep
@@ -227,12 +228,15 @@ class ImapClient::UserThread
   end
 
   # Private: Read and act on a single email. This is *not* run in a
-  # user thread, but rather in a worker thread; that's why we rescue
-  # exceptions rather than letting them bubble up.
+  # user thread, but rather in a worker thread; that's why we Timeout
+  # on long operations and rescue exceptions rather than letting them
+  # bubble up.
   #
   # + uid - The UID of the email.
   def process_uid(uid)
-    responses = client.uid_fetch([uid], ["INTERNALDATE", "RFC822.SIZE"])
+    responses = Timeout::timeout(30) do
+      client.uid_fetch([uid], ["INTERNALDATE", "RFC822.SIZE"])
+    end
     response = responses && responses.first
 
     # If there was no response, then skip this message.
@@ -278,7 +282,9 @@ class ImapClient::UserThread
     end
 
     # Load the email body.
-    responses = self.client.uid_fetch([uid], ["UID", "ENVELOPE", "RFC822"])
+    responses = Timeout::timeout(30) do
+      self.client.uid_fetch([uid], ["UID", "ENVELOPE", "RFC822"])
+    end
     response = responses && responses.first
 
     # If there was no response, then skip this message.
@@ -337,6 +343,11 @@ class ImapClient::UserThread
       self.daemon.processed_log << [Time.now, user.email, message_id]
 
     self.daemon.total_emails_processed += 1
+  rescue Timeout::Error => e
+    # If this email triggered a timeout, then skip it.
+    user.update_attributes!(:last_uid => uid)
+    log_exception(e)
+    stop!
   rescue => e
     log_exception(e)
     stop!
