@@ -11,7 +11,11 @@ module Oauth2::DisconnectsHelper
       :oauth2_refresh_token => nil,
       :connected_at         => nil)
 
-    CallUserDisconnectedWebhook.new(user).delay.run
+    begin
+      CallUserDisconnectedWebhook.new(user).run
+    rescue => e
+      CallUserDisconnectedWebhook.new(user).delay.run
+    end
 
     # Redirect.
     redirect_to_success_url

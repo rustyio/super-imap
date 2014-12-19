@@ -42,7 +42,11 @@ module Oauth2::ConnectsHelper
       :oauth2_refresh_token => oauth2_token.refresh_token,
       :connected_at         => Time.now)
 
-    CallUserConnectedWebhook.new(user).delay.run
+    begin
+      CallUserConnectedWebhook.new(user).run
+    rescue => e
+      CallUserConnectedWebhook.new(user).delay.run
+    end
 
     redirect_to_success_url
   rescue => e
