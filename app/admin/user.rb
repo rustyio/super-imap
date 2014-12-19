@@ -41,6 +41,7 @@ ActiveAdmin.register User do
     ]
   end
 
+  filter :tag
   filter :email
   scope :active
   scope :archived
