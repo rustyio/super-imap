@@ -202,10 +202,11 @@ class ProcessUid
 
   # Private: Have we already processed this message_id?
   def check_for_duplicate_message_id
+    old_mail_log = nil
     user_thread.schedule do
       old_mail_log = user.mail_logs.find_by_message_id(message_id)
-      return !old_mail_log
     end
+    return !old_mail_log
   end
 
   # Private: Have we already processed this sha1 hash? This helps us
@@ -216,10 +217,11 @@ class ProcessUid
     # Generate the SHA1.
     sha1 = Digest::SHA1.hexdigest(raw_eml)
 
+    old_mail_log = nil
     user_thread.schedule do
       old_mail_log = user.mail_logs.find_by_sha1(sha1)
-      return !old_mail_log
     end
+    return !old_mail_log
   end
 
   # Private: Log the mail.
