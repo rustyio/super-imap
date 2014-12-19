@@ -81,11 +81,19 @@ class CallNewMailWebhook < BaseWebhook
   # that are not valid in the encoding that the claim to be using.
   def fix_encoding(raw_eml)
     m = Mail.new(raw_eml)
+
+    m.body = fix_body_encoding(m.body, m.charset)
+
     m.parts.each do |part|
-      # Force the part body to use the charset it claims to use. Then
-      # remove invalid characters for that charset.
-      part.body = part.body.decoded.force_encoding(part.charset || 'UTF-8').scrub
+      part.body = fix_body_encoding(part.body, part.charset)
     end
+
     m.encoded
+  end
+
+  def fix_body_encoding(body, charset)
+    # Force the part body to use the charset it claims to use. Then
+    # remove invalid characters for that charset.
+    body && body.decoded.force_encoding(charset || 'UTF-8').scrub
   end
 end
