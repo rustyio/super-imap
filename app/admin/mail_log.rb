@@ -29,7 +29,7 @@ ActiveAdmin.register MailLog do
     column "Message ID" do |obj|
       link_to obj.message_id, admin_user_mail_log_path(obj.user, obj)
     end
-    column "Links" do |obj|
+    column "Transmit Logs", :sortable => :transmit_logs_count do |obj|
       link_to("Transmit Logs (#{obj.transmit_logs_count})", admin_mail_log_transmit_logs_path(obj))
     end
     actions

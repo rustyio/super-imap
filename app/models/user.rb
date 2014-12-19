@@ -5,7 +5,7 @@ class User < ActiveRecord::Base
   before_validation :fix_type
 
   # Scopes.
-  scope :active, proc { where(:archived => false) }
+  scope :active, proc { where(:archived => false).where.not(:last_email_at => nil) }
   scope :archived, proc { where(:archived => true) }
   scope :tracer, proc { where(:enable_tracer => true) }
 

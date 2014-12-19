@@ -55,7 +55,7 @@ ActiveAdmin.register User do
         link_to obj.email, admin_partner_connection_user_path(obj.connection, obj)
       end
     end
-    column :links do |obj|
+    column "Mail Logs", :sortable => :mail_logs_count do |obj|
       link_to("Mail Logs (#{obj.mail_logs_count})",
               admin_user_mail_logs_path(obj))
     end
