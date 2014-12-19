@@ -176,7 +176,7 @@ class ProcessUid
     # misconfigured email servers means that email arrives from the
     # future.
     if internal_date > Time.now
-      internal_date = user.last_internal_date
+      self.internal_date = user.last_internal_date
     end
 
     # Update the user.
@@ -215,7 +215,7 @@ class ProcessUid
   # duplicate. This may be unnecessary.
   def check_for_duplicate_sha1
     # Generate the SHA1.
-    sha1 = Digest::SHA1.hexdigest(raw_eml)
+    self.sha1 = Digest::SHA1.hexdigest(raw_eml)
 
     old_mail_log = nil
     user_thread.schedule do

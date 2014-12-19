@@ -5,7 +5,7 @@ ActiveAdmin.register TransmitLog do
 
   # Only allow viewing.
   config.clear_action_items!
-  actions :all, :except => [:edit, :destroy]
+  actions :all, :except => [:new, :edit, :destroy]
 
   filter :response_code
   filter :response_body

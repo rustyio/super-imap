@@ -61,9 +61,11 @@ def create_partner_connection(partner, imap_provider)
 end
 
 Partner.create!(
-  :name            => "Partner",
-  :new_mail_webhook => "/success.html",
-  :success_url     => "/success.html",
-  :failure_url     => "/failure.html").tap do |partner|
+  :name                      => "Partner",
+  :new_mail_webhook          => "http://localhost:5000/webhook_test/new_mail",
+  :user_connected_webhook    => "http://localhost:5000/webhook_test/user_connected",
+  :user_disconnected_webhook => "http://localhost:5000/webhook_test/user_disconnected",
+  :success_url               => "/success.html",
+  :failure_url               => "/failure.html").tap do |partner|
   create_partner_connection(partner, plain_provider)
 end

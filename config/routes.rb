@@ -19,4 +19,8 @@ Rails.application.routes.draw do
       get :callback
     end
   end
+
+  post 'webhook_test/new_mail'
+  post 'webhook_test/user_connected'
+  post 'webhook_test/user_disconnected'
 end

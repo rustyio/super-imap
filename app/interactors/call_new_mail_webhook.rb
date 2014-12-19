@@ -20,7 +20,7 @@ class CallNewMailWebhook < BaseWebhook
     begin
       JSON.dump(raw_eml)
     rescue => e
-      raw_eml = fix_encoding(raw_eml)
+      self.raw_eml = fix_encoding(raw_eml)
       sha1 = Digest::SHA1.hexdigest(raw_eml)
       mail_log.update_attributes(:sha1 => sha1)
     end
