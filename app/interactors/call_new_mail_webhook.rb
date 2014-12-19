@@ -15,6 +15,16 @@ class CallNewMailWebhook < BaseWebhook
       return false
     end
 
+    # Fix improper encodings enough to satisfy JSON.dump.
+    # TODO - The sha1 changed; re-check for duplicates?
+    begin
+      JSON.dump(raw_eml)
+    rescue => e
+      raw_eml = fix_encoding(raw_eml)
+      sha1 = Digest::SHA1.hexdigest(raw_eml)
+      mail_log.update_attributes(:sha1 => sha1)
+    end
+
     # Assemble the payload. We use the Mail class to decode and then
     # re-encode the raw_eml to fix any potential character encoding
     # issues.
@@ -24,7 +34,7 @@ class CallNewMailWebhook < BaseWebhook
       :user_tag           => user.tag,
       :imap_provider_code => user.connection.imap_provider_code,
       :envelope           => envelope,
-      :rfc822             => Mail.new(raw_eml).encoded.force_encoding('UTF-8')
+      :rfc822             => raw_eml
     }
     data[:signature] = calculate_signature(partner.api_key, data[:sha1], data[:timestamp])
 
@@ -63,5 +73,19 @@ class CallNewMailWebhook < BaseWebhook
                                       :response_body => e.to_s.slice(0, 1024))
       raise e
     end
+  end
+
+  private
+
+  # Private: Fix mail encoding. Some emails contain escaped characters
+  # that are not valid in the encoding that the claim to be using.
+  def fix_encoding(raw_eml)
+    m = Mail.new(raw_eml)
+    m.parts.each do |part|
+      # Force the part body to use the charset it claims to use. Then
+      # remove invalid characters for that charset.
+      part.body = part.body.decoded.force_encoding(part.charset || 'UTF-8').scrub
+    end
+    m.encoded
   end
 end
