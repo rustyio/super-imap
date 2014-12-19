@@ -45,6 +45,47 @@ class ImapClient::UserThread
     disconnect
   end
 
+  # Private: Schedule a block of code to run in a worker thread
+  # (rather than a user thread).
+  #
+  # We do this in order to prevent ourselves from using too many
+  # database connections, exhausting memory, and redlining the CPU at
+  # startup or at times of lots of email activity. This helps smooth
+  # out the load.
+  #
+  # Without this, we would have all the user threads maintaining
+  # separate database connections and trying to crunch through emails
+  # as quickly as possible at the same time.
+  def schedule(&block)
+    # Schedule the block to run on a worker thread, and put ourselves to sleep.
+    daemon.schedule_work(:callback,
+                         :hash    => user.id,
+                         :user_id => user.id,
+                         :block   => block,
+                         :thread  => Thread.current)
+
+    # Put ourselves to sleep. The worker will call Thread.run to wake us back up.
+    sleep
+  end
+
+  # Private: Log exceptions differently if we're stress testing.
+  def log_exception(e)
+    imap_exceptions = [
+      Net::IMAP::Error,
+      Net::IMAP::ResponseParseError,
+      IOError,
+      EOFError,
+      Errno::EPIPE
+    ]
+
+    # Minimally log imap exceptions when stress testing.
+    if imap_exceptions.include?(e.class) && self.daemon.stress_test_mode
+      Log.error("#{e.class} - #{e.to_s}")
+    else
+      Log.exception(e)
+    end
+  end
+
   private unless Rails.env.test?
 
   # Private: Exponentially backoff based on the number of errors we
@@ -161,9 +202,7 @@ class ImapClient::UserThread
     uids = client.uid_search(["UID", "#{user.last_uid + 1}:#{max_uid}"])
     uids.each do |uid|
       break if stopping?
-      schedule do
-        process_uid(uid) unless stopping?
-      end
+      process_uid(uid) unless stopping?
     end
 
     return uids.count
@@ -181,9 +220,7 @@ class ImapClient::UserThread
     uids = client.uid_search(["SINCE", date_string])
     uids.each do |uid|
       break if stopping?
-      schedule do
-        process_uid(uid) unless stopping?
-      end
+      process_uid(uid) unless stopping?
     end
 
     return uids.count
@@ -208,153 +245,12 @@ class ImapClient::UserThread
     stop!
   end
 
-  # Private: Schedule a block of code to run in a worker thread
-  # (rather than a user thread).
-  #
-  # We do this in order to prevent ourselves from using too many
-  # database connections, exhausting memory, and redlining the CPU at
-  # startup or at times of lots of email activity. This helps smooth
-  # out the load.
-  #
-  # Without this, we would have all the user threads (500 by default)
-  # maintaining separate database connections and trying to crunch
-  # through emails as quickly as possible at the same time.
-  def schedule(&block)
-    # Schedule the block to run on a worker thread, and put ourselves to sleep.
-    daemon.schedule_work(:callback,
-                         :hash    => user.id,
-                         :user_id => user.id,
-                         :block   => block,
-                         :thread  => Thread.current)
-
-    # Put ourselves to sleep. The worker will call Thread.run to wake us back up.
-    sleep
-  end
-
-  # Private: Read and act on a single email. This is *not* run in a
-  # user thread, but rather in a worker thread; that's why we Timeout
-  # on long operations and rescue exceptions rather than letting them
-  # bubble up.
+  # Private: Read and act on a single email. Calls the ProcessUid
+  # interactor.
   #
   # + uid - The UID of the email.
   def process_uid(uid)
-    responses = Timeout::timeout(30) do
-      client.uid_fetch([uid], ["INTERNALDATE", "RFC822.SIZE"])
-    end
-    response = responses && responses.first
-
-    # If there was no response, then skip this message.
-    if response.nil?
-      user.update_attributes!(:last_uid => uid)
-      return
-    end
-
-    # Check for a really old date. If it's old, then we should stop
-    # counting on our UID knowledge and go back to loading UIDs by
-    # date.
-    internal_date = Time.parse(response.attr["INTERNALDATE"])
-    if internal_date < 4.days.ago
-      user.update_attributes!(:last_uid => nil, :last_uid_validity => nil)
-      stop!
-      return
-    end
-
-    # Don't process emails that arrived before this user was created.
-    if internal_date < user.created_at
-      user.update_attributes!(:last_uid => uid)
-      return
-    end
-
-    # Don't process emails that are significantly older than the last internal date that we've processed.
-    if user.last_internal_date && internal_date < (user.last_internal_date - 1.hour)
-      user.update_attributes!(:last_uid => uid)
-      return
-    end
-
-    # Skip emails that are too big.
-    message_size = (response.attr["RFC822.SIZE"] || 0).to_i
-    if message_size > self.options[:max_email_size]
-      user.update_attributes!(:last_uid => uid)
-      return
-    end
-
-    # Ignore any suspicious looking internal dates. Sometimes
-    # misconfigured email servers means that email arrives from the
-    # future.
-    if internal_date > Time.now
-      internal_date = user.last_internal_date
-    end
-
-    # Load the email body.
-    responses = Timeout::timeout(30) do
-      self.client.uid_fetch([uid], ["UID", "ENVELOPE", "RFC822"])
-    end
-    response = responses && responses.first
-
-    # If there was no response, then skip this message.
-    if response.nil?
-      user.update_attributes!(:last_uid => uid)
-      return
-    end
-
-    uid = response.attr["UID"]
-    raw_eml = response.attr["RFC822"]
-
-    # Update the user.
-    user.update_attributes!(:last_uid           => uid,
-                            :last_email_at      => Time.now,
-                            :last_internal_date => internal_date)
-
-    # Get the message_id.
-    envelope = response.attr["ENVELOPE"]
-    message_id = envelope.message_id || "#{user.email} - #{uid} - #{internal_date}"
-    message_id = message_id.slice(0, 255)
-
-    # Is this a tracer? If so, update the TracerLog.
-    if m = /^TRACER: (.+)$/.match(envelope.subject)
-      tracer_uid = m[1]
-      tracer = TracerLog.find_by_uid(tracer_uid) || TracerLog.new(:uid => tracer_uid)
-      tracer.update_attributes!(:detected_at => Time.now)
-      user.update_attributes!(:last_uid => uid)
-      self.daemon.total_emails_processed += 1
-      return
-    end
-
-    # Have we already processed this one?
-    if user.mail_logs.find_by_message_id(message_id)
-      return
-    end
-
-    # Generate the SHA1.
-    sha1 = Digest::SHA1.hexdigest(raw_eml)
-
-    # Have we already processed this one?
-    if user.mail_logs.find_by_sha1(sha1)
-      return
-    end
-
-    # Create the mail log record.
-    mail_log = user.mail_logs.create(:message_id => message_id, :sha1 => sha1)
-
-    # Transmit to the partner's webhook.
-    unless self.daemon.stress_test_mode
-      CallNewMailWebhook.new(mail_log, envelope, raw_eml).delay.run
-    end
-
-    # Update stats.
-    self.daemon.clear_error_count(user.id)
-    self.daemon.processed_log &&
-      self.daemon.processed_log << [Time.now, user.email, message_id]
-
-    self.daemon.total_emails_processed += 1
-  rescue Timeout::Error => e
-    # If this email triggered a timeout, then skip it.
-    user.update_attributes!(:last_uid => uid)
-    log_exception(e)
-    stop!
-  rescue => e
-    log_exception(e)
-    stop!
+    ProcessUid.new(self, uid).run
   end
 
   # Private: Logout the user, disconnect the client.
@@ -373,23 +269,5 @@ class ImapClient::UserThread
 
     # The client is no longer connected.
     self.client = nil
-  end
-
-
-  def log_exception(e)
-    imap_exceptions = [
-      Net::IMAP::Error,
-      Net::IMAP::ResponseParseError,
-      IOError,
-      EOFError,
-      Errno::EPIPE
-    ]
-
-    # Minimally log imap exceptions when stress testing.
-    if imap_exceptions.include?(e.class) && self.daemon.stress_test_mode
-      Log.error("#{e.class} - #{e.to_s}")
-    else
-      Log.exception(e)
-    end
   end
 end

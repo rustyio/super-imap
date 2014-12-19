@@ -78,6 +78,8 @@ ActiveAdmin.register User do
         row :connected_at
         row :last_login_at
         row :last_email_at
+        row :last_uid
+        row :last_uid_validity
         row :type
         row "Links" do
           link_to("Connect", new_users_connect_url(obj.signed_request_params)) +
