@@ -1,8 +1,9 @@
 ActiveAdmin.register DelayedJob do
   menu priority: 90
   config.sort_order = "created_at_desc"
+  config.batch_actions = true
 
-  # Only allow viewing.
+  # Only allow viewing and deleting.
   actions :all, :except => [:new, :edit]
 
   filter :handler
