@@ -22,7 +22,7 @@ gem 'activeadmin'               , '1.0.0.pre', :github => 'activeadmin', :ref =>
 
 gem 'rails_stdout_logging'      , :group => [:staging, :production]
 gem 'rails_12factor'            , :group => :production
-gem 'newrelic_rpm'              , :group => :production
+# gem 'newrelic_rpm'              , :group => :production
 
 gem 'spring'                    , :group => :development
 gem 'sqlite3'                   , :group => :development

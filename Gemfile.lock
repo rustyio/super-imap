@@ -127,7 +127,6 @@ GEM
     multi_xml (0.5.5)
     multipart-post (2.0.0)
     netrc (0.7.9)
-    newrelic_rpm (3.9.6.257)
     oauth (0.4.7)
     oauth2 (0.9.4)
       faraday (>= 0.8, < 0.10)
@@ -235,7 +234,6 @@ DEPENDENCIES
   foreman
   jbuilder (~> 2.0)
   jquery-rails
-  newrelic_rpm
   oauth (~> 0.4.7)
   oauth2 (~> 0.9.3)
   pg (~> 0.17.1)
