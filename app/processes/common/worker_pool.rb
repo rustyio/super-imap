@@ -81,7 +81,7 @@ module Common::WorkerPool
     # Sample to avoid log spam.
     if rand() <= 0.02
       latency = Time.now - options[:'$time']
-      Log.libreto(:measure, 'work_queue.latency', latency)
+      Log.librato(:measure, 'work_queue.latency', latency)
     end
   rescue ThreadError => e
     # Queue is empty.

@@ -27,7 +27,7 @@ class MyLogger
     end
   end
 
-  def libreto(mode, key, value)
+  def librato(mode, key, value)
     source = ENV['DYNO']
     if source
       info("source=#{source} #{mode}\##{key}=#{value}")
