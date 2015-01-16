@@ -52,7 +52,7 @@ class CallNewMailWebhook < BaseWebhook
       transmit_log.update_attributes!(:response_code => response.code.to_i,
                                       :response_body => response.to_s.slice(0, 1024))
 
-      Log.librato(:measure, 'app.call_new_mail_webhook.count', 1)
+      Log.librato(:count, 'app.call_new_mail_webhook.count', 1)
       return true
     rescue RestClient::Forbidden => e
       response = e.response
