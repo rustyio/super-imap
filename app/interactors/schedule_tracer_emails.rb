@@ -18,6 +18,7 @@ class ScheduleTracerEmails
     mail = TracerMailer.tracer_email(user, uid)
     user.connection.imap_provider.authenticate_smtp(mail, user)
     mail.deliver
+    Log.librato(:measure, 'app.schedule_tracer_email.count', 1)
 
     # Log the tracer.
     user.tracer_logs.create!(:uid => uid)

@@ -27,6 +27,7 @@ class CallUserDisconnectedWebhook < BaseWebhook
       response = Timeout::timeout(30) do
         webhook.post(data.to_json, :content_type => :json, :accept => :json)
       end
+      Log.librato(:measure, 'app.call_user_disconnected_webhook.count', 1)
     rescue RestClient::Forbidden => e
       # The server understood the request but refused it. Mark the
       # user as archived, but only if it's not a tracer user.
