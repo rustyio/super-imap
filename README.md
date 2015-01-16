@@ -5,31 +5,32 @@
 SuperIMAP is an inbound mail processor - it triggers a webhook event when
 new email arrives in an IMAP inbox. SuperIMAP is useful when you want your application to react to email sent to your users.
 
-[FiveStreet](http://www.fivestreet.com) built SuperIMAP to solve
-scaling issues as we grew 7000% in weekly email volume over the past
-year. SuperIMAP can scale to tens of thousands of users. SuperIMAP is
-an alternative to Context.io and contains a subset of Context.io Lite
-API functionality. SuperIMAP is written in Ruby on Rails and is open
-source under the MIT license.
+[FiveStreet.com](http://www.fivestreet.com) built SuperIMAP to solve
+scaling issues as we grew 7,000% in weekly email volume over the past
+year. As of January 2015, we run a SuperIMAP installation with
+thousands of users processing over 1M emails per week.
+
+SuperIMAP is an alternative to Context.io and contains a subset of
+Context.io Lite API functionality. SuperIMAP is written in Ruby on
+Rails and is open source under the MIT license.
 
 The following IMAP authentication methods are supported:
 
-+ Gmail OAuth 1.0
 + Gmail OAuth 2.0
 + Plain authentication (username / password)
 
 ## Security
 
 If you use this code, *PLEASE* ensure that you use very strong,
-safeguarded passwords, and preferably, make sure your data is
-encrypted at rest. It is a big responsibility to hold the keys to
+safeguarded passwords, and preferably, make sure your entire database
+is encrypted at rest. It is a big responsibility to hold the keys to
 someone's email. Treat it with the appropriate amount of caution.
 
 Other security measures:
 
 + SSL is *required* in production.
-+ Secure data (e.g. passwords and other credentials) are never exposed via the web interface.
-+ Sessions are not remembered.
++ Secure data (e.g. passwords and other credentials) is never exposed via the web interface.
++ Secure data (e.g. passwords and other credentials) is encrypted at rest.
 + Passwords are not recoverable by email.
 + Accounts are locked for an hour after three invalid password attempts.
 
@@ -213,7 +214,7 @@ no effect.
 
 If a new IMAP Client instance is started, then a small number of users
 will be taken from each running instance and handed to the new
-instance. If one of the IMAP Client instances is stopped is removed
+instance. If one of the IMAP Client instances is stopped it is removed
 from the pool, then it's users will be evenly distributed to the
 remaining instances (assuming they are still below the
 `MAX_USER_THREADS` threshold.)
