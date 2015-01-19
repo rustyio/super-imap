@@ -231,7 +231,8 @@ DEPENDENCIES
   coffee-rails (~> 4.0.0)
   delayed_job_active_record (~> 4.0.2)
   devise (~> 3.4.1)
-  foreman
+  foreman (~> 0.75.0)
+  gibberish (~> 1.4.0)
   jbuilder (~> 2.0)
   jquery-rails
   oauth (~> 0.4.7)

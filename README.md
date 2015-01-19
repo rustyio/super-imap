@@ -271,7 +271,7 @@ Run this once:
 
 Then start the server:
 
-    foreman s
+    foreman s -f Procfile.development
 
 Log in as the default user: "admin@example.com" / "password"
 
@@ -285,7 +285,9 @@ Then start the server:
 
     foreman s -f Procfile
 
-Log in as the default user: "admin@example.com" / "password", and **change the username / password immediately!**
+Log in as the default user: "admin@example.com" / "password", and **change the username / password immediately!** Please use a very secure password.
+
+The production Procfile assumes that you are installing on Heroku. As a result it has multiple definitions for the `imap_client` process corresponding to different sized Heroku dynos. In order for load balancing to work correctly, you should have all `imap_client` processes use the same dyno size. Do not mix and match boxes.
 
 #### Testing
 

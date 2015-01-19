@@ -28,9 +28,10 @@ class MyLogger
   end
 
   def librato(mode, key, value)
-    source = ENV['DYNO']
-    if source
-      info("source=#{source} #{mode}\##{key}=#{value}")
+    dyno_name = ENV['DYNO']
+
+    if dyno_name
+      info("source=#{dyno_name} #{mode}\##{key}=#{value}")
     else
       info("#{mode}\##{key}=#{value}")
     end

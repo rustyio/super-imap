@@ -19,6 +19,8 @@ gem 'oauth'                     , '~> 0.4.7'
 gem 'oauth2'                    , '~> 0.9.3'
 gem 'airbrake'                  , '~> 4.1.0'
 gem 'activeadmin'               , '1.0.0.pre', :github => 'activeadmin', :ref => '0becbef0'
+gem 'gibberish'                 , '~> 1.4.0'
+gem 'foreman'                   , '~> 0.75.0'
 
 gem 'rails_stdout_logging'      , :group => [:staging, :production]
 gem 'rails_12factor'            , :group => :production
@@ -26,7 +28,6 @@ gem 'rails_12factor'            , :group => :production
 
 gem 'spring'                    , :group => :development
 gem 'sqlite3'                   , :group => :development
-gem 'foreman'                   , :group => :development
 gem 'pry'                       , :group => :development
 gem 'pry-byebug'                , :group => :development
 
