@@ -5,6 +5,18 @@ module ConnectionFields
   included do
     @connection_fields = []
 
+    def self.encrypt(value)
+      Rails.application.config.encryption_cipher ? Rails.application.config.encryption_cipher.encrypt(value) : value
+    end
+
+    def self.decrypt(value)
+      begin
+        Rails.application.config.encryption_cipher ? Rails.application.config.encryption_cipher.decrypt(value) : value
+      rescue
+        value
+      end
+    end
+
     def self.connection_field(field, options = {})
       @connection_fields ||= []
       @connection_fields << field
@@ -18,9 +30,9 @@ module ConnectionFields
       if options[:secure]
         define_method(field) do |secure = false|
           if !secure && self[field].present?
-            self[field][0..3] + ("•" * (self[field].length - 4))
+            "- encrypted -"
           else
-            super()
+            self.class.decrypt(super())
           end
         end
 
@@ -30,7 +42,7 @@ module ConnectionFields
 
         define_method("#{field}=".to_sym) do |value|
           if value != self.send(field)
-            super(value)
+            super(self.class.encrypt(value))
           end
         end
       end

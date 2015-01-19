@@ -1,6 +1,5 @@
 class Partner < ActiveRecord::Base
   # Magic.
-  strip_attributes
   before_save :ensure_api_key
 
   # Relations

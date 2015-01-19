@@ -75,4 +75,8 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
+
+  if config.encryption_cipher.nil?
+    raise "Must set ENCRYPTION_KEY environment variable."
+  end
 end

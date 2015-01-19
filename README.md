@@ -3,7 +3,7 @@
 # SuperIMAP Overview
 
 SuperIMAP is an inbound mail processor - it triggers a webhook event when
-new email arrives in an IMAP inbox. SuperIMAP is useful when you want your application to react to email sent to your users.
+new email arrives in an IMAP inbox. SuperIMAP is useful for applications that need to react to email on behalf of their users.
 
 [FiveStreet.com](http://www.fivestreet.com) built SuperIMAP to solve
 scaling issues as we grew 7,000% in weekly email volume over the past
@@ -30,7 +30,7 @@ Other security measures:
 
 + SSL is *required* in production.
 + Secure data (e.g. passwords and other credentials) is never exposed via the web interface.
-+ Secure data (e.g. passwords and other credentials) is encrypted at rest.
++ Secure data (e.g. passwords and other credentials) is encrypted in the database. (Using the ENCRYPTION_KEY environment variable.)
 + Passwords are not recoverable by email.
 + Accounts are locked for an hour after three invalid password attempts.
 

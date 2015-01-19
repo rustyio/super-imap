@@ -22,5 +22,12 @@ module SuperIMAP
 
     config.autoload_paths += Dir["#{config.root}/app/interactors"]
     config.autoload_paths += Dir["#{config.root}/app/processes"]
+
+    encryption_key = ENV['ENCRYPTION_KEY']
+    if encryption_key.present?
+      config.encryption_cipher = Gibberish::AES.new(encryption_key)
+    else
+      config.encryption_cipher = nil
+    end
   end
 end
