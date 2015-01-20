@@ -1,6 +1,6 @@
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/rustyio/super_imap)
 
-# SuperIMAP Overview
+# SuperIMAP
 
 SuperIMAP is an inbound mail processor - it triggers a webhook event when
 new email arrives in an IMAP inbox. SuperIMAP is useful for applications that need to react to email on behalf of their users.
@@ -19,6 +19,10 @@ The following IMAP authentication methods are supported:
 + Gmail OAuth 2.0
 + Plain authentication (username / password)
 
+## Screenshot
+
+![Screenshot](screenshot.png)
+
 ## Security
 
 If you use this code, *PLEASE* ensure that you use very strong,
@@ -29,8 +33,7 @@ someone's email. Treat it with the appropriate amount of caution.
 Other security measures:
 
 + SSL is *required* in production.
-+ Secure data (e.g. passwords and other credentials) is never exposed via the web interface.
-+ Secure data (e.g. passwords and other credentials) is encrypted in the database. (Using the ENCRYPTION_KEY environment variable.)
++ Secure fields (e.g. passwords and other credentials) are never exposed via the web interface, and are encrypted in the database.
 + Passwords are not recoverable by email.
 + Accounts are locked for an hour after three invalid password attempts.
 
