@@ -32,7 +32,7 @@ class Oauth2::ImapProvider < ImapProvider
   private
 
   def _access_token(user)
-    partner_connection = user.partner_connection
+    partner_connection = user.connection
 
     oauth_client = OAuth2::Client.new(
       partner_connection.oauth2_client_id,

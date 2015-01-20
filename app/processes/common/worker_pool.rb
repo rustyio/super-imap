@@ -3,7 +3,7 @@ module Common::WorkerPool
   include Common::WrappedThread
   include Common::DbConnection
 
-  attr_accessor :work_queues, :worker_rhash, :worker_threads
+  attr_accessor :work_queues, :worker_rhash, :worker_threads, :work_queue_latency
 
   # Public: Start a number of worker threads and begin processing
   # scheduled work.
@@ -71,18 +71,15 @@ module Common::WorkerPool
     options = queue.pop(true)
     method = "action_#{options[:'$action']}".to_sym
 
+    # Run the action.
     begin
       self.send(method.to_sym, options)
     rescue => e
       Log.exception(e)
     end
 
-    # Log Heroku / Librato stats
-    # Sample to avoid log spam.
-    if rand() <= 0.01
-      latency = Time.now - options[:'$time']
-      Log.librato(:measure, 'work_queue.latency', latency)
-    end
+    # Track the most recent latency.
+    self.work_queue_latency = Time.now - options[:'$time']
   rescue ThreadError => e
     # Queue is empty.
     sleep 0.1

@@ -1,3 +1,0 @@
-imap_client_1: DYNO=$DYNO-1 MAX_USER_THREADS=1000 bundle exec rake imap:client
-imap_client_2: DYNO=$DYNO-2 MAX_USER_THREADS=1000 bundle exec rake imap:client
-imap_client_3: DYNO=$DYNO-3 MAX_USER_THREADS=1000 bundle exec rake imap:client

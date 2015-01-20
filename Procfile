@@ -8,6 +8,6 @@ worker:         bundle exec rake jobs:work
 #
 # See https://devcenter.heroku.com/articles/limits#processes-threads
 
-imap_client_1x: MAX_USER_THREADS=100 bundle exec rake imap:client
-imap_client_2x: MAX_USER_THREADS=250 bundle exec rake imap:client
-imap_client_px: foreman s -f Procfile.imap_client_heroku_px
+imap_client_1x: NUM_WORKER_THREADS=1 MAX_USER_THREADS=200 bundle exec rake imap:client
+imap_client_2x: NUM_WORKER_THREADS=2 MAX_USER_THREADS=500 bundle exec rake imap:client
+imap_client_px: NUM_WORKER_THREADS=10 MAX_USER_THREADS=10000 bundle exec rake imap:client
