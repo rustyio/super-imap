@@ -35,7 +35,7 @@ class Oauth2::ImapProvider < ImapProvider
     partner_connection = user.partner_connection
 
     oauth_client = OAuth2::Client.new(
-      partner_connection.oauth2_client_id_secure,
+      partner_connection.oauth2_client_id,
       partner_connection.oauth2_client_secret_secure,
       {
         :site         => oauth2_site,
@@ -47,7 +47,7 @@ class Oauth2::ImapProvider < ImapProvider
 
     oauth2_access_token = oauth_client.get_token(
       {
-        :client_id     => partner_connection.oauth2_client_id_secure,
+        :client_id     => partner_connection.oauth2_client_id,
         :client_secret => partner_connection.oauth2_client_secret_secure,
         :refresh_token => user.oauth2_refresh_token_secure,
         :grant_type    => oauth2_grant_type
