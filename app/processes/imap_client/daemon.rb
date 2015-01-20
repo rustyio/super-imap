@@ -74,7 +74,7 @@ class ImapClient::Daemon
 
     # Sleep until we are stopped.
     light_sleep
-  rescue => e
+  rescue Exception => e
     stop!
     Log.exception(e)
   ensure
@@ -119,15 +119,13 @@ class ImapClient::Daemon
   end
 
   def start_heartbeat_thread
-    self.heartbeat_thread = wrapped_thread do
-      establish_db_connection
+    self.heartbeat_thread = Thread.new do
       heartbeat_thread_runner
     end
   end
 
   def start_discovery_thread
-    self.discovery_thread = wrapped_thread do
-      establish_db_connection
+    self.discovery_thread = Thread.new do
       discovery_thread_runner
     end
 
@@ -139,15 +137,13 @@ class ImapClient::Daemon
   end
 
   def start_claim_thread
-    self.claim_thread = wrapped_thread do
-      establish_db_connection
+    self.claim_thread = Thread.new do
       claim_thread_runner
     end
   end
 
   def start_tracer_thread
-    self.tracer_thread = wrapped_thread do
-      establish_db_connection
+    self.tracer_thread = Thread.new do
       tracer_thread_runner
     end
   end
@@ -155,6 +151,7 @@ class ImapClient::Daemon
   # Private: Creates/updates an ImapDaemonHeartbeat record in the
   # database every 10 seconds.
   def heartbeat_thread_runner
+    establish_db_connection
     heartbeat = ImapDaemonHeartbeat.create(:tag => server_tag)
     while running?
       # Update the heartbeat.
@@ -168,12 +165,18 @@ class ImapClient::Daemon
 
       light_sleep 10
     end
+  rescue Exception => e
+    Log.exception(e)
+    raise e
+  ensure
+    Log.info("Stopping heartbeat thread.")
   end
 
   # Private: Fetches all recently updated ImapDaemonHeartbeat records
   # in the database very 30 seconds. Create a new RendezvousHash from
   # the associated tags.
   def discovery_thread_runner
+    establish_db_connection
     while running?
       tags = ImapDaemonHeartbeat.where("updated_at >= ?", 30.seconds.ago).map(&:tag)
       Log.info("There are #{tags.count} daemons running.")
@@ -186,12 +189,18 @@ class ImapClient::Daemon
         light_sleep 10
       end
     end
+  rescue Exception => e
+    Log.exception(e)
+    raise e
+  ensure
+    Log.info("Stopping discovery thread.")
   end
 
   # Private: Iterate through users and schedule a connect or
   # disconnect task depending on whether the user is hashed to this
   # server.
   def claim_thread_runner
+    establish_db_connection
     while running?
       User.select(:id, :email, :connected_at, :archived).find_each do |user|
         if server_rhash.hash(user.id) == server_tag && !user.archived && user.connected_at
@@ -202,10 +211,16 @@ class ImapClient::Daemon
       end
       light_sleep 10
     end
+  rescue Exception => e
+    Log.exception(e)
+    raise e
+  ensure
+    Log.info("Stopping claim thread.")
   end
 
   # Private: Schedule a tracer emails to random tracer users.
   def tracer_thread_runner
+    establish_db_connection
     while running?
       # Get a random user assigned to this server.
       user = User.where(:enable_tracer => true, :archived => false).select(:id, :connected_at).all.select do |user|
@@ -220,6 +235,11 @@ class ImapClient::Daemon
 
       light_sleep self.tracer_interval
     end
+  rescue Exception => e
+    Log.exception(e)
+    raise e
+  ensure
+    Log.info("Stopping traicer thread.")
   end
 
   # Private: Disconnect all user threads.
