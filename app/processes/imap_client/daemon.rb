@@ -248,8 +248,9 @@ class ImapClient::Daemon
     # Are we allowed to create a new user thread?
     return if user_threads.count > max_user_threads
 
-    # Nothing to do if already a thread.
-    return if user_threads[user_id].present?
+    # Nothing to do if already a running (or sleeping) thread.
+    user_thread = user_threads[user_id]
+    return if user_thread.present? && user_thread.alive?
 
     # Load the user; preload connection information.
     user = User.find(user_id)
