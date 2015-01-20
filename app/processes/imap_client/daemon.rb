@@ -287,13 +287,11 @@ class ImapClient::Daemon
   # options[:thread] - The thread to restart.
   def action_callback(options)
     # Wait until the calling thread goes to sleep.
-    Log.info("Thread Status 1: #{options[:thread].status}")
     while options[:thread].status == "run"
       sleep 0.1
     end
 
     # Run the block.
-    Log.info("Thread Status 2: #{options[:thread].status}")
     if options[:thread].status == "sleep"
       # Call the callback.
       options[:block].call
@@ -302,7 +300,6 @@ class ImapClient::Daemon
     Log.exception(e)
   ensure
     # Wake up the thread.
-    Log.info("Thread Status 3: #{options[:thread].status}")
     if options[:thread].status == "sleep"
       options[:thread].run
     end
