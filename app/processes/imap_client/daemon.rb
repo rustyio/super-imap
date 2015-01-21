@@ -209,6 +209,9 @@ class ImapClient::Daemon
         else
           schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
         end
+
+        # Try not to peg the processor.
+        sleep 0.01
       end
       light_sleep 10
     end
