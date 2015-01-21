@@ -3,10 +3,11 @@
 # SuperIMAP
 
 SuperIMAP is an inbound mail processor. It triggers a webhook event
-when new email arrives in an IMAP inbox. SuperIMAP is useful for
-applications that need to react to email on behalf of their users.
+when new email arrives in an IMAP inbox, typically within
+seconds. SuperIMAP is useful for applications that need to react to
+email in real-time on behalf of their users.
 
-[FiveStreet.com](http://www.fivestreet.com) built SuperIMAP to solve
+[FiveStreet.com](https://www.fivestreet.com) built SuperIMAP to solve
 scaling issues as we grew 7,000% in weekly email volume over the past
 year. As of January 2015, we run a SuperIMAP installation with
 thousands of users processing over 1M emails per week.
@@ -231,7 +232,8 @@ There is no "master" process that decides which IMAP Client process
 should handle a given user. SuperIMAP uses a
 [Rendezvous Hash](http://en.wikipedia.org/wiki/Rendezvous_hashing) to
 allow IMAP Client instances to agree on how to evenly assign users
-without any central coordination.
+without any central coordination. The algorithm assumes that all
+SuperIMAP instances have roughly the same number of resources.
 
 #### Operations
 
@@ -251,6 +253,41 @@ for more information.
 Apart from keeping an eye on these metrics, SuperIMAP should need no other regular metrics.
 
 You may also want to keep an eye out for any failing Delayed Job tasks. You can view these from the Admin site.
+
+#### Performance
+
+SuperIMAP's architecture makes judicious use of system resources:
+
+All connections to the IMAP server are managed by separate "user
+threads", but these threads sit dormant most of the time. When
+anything interesting happens that requires real work, the operation is
+queued and handled by a worker in a worker pool. The size of the
+worker pool is controlled by the `NUM_WORKER_THREADS` environment
+variable. Only worker pools threads, and a small number of other
+system threads, require a database connection.
+
+In terms of tradeoffs, this architecture chooses to slightly degrade
+an individual user's response time in favor of making sure that the
+system will not get overloaded when things get rough. When things get
+busy, the work simply builds up in the queue. The size of the worker
+queue, and the queue latency, becomes a rough measure of system
+health.
+
+Typically, a SuperIMAP box is resource-limited by the number of user
+processes that can be started. SuperIMAP requires 2 user processes for
+each user's IMAP connection. On Heroku, the number of user processes
+are limited at 256 for a 1X box, 512 for a 2X box, and 32,767 for a PX
+box. You can set this at home using `ulimit -u`. Divide this in half
+to get the maximum number of users that the SuperIMAP process can
+manage.
+
+[FiveStreet.com](https://www.fivestreet.com) uses SuperIMAP to manages
+thousands of users and process over 1M incoming emails per week (as of
+January 2015). We currently run this load on a single Heroku PX dyno,
+with plenty of headroom. Our SuperIMAP instance serving thousands of
+users requires just 10 database connections, uses about 3GB of RAM,
+and has a 0.50 load average. The work queue usually sits near 0, with
+a latency of < 0.5 seconds.
 
 #### Tracer Emails
 
