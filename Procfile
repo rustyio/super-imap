@@ -10,4 +10,4 @@ worker:         bundle exec rake jobs:work
 
 imap_client_1x: NUM_WORKER_THREADS=1 MAX_USER_THREADS=200 bundle exec rake imap:client
 imap_client_2x: NUM_WORKER_THREADS=2 MAX_USER_THREADS=500 bundle exec rake imap:client
-imap_client_px: NUM_WORKER_THREADS=10 MAX_USER_THREADS=10000 bundle exec rake imap:client
+imap_client_px: bundle exec foreman s -f Procfile.imap-client-px
