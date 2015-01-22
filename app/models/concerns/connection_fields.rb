@@ -6,12 +6,20 @@ module ConnectionFields
     @connection_fields = []
 
     def self.encrypt(value)
-      Rails.application.config.encryption_cipher ? Rails.application.config.encryption_cipher.encrypt(value) : value
+      if Rails.application.config.encryption_cipher && value.present?
+        Rails.application.config.encryption_cipher.encrypt(value)
+      else
+        value
+      end
     end
 
     def self.decrypt(value)
       begin
-        Rails.application.config.encryption_cipher ? Rails.application.config.encryption_cipher.decrypt(value) : value
+        if Rails.application.config.encryption_cipher && value.present?
+          Rails.application.config.encryption_cipher.decrypt(value)
+        else
+          value
+        end
       rescue
         value
       end
