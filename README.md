@@ -9,7 +9,7 @@ email in real-time on behalf of their users.
 
 [FiveStreet.com](https://www.fivestreet.com) built SuperIMAP to solve
 scaling issues as we grew 7,000% in weekly email volume over the past
-year. As of January 2015, we run a SuperIMAP installation witho
+year. As of January 2015, we run a SuperIMAP installation with
 thousands of users processing over 1.5M emails per week.
 
 SuperIMAP is an alternative to Context.io and contains a subset of
