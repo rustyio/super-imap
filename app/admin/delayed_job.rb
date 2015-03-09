@@ -28,6 +28,9 @@ ActiveAdmin.register DelayedJob do
         row :created_at
         row :failed_at if obj.attempts > 0
         row :attempts if obj.attempts > 0
+        row :message do
+          link_to "Download Message", message_admin_delayed_job_path(obj, "eml")
+        end if /CallNewMailWebhook/.match(obj.handler)
       end
     end
 
@@ -38,14 +41,17 @@ ActiveAdmin.register DelayedJob do
     panel "Last Error" do
       pre obj.last_error
     end if obj.attempts > 0
-end
+  end
 
-  # form do |f|
-  #   f.inputs "Admin Details" do
-  #     f.input :email
-  #     f.input :password
-  #     f.input :password_confirmation
-  #   end
-  #   f.actions
-  # end
+  member_action :message, :method => :get do
+    # HACK - Make sure the class is loaded.
+    CallNewMailWebhook
+
+    job = YAML.load(resource.handler)
+    if job.object.class == CallNewMailWebhook
+      render :text => job.object.raw_eml, :content_type => 'message/rfc822'
+    else
+      render :text => "There was a problem."
+    end
+  end
 end
