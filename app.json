@@ -1,6 +1,6 @@
 {
     "name": "SuperIMAP",
-    "description": "Tap into IMAP, trigger webhooks on incoming emails.",
+    "description": "Monitor inboxes for incoming email, at scale.",
     "repository": "https://github.com/rustyio/super-imap",
     "keywords": ["IMAP", "mail", "webhook", "client", "ruby"],
     "success_url": "/admin",
