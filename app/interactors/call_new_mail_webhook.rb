@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 class CallNewMailWebhook < BaseWebhook
   attr_accessor :mail_log, :envelope, :raw_eml
 
@@ -96,5 +98,7 @@ class CallNewMailWebhook < BaseWebhook
     # Force the part body to use the charset it claims to use. Then
     # remove invalid characters for that charset.
     body && body.decoded.force_encoding(charset || 'UTF-8').scrub
+  rescue => e
+    body && body.decoded.force_encoding('UTF-8').scrub
   end
 end
