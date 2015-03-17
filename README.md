@@ -10,7 +10,7 @@ email in real-time on behalf of their users.
 [FiveStreet.com](https://www.fivestreet.com) built SuperIMAP to solve
 scaling issues as we grew 7,000% in weekly email volume over the past
 year. As of January 2015, we run a SuperIMAP installation with
-thousands of users processing over 1M emails per week.
+thousands of users processing over 1.5M emails per week.
 
 SuperIMAP is an alternative to Context.io and contains a subset of
 Context.io Lite API functionality. SuperIMAP is written in Ruby on
@@ -44,8 +44,7 @@ Other security measures:
 SuperIMAP has:
 
 * **IMAP Providers** - Configures an authentication transport
-  mechanism. For example, there are connection types for "Plain",
-  "Gmail OAuth 1.0" and "Gmail OAuth 2.0".
+  mechanism. For example, there are connection types for "Plain" and "Gmail OAuth 2.0".
 * **Partners** - Create a partner for each application / environment
   that will use SuperIMAP.
 * **Partner Connection** - Defines a connection between a partner and
