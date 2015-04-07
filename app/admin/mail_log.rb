@@ -7,7 +7,7 @@ ActiveAdmin.register MailLog do
   config.clear_action_items!
   actions :all, :except => [:new, :edit, :destroy]
 
-  config.filters = false
+  filter :message_id
 
   breadcrumb do
     user = User.find(params[:user_id])
