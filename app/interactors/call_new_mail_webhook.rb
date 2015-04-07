@@ -44,13 +44,13 @@ class CallNewMailWebhook < BaseWebhook
     begin
       envelope.to_json
     rescue => e
-      Log.debug("Problem converting to JSON:\n#{envelope}.")
+      Log.info("Problem converting to JSON:\n#{envelope}.")
     end
 
     begin
       raw_eml.to_json
     rescue => e
-      Log.debug("Problem converting to JSON:\n#{raw_eml}.")
+      Log.info("Problem converting to JSON:\n#{raw_eml}.")
     end
     # END DEBUGGING!
 
