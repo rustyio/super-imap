@@ -36,6 +36,7 @@ class ImapClient::UserThread
     update_uid_validity if running?
     main_loop           if running?
   rescue => e
+    Log.error("Encountered error for #{user.email}.")
     log_exception(e)
     self.daemon.increment_error_count(user.id)
     stop!
@@ -43,6 +44,7 @@ class ImapClient::UserThread
     stop!
     daemon.schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
     disconnect
+    Log.error("Disconnected #{user.email}.")
   end
 
   # Private: Schedule a block of code to run in a worker thread

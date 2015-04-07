@@ -40,6 +40,20 @@ class CallNewMailWebhook < BaseWebhook
     }
     data[:signature] = calculate_signature(partner.api_key, data[:sha1], data[:timestamp])
 
+    # START DEBUGGING!
+    begin
+      envelope.to_json
+    rescue => e
+      Log.debug("Problem converting to JSON:\n#{envelope}.")
+    end
+
+    begin
+      raw_eml.to_json
+    rescue => e
+      Log.debug("Problem converting to JSON:\n#{raw_eml}.")
+    end
+    # END DEBUGGING!
+
     # Post the data
     begin
       transmit_log = mail_log.transmit_logs.create()
@@ -89,9 +103,12 @@ class CallNewMailWebhook < BaseWebhook
 
     m.parts.each do |part|
       part.body = fix_body_encoding(part.body, part.charset)
-    end
+    end if m.parts
 
     m.encoded
+  rescue => e
+    Log.exception(e)
+    raw_eml.force_encoding('UTF-8').scrub
   end
 
   def fix_body_encoding(body, charset)
