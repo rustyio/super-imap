@@ -89,7 +89,7 @@ p2 <- ggplot() +
 
 ## Save the plots.
 cat("Saving plots.\n")
-pdf("./stress-test-results.pdf")
+pdf("./tmp/stress-test-results.pdf")
 print(p1)
 print(p2)
 dev.off()

@@ -29,5 +29,7 @@ module SuperIMAP
     else
       config.encryption_cipher = nil
     end
+
+    config.log_level = String(ENV['LOG_LEVEL'] || "info").upcase
   end
 end

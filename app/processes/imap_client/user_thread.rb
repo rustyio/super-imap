@@ -36,15 +36,15 @@ class ImapClient::UserThread
     update_uid_validity if running?
     main_loop           if running?
   rescue => e
-    Log.error("Encountered error for #{user.email}.")
     log_exception(e)
+    stat_exception(e)
     self.daemon.increment_error_count(user.id)
     stop!
   ensure
     stop!
     daemon.schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
     disconnect
-    Log.error("Disconnected #{user.email}.")
+    Log.info("Disconnected #{user.email}.")
   end
 
   # Private: Schedule a block of code to run in a worker thread
@@ -70,7 +70,7 @@ class ImapClient::UserThread
     sleep
   end
 
-  # Private: Log exceptions differently if we're stress testing.
+  # Private: Log exceptions. Be less verbose if we're stress testing.
   def log_exception(e)
     imap_exceptions = [
       Net::IMAP::Error,
@@ -82,10 +82,18 @@ class ImapClient::UserThread
 
     # Minimally log imap exceptions when stress testing.
     if imap_exceptions.include?(e.class) && self.daemon.stress_test_mode
-      Log.error("#{e.class} - #{e.to_s}")
+      Log.info("#{e.class} - #{e.to_s}")
     else
+      Log.info("Encountered error for #{user.email}: #{e.class} - #{e.to_s}")
       Log.exception(e)
     end
+  end
+
+  # Private: Log operations metrics. Be less verbose if we're stress testing.
+  def stat_exception(e)
+    return if self.daemon.stress_test_mode
+    category = "error." + e.class.to_s.gsub("::", "_")
+    Log.librato(:count, category, 1)
   end
 
   private unless Rails.env.test?
@@ -114,21 +122,16 @@ class ImapClient::UserThread
     schedule do
       user.update_attributes!(:last_login_at => Time.now)
     end
-  rescue OAuth::Error => e
+  rescue OAuth::Error,
+         Net::IMAP::NoResponseError,
+         Net::IMAP::ByeResponseError,
+         OAuth2::Error => e
     # If we encounter an OAuth error during authentication, then the
     # credentials are probably invalid. We don't want to log every
-    # occurrance of this, and we don't want to discard any information
-    # or disconnect the user, so we'll just back off from reconnecting
-    # again.
-    self.daemon.increment_error_count(user.id)
-    stop!
-  rescue OAuth2::Error => e
-    # Ditto for OAuth 2.0
-    self.daemon.increment_error_count(user.id)
-    stop!
-  rescue Net::IMAP::NoResponseError => e
-    # Ditto, some servers trigger this exception when an agent is not
-    # authorized.
+    # occurrance of this, and we don't want to archive the user, so
+    # we'll just back off from reconnecting again.
+    stat_exception(e)
+    Log.info("Encountered error for #{user.email}: #{e.class} - #{e.to_s}")
     self.daemon.increment_error_count(user.id)
     stop!
   end
@@ -241,8 +244,11 @@ class ImapClient::UserThread
         client.idle_done()
       end
     end
-  rescue Net::IMAP::Error => e
+  rescue Net::IMAP::Error,
+         EOFError => e
     # Recover gracefully.
+    stat_exception(e)
+    Log.info("Encountered error for #{user.email}: #{e.class} - #{e.to_s}")
     self.daemon.increment_error_count(user.id)
     stop!
   end
@@ -253,6 +259,12 @@ class ImapClient::UserThread
   # + uid - The UID of the email.
   def process_uid(uid)
     ProcessUid.new(self, uid).run
+  rescue Timeout::Error => e
+    # Recover gracefully.
+    stat_exception(e)
+    Log.info("Encountered error for #{user.email}: #{e.class} - #{e.to_s}")
+    self.daemon.increment_error_count(user.id)
+    stop!
   end
 
   # Private: Logout the user, disconnect the client.

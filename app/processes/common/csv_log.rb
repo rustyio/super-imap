@@ -20,7 +20,11 @@ module Common::CsvLog
   def close_csv_logs
     _csv_log_initialize
     @csv_log_paths.each do |path|
-      @csv_log_filehandles[path].close
+      begin
+        @csv_log_filehandles[path].close
+      rescue IOError
+        # May fire if we've already closed the stream elsewhere.
+      end
     end
   end
 

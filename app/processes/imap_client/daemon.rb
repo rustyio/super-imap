@@ -24,7 +24,7 @@ class ImapClient::Daemon
   include Common::DbConnection
   include Common::CsvLog
 
-  attr_accessor :stress_test_mode, :chaos_mode
+  attr_accessor :stress_test_mode, :chaos_mode, :enable_profiler
   attr_accessor :num_worker_threads, :max_user_threads, :max_email_size, :tracer_interval, :num_tracers
   attr_accessor :server_tag, :server_rhash
   attr_accessor :heartbeat_thread, :discovery_thread
@@ -41,6 +41,7 @@ class ImapClient::Daemon
     self.max_email_size     = options.fetch(:max_email_size)
     self.tracer_interval    = options.fetch(:tracer_interval)
     self.num_tracers        = options.fetch(:num_tracers)
+    self.enable_profiler    = options.fetch(:enable_profiler)
 
     # Load balancing stuff.
     self.server_tag = SecureRandom.hex(10)
@@ -57,6 +58,7 @@ class ImapClient::Daemon
   def run
     trap_signals
     force_class_loading
+    maybe_start_profiling
 
     # If stress testing, start a log.
     if self.stress_test_mode
@@ -83,9 +85,9 @@ class ImapClient::Daemon
     discovery_thread && discovery_thread.terminate
     claim_thread && claim_thread.terminate
     terminate_worker_pool
-    user_threads.values.map(&:terminate)
-    user_threads.values.map(&:join)
+    terminate_user_threads
     close_csv_logs
+    stop_profiling
   end
 
 
@@ -304,6 +306,19 @@ class ImapClient::Daemon
     Log.exception(e)
   end
 
+  # Private: Stop and disconnect all user threads.
+  def terminate_user_threads
+    user_threads.values.each do |thread|
+      # Terminate the thread, ignore exceptions.
+      thread.terminate rescue nil
+    end
+
+    user_threads.values.each do |thread|
+      # Join the thread, ignore exceptions.
+      thread.join if thread.alive?
+    end
+  end
+
   # Private: Run a function, then restart a user thread.
   #
   # See UserThread#schedule for more details.
@@ -327,6 +342,25 @@ class ImapClient::Daemon
     # Wake up the thread.
     if options[:thread].status == "sleep"
       options[:thread].run
+    end
+  end
+
+  # Private.
+  def maybe_start_profiling
+    return unless enable_profiler
+    Log.info("Starting profiler...")
+    require 'ruby-prof'
+    RubyProf.start
+  end
+
+  # Private.
+  def stop_profiling
+    return unless enable_profiler
+    Log.info("Stopping profiler...")
+    result = RubyProf.stop
+    printer = RubyProf::CallStackPrinter.new(result)
+    File.open("./tmp/profile.html", 'w') do |file|
+      printer.print(file)
     end
   end
 end

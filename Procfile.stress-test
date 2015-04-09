@@ -1,2 +1,4 @@
 imap_test_server: rake imap:test_server
-imap_client: rake imap:client STRESS_TEST_MODE=true
+imap_client_1: rake imap:client STRESS_TEST_MODE=true ENABLE_PROFILER=$ENABLE_PROFILER
+imap_client_2: rake imap:client STRESS_TEST_MODE=true ENABLE_PROFILER=false
+imap_client_3: rake imap:client STRESS_TEST_MODE=true ENABLE_PROFILER=false

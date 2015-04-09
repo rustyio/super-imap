@@ -29,5 +29,6 @@ gem 'spring'                    , :group => :development
 gem 'sqlite3'                   , :group => :development
 gem 'pry'                       , :group => :development
 gem 'pry-byebug'                , :group => :development
+gem 'ruby-prof'                 , :group => :stress
 
 gem 'sdoc'                      , '~> 0.4.0', :group => :doc

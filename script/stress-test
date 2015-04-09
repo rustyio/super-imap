@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+[ -z "$LENGTH_OF_TEST" ]         && LENGTH_OF_TEST="1"
+[ -z "$EMAILS_PER_MINUTE" ]      && EMAILS_PER_MINUTE="500"
+[ -z "$ENABLE_CHAOS" ]           && ENABLE_CHAOS="true"
+[ -z "$ENABLE_PROFILER" ]        && ENABLE_PROFILER="false"
+[ -z "$RUBY_PROF_MEASURE_MODE" ] && RUBY_PROF_MEASURE_MODE="process"
+
 clear
 
 echo
@@ -22,27 +28,29 @@ echo "Do not be alarmed; you can ignore the errors."
 echo
 echo "Some useful environment variables to set:"
 echo
-echo "+ LENGTH_OF_TEST    - Total number of minutes to run test. [$LENGTH_OF_TEST]"
-echo "+ EMAILS_PER_MINUTE - Rate of fake email generation. [$EMAILS_PER_MINUTE]"
-echo "+ ENABLE_CHAOS      - 'true' if we should generate bad IMAP responses. [$ENABLE_CHAOS]"
+echo "+ LENGTH_OF_TEST         - Total number of minutes to run test. [$LENGTH_OF_TEST]"
+echo "+ EMAILS_PER_MINUTE      - Rate of fake email generation. [$EMAILS_PER_MINUTE]"
+echo "+ ENABLE_CHAOS           - 'true' if we should generate bad IMAP responses. [$ENABLE_CHAOS]"
+echo "+ ENABLE_PROFILER        - 'true' to start the ruby-prof profiler. [$ENABLE_PROFILER]"
+echo "+ RUBY_PROF_MEASURE_MODE - What should ruby-prof measure? [$RUBY_PROF_MEASURE_MODE]"
+echo "                         - Can be 'wall', 'process', 'cpu', 'allocations', 'memory', 'gc_time', or 'gc_runs'"
+echo "                         - See https://github.com/ruby-prof/ruby-prof"
 echo
 echo "Press enter to continue, Control-C to exit."
 read
+
+echo "Beginning stress test. Please wait."
 
 # Remove old log files.
 rm ./log/stress/*
 
 # Begin the stress test.
-RAILS_ENV=stress LOG_LEVEL=info \
-         foreman s \
-         -f Procfile.stress-test \
-         -c imap_client=3,imap_test_server=1
-
+RAILS_ENV=stress foreman s -f Procfile.stress-test
 
 # Generate some plots.
-
 Rscript script/analyze-stress-test.R
 
 echo
-echo "Results are in 'stress-test-results.pdf'."
+echo "Stress test results are in 'tmp/stress-test-results.pdf'."
+echo "If enabled, profiler results are in 'tmp/profile.html'."
 echo

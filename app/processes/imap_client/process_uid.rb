@@ -41,9 +41,6 @@ class ProcessUid
     maybe.run { deploy_webhook }
     maybe.run { update_daemon_stats }
     maybe.finish
-  rescue => e
-    user_thread.log_exception(e)
-    user_thread.stop!
   end
 
   # Private: The User model.
@@ -91,6 +88,7 @@ class ProcessUid
     # Save the internal_date and message_size for later.
     self.internal_date = Time.parse(response.attr["INTERNALDATE"])
     self.message_size  = (response.attr["RFC822.SIZE"] || 0).to_i
+
     return true
   rescue Timeout::Error => e
     # If this email triggered a timeout, then skip it.
