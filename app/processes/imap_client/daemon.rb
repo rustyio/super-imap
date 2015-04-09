@@ -78,9 +78,11 @@ class ImapClient::Daemon
     light_sleep
   rescue Exception => e
     stop!
+    Log.error("ImapClient::Daemon is stopping because of an exception.")
     Log.exception(e)
   ensure
     stop!
+    Log.info("ImapClient::Daemon is stopping.")
     heartbeat_thread && heartbeat_thread.terminate
     discovery_thread && discovery_thread.terminate
     claim_thread && claim_thread.terminate
