@@ -101,6 +101,7 @@ class ProcessUid
   # date.
   def check_for_really_old_internal_date
     if internal_date < 4.days.ago
+      Log.librato(:count, "system.process_uid.really_old_internal_date", 1)
       update_user(:last_uid => nil, :last_uid_validity => nil)
       user_thread.stop!
       return false
@@ -113,6 +114,7 @@ class ProcessUid
   # created.
   def check_for_pre_creation_internal_date
     if internal_date < user.created_at
+      Log.librato(:count, "system.process_uid.pre_creation_internal_date", 1)
       update_user(:last_uid => uid)
       return false
     else
@@ -124,6 +126,7 @@ class ProcessUid
   # the last internal date that we've processed.
   def check_for_relapsed_internal_date
     if user.last_internal_date && internal_date < (user.last_internal_date - 1.hour)
+      Log.librato(:count, "system.process_uid.relapsed_internal_date", 1)
       update_user(:last_uid => uid)
       return false
     else
@@ -134,6 +137,7 @@ class ProcessUid
   # Private: Skip emails that are too big.
   def check_for_big_messages
     if message_size > user_thread.options[:max_email_size]
+      Log.librato(:count, "system.process_uid.big_message", 1)
       update_user(:last_uid => uid)
       return false
     else
@@ -150,6 +154,7 @@ class ProcessUid
 
     # If there was no response, then skip this message.
     if response.nil?
+      Log.librato(:count, "system.process_uid.uid_fetch_no_response", 1)
       update_user(:last_uid => uid)
       return false
     end
@@ -174,6 +179,7 @@ class ProcessUid
     # misconfigured email servers means that email arrives from the
     # future.
     if internal_date > Time.now
+      Log.librato(:count, "system.process_uid.fix_suspicious_internal_date", 1)
       self.internal_date = user.last_internal_date
     end
 
@@ -204,7 +210,13 @@ class ProcessUid
     user_thread.schedule do
       old_mail_log = user.mail_logs.find_by_message_id(message_id)
     end
-    return !old_mail_log
+
+    if old_mail_log
+      Log.librato(:count, "system.process_uid.duplicate_message_id", 1)
+      return false
+    else
+      return true
+    end
   end
 
   # Private: Have we already processed this sha1 hash? This helps us
@@ -219,7 +231,13 @@ class ProcessUid
     user_thread.schedule do
       old_mail_log = user.mail_logs.find_by_sha1(sha1)
     end
-    return !old_mail_log
+
+    if old_mail_log
+      Log.librato(:count, "system.process_uid.duplicate_sha1", 1)
+      return false
+    else
+      return true
+    end
   end
 
   # Private: Log the mail.
