@@ -17,19 +17,7 @@ class CallNewMailWebhook < BaseWebhook
       return false
     end
 
-    # Fix improper encodings enough to satisfy JSON.dump.
-    # TODO - The sha1 changed; re-check for duplicates?
-    begin
-      JSON.dump(raw_eml)
-    rescue => e
-      self.raw_eml = fix_encoding(raw_eml)
-      sha1 = Digest::SHA1.hexdigest(raw_eml)
-      mail_log.update_attributes(:sha1 => sha1)
-    end
-
-    # Assemble the payload. We use the Mail class to decode and then
-    # re-encode the raw_eml to fix any potential character encoding
-    # issues.
+    # Assemble the payload.
     data = {
       :timestamp          => Time.now.to_i,
       :sha1               => mail_log.sha1,
@@ -90,32 +78,5 @@ class CallNewMailWebhook < BaseWebhook
                                       :response_body => e.to_s.slice(0, 1024))
       raise e
     end
-  end
-
-  private
-
-  # Private: Fix mail encoding. Some emails contain escaped characters
-  # that are not valid in the encoding that the claim to be using.
-  def fix_encoding(raw_eml)
-    m = Mail.new(raw_eml)
-
-    m.body = fix_body_encoding(m.body, m.charset)
-
-    m.parts.each do |part|
-      part.body = fix_body_encoding(part.body, part.charset)
-    end if m.parts
-
-    m.encoded
-  rescue => e
-    Log.exception(e)
-    raw_eml.force_encoding('UTF-8').scrub
-  end
-
-  def fix_body_encoding(body, charset)
-    # Force the part body to use the charset it claims to use. Then
-    # remove invalid characters for that charset.
-    body && body.decoded.force_encoding(charset || 'UTF-8').scrub
-  rescue => e
-    body && body.decoded.force_encoding('UTF-8').scrub
   end
 end

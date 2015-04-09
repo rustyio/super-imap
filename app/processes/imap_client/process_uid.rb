@@ -156,7 +156,7 @@ class ProcessUid
 
     # Save the internal_date and message_size for later.
     self.uid        = response.attr["UID"]
-    self.raw_eml    = response.attr["RFC822"]
+    self.raw_eml    = to_utf8(response.attr["RFC822"])
     self.envelope   = response.attr["ENVELOPE"]
     self.message_id = (envelope.message_id || "#{user.email} - #{uid} - #{internal_date}").slice(0, 255)
 
@@ -247,5 +247,17 @@ class ProcessUid
       daemon.processed_log << [Time.now, user.email, message_id]
     daemon.total_emails_processed += 1
     return true
+  end
+
+  # Private: Convert a string UTF-8 format.
+  def to_utf8(s)
+    return nil if s.nil?
+
+    # Attempt to politely transcode the string.
+    s.encode("UTF-8").scrub
+  rescue
+    # If that doesn't work, then overwrite the existing encoding and
+    # clobber any strange characters.
+    s.force_encoding("UTF-8").scrub
   end
 end
