@@ -45,6 +45,7 @@ class ImapClient::UserThread
     daemon.schedule_work(:disconnect_user, :hash => user.id, :user_id => user.id)
     disconnect
     Log.info("Disconnected #{user.email}.")
+    clean_up
   end
 
   # Private: Schedule a block of code to run in a worker thread
@@ -282,6 +283,13 @@ class ImapClient::UserThread
     end
 
     # The client is no longer connected.
+    self.client = nil
+  end
+
+  # Private: Help the garbage collector know what it can collect.
+  def clean_up
+    self.daemon = nil
+    self.user = nil
     self.client = nil
   end
 end

@@ -41,6 +41,8 @@ class ProcessUid
     maybe.run { deploy_webhook }
     maybe.run { update_daemon_stats }
     maybe.finish
+  ensure
+    clean_up
   end
 
   # Private: The User model.
@@ -265,6 +267,18 @@ class ProcessUid
       daemon.processed_log << [Time.now, user.email, message_id]
     daemon.total_emails_processed += 1
     return true
+  end
+
+  # Private: Help the garbage collector know what it can collect.
+  def clean_up
+    self.user_thread = nil
+    self.uid = nil
+    self.internal_date = nil
+    self.raw_eml = nil
+    self.envelope = nil
+    self.message_id = nil
+    self.sha1 = nil
+    self.mail_log = nil
   end
 
   # Private: Convert a string UTF-8 format.
