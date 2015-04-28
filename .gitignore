@@ -16,3 +16,5 @@
 /stress-test-results.pdf
 /log/*.log
 /tmp
+
+.ruby-version
