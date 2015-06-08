@@ -19,12 +19,14 @@ class User < ActiveRecord::Base
   validates_presence_of :tag
   validates_uniqueness_of :tag, :case_sensitive => false,
                           :scope      => :partner_connection_id,
-                          :conditions => -> { where.not(:archived => true) }
+                          :conditions => -> { where.not(:archived => true) },
+                          :if => Proc.new { |object| object.tag_changed? }
 
   validates_uniqueness_of :email, :case_sensitive => false,
                           :scope      => :partner_connection_id,
                           :allow_nil  => true,
-                          :conditions => -> { where.not(:archived => true) }
+                          :conditions => -> { where.not(:archived => true) },
+                          :if => Proc.new { |object| object.email_changed? }
 
   def imap_provider
     self.connection.imap_provider
