@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150119185401) do
+ActiveRecord::Schema.define(version: 20150611134232) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -107,6 +107,8 @@ ActiveRecord::Schema.define(version: 20150119185401) do
     t.string   "sha1",                limit: 40
   end
 
+  add_index "mail_logs", ["user_id", "message_id"], name: "index_mail_logs_on_user_id_and_message_id", using: :btree
+  add_index "mail_logs", ["user_id", "sha1"], name: "index_mail_logs_on_user_id_and_sha1", using: :btree
   add_index "mail_logs", ["user_id"], name: "index_mail_logs_on_user_id", using: :btree
 
   create_table "partner_connections", force: true do |t|
