@@ -179,6 +179,12 @@ class ImapClient::UserThread
   # email.
   def main_loop
     while running?
+      # Make sure an email with a known uid exists.
+      verify_last_uid
+
+      # Maybe we stopped?
+      break if stopping?
+
       # Read emails until we have read everything there is to
       # read. Then go into idle mode.
       last_read_count = 9999
@@ -197,15 +203,46 @@ class ImapClient::UserThread
     end
   end
 
+  # Private: Verify that an email with a known UID exists on the
+  # server. Because of a hard-to-avoid race condition, there is a
+  # chance that we update `last_uid_validity` and clear `last_uid`,
+  # and then later overwrite `last_uid` with an old value. When this
+  # happens, the system may fail to read email.  To avoid this, we try
+  # to read some status about an email that we *know* to exist. If we
+  # don't get a response, then we clear `last_uid_validity` and
+  # `last_uid` and start over.
+  def verify_last_uid
+    # Nothing to do if we don't have a last_uid.
+    return if user.last_uid.nil?
+
+    # Fetch some info about the last email we successfully read.
+    responses = Timeout::timeout(30) do
+      client.uid_fetch([user.last_uid], ["RFC822.SIZE"])
+    end
+
+    # Make sure we have a response. If we don't, then forget our
+    # knowledge of `last_uid_validity` and `last_uid` and
+    # stop. Stopping may be a bit over-conservative, but because this
+    # is caused by a race-condition, it makes sense to back off.
+    response = responses && responses.first
+    if response.nil?
+      schedule do
+        user.update_attributes!(:last_uid_validity => nil, :last_uid => nil)
+      end
+
+      stop!
+    end
+  end
+
   # Private: Search for new email by uid. See
   # "https://tools.ietf.org/html/rfc3501#section-2.3.1.1"e
   #
   # Returns the number of emails read.
   def read_email_by_uid
-    # HACK - Library doesn't work with "UID N:*". Just use a really
-    # big ending number.
-    max_uid = 2 ** 32 - 1
-    uids = client.uid_search(["UID", "#{user.last_uid + 1}:#{max_uid}"])
+    # Read in batches of 100 emails.
+    batch_size = 100
+    uids = client.uid_search(["UID", "#{user.last_uid + 1}:#{user.last_uid + batch_size}"])
+
     uids.each do |uid|
       break if stopping?
       process_uid(uid) unless stopping?
