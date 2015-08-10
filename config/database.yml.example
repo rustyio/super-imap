@@ -1,0 +1,19 @@
+default: &default
+  adapter: postgresql
+  host: localhost
+  pool: 5
+  timeout: 5000
+  user: username
+  password: password
+
+development:
+  <<: *default
+  database: super_imap_development
+
+stress:
+  <<: *default
+  database: super_imap_stress
+
+test:
+  <<: *default
+  database: super_imap_test
