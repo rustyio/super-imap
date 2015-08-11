@@ -106,6 +106,7 @@ class ImapClient::UserThread
     errors  = self.daemon.error_count(user.id)
     seconds = (errors ** 3) - 1
     seconds = [seconds, 300].min
+    Log.librato(:measure, 'user_thread.delayed_start', seconds) if seconds > 0
     light_sleep seconds
   end
 
@@ -242,6 +243,7 @@ class ImapClient::UserThread
     # Read in batches of 100 emails.
     batch_size = 100
     uids = client.uid_search(["UID", "#{user.last_uid + 1}:#{user.last_uid + batch_size}"])
+    Log.librato(:measure, 'user_thread.read_email_by_uid.batch_size', uids.length)
 
     uids.each do |uid|
       break if stopping?
@@ -261,6 +263,7 @@ class ImapClient::UserThread
     # days. We filter out duplicates later.
     date_string = 2.days.ago.strftime("%d-%b-%Y")
     uids = client.uid_search(["SINCE", date_string])
+    Log.librato(:measure, 'user_thread.read_email_by_date.batch_size', uids.length)
     uids.each do |uid|
       break if stopping?
       process_uid(uid) unless stopping?

@@ -162,11 +162,11 @@ class ImapClient::Daemon
       heartbeat.touch
 
       # Log Heroku / Librato stats.
-      Log.librato(:sample, 'imap_client.thread.count', Thread.list.count)
-      Log.librato(:sample, 'imap_client.work_queue.length', work_queue_length)
-      Log.librato(:sample, 'imap_client.user_thread.count', user_threads.count)
-      Log.librato(:sample, 'imap_client.total_emails_processed', total_emails_processed)
+      Log.librato(:measure, 'imap_client.thread.count', Thread.list.count)
+      Log.librato(:measure, 'imap_client.work_queue.length', work_queue_length)
+      Log.librato(:measure, 'imap_client.user_thread.count', user_threads.count)
       Log.librato(:measure, 'work_queue.latency', work_queue_latency)
+      Log.librato(:sample, 'imap_client.total_emails_processed', total_emails_processed)
 
       light_sleep 10
     end
