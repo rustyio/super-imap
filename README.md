@@ -5,19 +5,18 @@ your application when new email arrives in an IMAP inbox, typically
 within seconds. SuperIMAP is especially useful for applications that
 need to react to email in real-time on behalf of their users.
 
-[FiveStreet.com](https://www.fivestreet.com) built SuperIMAP to solve
-scaling issues as we grew 7,000% in weekly email volume over the past
-year. As of July 2015, we run a SuperIMAP installation that processes
-nearly 3 million emails per week for thousands of users.
-
-SuperIMAP is an alternative to Context.io and contains a subset of
-Context.io Lite API functionality. SuperIMAP is written in Ruby on
-Rails and is open source under the MIT license.
+[FiveStreet.com](https://www.fivestreet.com) built SuperIMAP as an
+alternative to Context.io. It contains a subset of Context.io Lite API
+functionality. As of July 2015, the FiveStreet team runs a SuperIMAP
+cluster processing ~400k emails per day for thousands of users.
 
 The following IMAP authentication methods are supported:
 
 + Gmail OAuth 2.0
 + Plain authentication (username / password)
+
+SuperIMAP is written in Ruby on Rails and is open source under the MIT
+license.
 
 ## Screenshot
 
