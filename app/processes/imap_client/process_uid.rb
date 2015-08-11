@@ -69,12 +69,6 @@ class ProcessUid
     end
   end
 
-  def update_user(hash)
-    user_thread.schedule do
-      user.update_attributes!(hash)
-    end
-  end
-
   def fetch_internal_date_and_size
     responses = Timeout::timeout(30) do
       client.uid_fetch([uid], ["INTERNALDATE", "RFC822.SIZE"])
@@ -83,7 +77,7 @@ class ProcessUid
 
     # If there was no response, then skip this message.
     if response.nil?
-      update_user(:last_uid => uid)
+      user_thread.update_user(:last_uid => uid)
       return false
     end
 
@@ -94,7 +88,7 @@ class ProcessUid
     return true
   rescue Timeout::Error => e
     # If this email triggered a timeout, then skip it.
-    update_user(:last_uid => uid)
+    user_thread.update_user(:last_uid => uid)
     raise e
   end
 
@@ -104,7 +98,7 @@ class ProcessUid
   def check_for_really_old_internal_date
     if internal_date < 4.days.ago
       Log.librato(:count, "system.process_uid.really_old_internal_date", 1)
-      update_user(:last_uid => nil, :last_uid_validity => nil)
+      user_thread.update_user(:last_uid => nil, :last_uid_validity => nil)
       user_thread.stop!
       return false
     else
@@ -117,7 +111,7 @@ class ProcessUid
   def check_for_pre_creation_internal_date
     if internal_date < user.created_at
       Log.librato(:count, "system.process_uid.pre_creation_internal_date", 1)
-      update_user(:last_uid => uid)
+      user_thread.update_user(:last_uid => uid)
       return false
     else
       return true
@@ -129,7 +123,7 @@ class ProcessUid
   def check_for_relapsed_internal_date
     if user.last_internal_date && internal_date < (user.last_internal_date - 1.hour)
       Log.librato(:count, "system.process_uid.relapsed_internal_date", 1)
-      update_user(:last_uid => uid)
+      user_thread.update_user(:last_uid => uid)
       return false
     else
       return true
@@ -140,7 +134,7 @@ class ProcessUid
   def check_for_big_messages
     if message_size > user_thread.options[:max_email_size]
       Log.librato(:count, "system.process_uid.big_message", 1)
-      update_user(:last_uid => uid)
+      user_thread.update_user(:last_uid => uid)
       return false
     else
       return true
@@ -157,7 +151,7 @@ class ProcessUid
     # If there was no response, then skip this message.
     if response.nil?
       Log.librato(:count, "system.process_uid.uid_fetch_no_response", 1)
-      update_user(:last_uid => uid)
+      user_thread.update_user(:last_uid => uid)
       return false
     end
 
@@ -170,7 +164,7 @@ class ProcessUid
     return true
   rescue Timeout::Error => e
     # If this email triggered a timeout, then skip it.
-    update_user(:last_uid => uid)
+    user_thread.update_user(:last_uid => uid)
     raise e
   end
 
@@ -186,9 +180,9 @@ class ProcessUid
     end
 
     # Update the user.
-    update_user(:last_uid           => uid,
-                :last_email_at      => Time.now,
-                :last_internal_date => internal_date)
+    user_thread.update_user(:last_uid           => uid,
+                            :last_email_at      => Time.now,
+                            :last_internal_date => internal_date)
     return true
   end
 
@@ -198,7 +192,7 @@ class ProcessUid
     if m = /^TRACER: (.+)$/.match(envelope.subject)
       tracer_uid = m[1]
       confirm_tracer(tracer_uid)
-      update_user(:last_uid => uid)
+      user_thread.update_user(:last_uid => uid)
       daemon.total_emails_processed += 1
       return false
     else

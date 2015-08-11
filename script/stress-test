@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+ulimit -n 2048
+
 [ -z "$LENGTH_OF_TEST" ]         && LENGTH_OF_TEST="1"
 [ -z "$EMAILS_PER_MINUTE" ]      && EMAILS_PER_MINUTE="500"
 [ -z "$ENABLE_CHAOS" ]           && ENABLE_CHAOS="true"

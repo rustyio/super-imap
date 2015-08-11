@@ -19,13 +19,26 @@ class ImapClient::UserThread
   include Common::LightSleep
   include Common::Stoppable
 
+  UIDValidityContentionError  = Class.new(StandardError)
+
   attr_accessor :daemon, :options
   attr_accessor :user, :client, :folder_name
+  attr_accessor :uid_validity
 
   def initialize(daemon, user, options)
     self.daemon = daemon
     self.user = user
     self.options = options
+  end
+
+  # Private: Update a user record in a scheduled way.
+  def update_user(hash)
+    schedule do
+      if !user.update_attributes(hash)
+        Log.error("Could not update #{user.email} - #{user.errors.to_h}")
+        stop!
+      end
+    end
   end
 
   def run
@@ -121,9 +134,7 @@ class ImapClient::UserThread
   # Private: Authenticate a user to the server.
   def authenticate
     user.connection.imap_provider.authenticate_imap(client, user)
-    schedule do
-      user.update_attributes!(:last_login_at => Time.now)
-    end
+    update_user(:last_login_at => Time.now)
   rescue OAuth::Error,
          Net::IMAP::NoResponseError,
          Net::IMAP::ByeResponseError,
@@ -165,14 +176,12 @@ class ImapClient::UserThread
   def update_uid_validity
     # Get the latest validity value.
     response = client.status(folder_name.to_s, attrs=['UIDVALIDITY'])
-    uid_validity = response['UIDVALIDITY']
+    self.uid_validity = response['UIDVALIDITY']
 
-    if user.last_uid_validity.to_s != uid_validity.to_s
-      schedule do
-        # Update the user with the new validity value, invalidate the
-        # old last_uid value.
-        user.update_attributes!(:last_uid_validity => uid_validity, :last_uid => nil)
-      end
+    if user.last_uid_validity.to_s != self.uid_validity.to_s
+      # Update the user with the new validity value, invalidate the
+      # old last_uid value.
+      update_user(:last_uid_validity => self.uid_validity, :last_uid => nil)
     end
   end
 
@@ -180,11 +189,8 @@ class ImapClient::UserThread
   # email.
   def main_loop
     while running?
-      # Make sure an email with a known uid exists.
-      # verify_last_uid
-
-      # Maybe we stopped?
-      break if stopping?
+      verify_uid_validity if running?
+      jumpstart_stalled_account if running?
 
       # Read emails until we have read everything there is to
       # read. Then go into idle mode.
@@ -197,41 +203,39 @@ class ImapClient::UserThread
         end
       end
 
-      # Maybe we stopped?
-      break if stopping?
-
-      wait_for_email
+      wait_for_email if running?
     end
   end
 
-  # Private: Verify that an email with a known UID exists on the
-  # server. Because of a hard-to-avoid race condition, there is a
-  # chance that we update `last_uid_validity` and clear `last_uid`,
-  # and then later overwrite `last_uid` with an old value. When this
-  # happens, the system may fail to read email.  To avoid this, we try
-  # to read some status about an email that we *know* to exist. If we
-  # don't get a response, then we clear `last_uid_validity` and
-  # `last_uid` and start over.
-  def verify_last_uid
-    # Nothing to do if we don't have a last_uid.
-    return if user.last_uid.nil?
-
-    # Fetch some info about the last email we successfully read.
-    responses = Timeout::timeout(30) do
-      client.uid_fetch([user.last_uid], ["RFC822.SIZE"])
+  # Private: Stop if the uid_validity was changed by someone else.
+  #
+  # Because SuperIMAP tries to avoid locks, there is a chance that two
+  # machines in a cluster may briefly own the same user. If this
+  # happens and the server manages to change the UIDVALIDITY settings,
+  # then there is a chance that one server could change the
+  # `uid_validity` attribute, and the other server could set the
+  # `last_uid` attribute. This would put the user out of sync, we
+  # would begin querying for UIDS that no longer exist, and we'd miss
+  # emails.
+  #
+  # To work around this, we refresh the user object and make sure that
+  # the `uid_validity` field hasn't changed from what we know it to
+  # be. If it has, then we'll stop this instance of the thread.
+  def verify_uid_validity
+    schedule do
+      user.reload
     end
 
-    # Make sure we have a response. If we don't, then forget our
-    # knowledge of `last_uid_validity` and `last_uid` and
-    # stop. Stopping may be a bit over-conservative, but because this
-    # is caused by a race-condition, it makes sense to back off.
-    response = responses && responses.first
-    if response.nil?
-      schedule do
-        user.update_attributes!(:last_uid_validity => nil, :last_uid => nil)
-      end
+    stop! if self.uid_validity.present? && (self.uid_validity.to_s != user.last_uid_validity.to_s)
+  end
 
-      stop!
+  # Private: Check for accounts that haven't had an email in 24 hours.
+  # When this happens, start reading emails by date, not UID. This
+  # hopefully guards against accounts getting into a weird state and
+  # getting locked.
+  def jumpstart_stalled_account
+    if user.last_email_at && user.last_email_at < 24.hours.ago
+      update_user(:last_uid => nil)
     end
   end
 
@@ -243,7 +247,6 @@ class ImapClient::UserThread
     # Read in batches of 100 emails.
     batch_size = 100
     uids = client.uid_search(["UID", "#{user.last_uid + 1}:#{user.last_uid + batch_size}"])
-    Log.librato(:measure, 'user_thread.read_email_by_uid.batch_size', uids.length)
 
     uids.each do |uid|
       break if stopping?
@@ -263,7 +266,6 @@ class ImapClient::UserThread
     # days. We filter out duplicates later.
     date_string = 2.days.ago.strftime("%d-%b-%Y")
     uids = client.uid_search(["SINCE", date_string])
-    Log.librato(:measure, 'user_thread.read_email_by_date.batch_size', uids.length)
     uids.each do |uid|
       break if stopping?
       process_uid(uid) unless stopping?
