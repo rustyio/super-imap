@@ -1,5 +1,3 @@
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/rustyio/super-imap)
-
 # SuperIMAP - Version 0.1.1
 
 SuperIMAP is an inbound mail processor. It triggers a webhook event
