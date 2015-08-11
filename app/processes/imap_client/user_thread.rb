@@ -181,7 +181,7 @@ class ImapClient::UserThread
   def main_loop
     while running?
       # Make sure an email with a known uid exists.
-      verify_last_uid
+      # verify_last_uid
 
       # Maybe we stopped?
       break if stopping?
