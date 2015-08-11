@@ -1,14 +1,14 @@
 # SuperIMAP - Version 0.1.1
 
-SuperIMAP is an inbound mail processor. It triggers a webhook event
-when new email arrives in an IMAP inbox, typically within
-seconds. SuperIMAP is useful for applications that need to react to
-email in real-time on behalf of their users.
+SuperIMAP is an inbound mail processor. It triggers a webhook event to
+your application when new email arrives in an IMAP inbox, typically
+within seconds. SuperIMAP is especially useful for applications that
+need to react to email in real-time on behalf of their users.
 
 [FiveStreet.com](https://www.fivestreet.com) built SuperIMAP to solve
 scaling issues as we grew 7,000% in weekly email volume over the past
-year. As of January 2015, we run a SuperIMAP installation with
-thousands of users processing over 1.5M emails per week.
+year. As of July 2015, we run a SuperIMAP installation that processes
+nearly 3 million emails per week for thousands of users.
 
 SuperIMAP is an alternative to Context.io and contains a subset of
 Context.io Lite API functionality. SuperIMAP is written in Ruby on
