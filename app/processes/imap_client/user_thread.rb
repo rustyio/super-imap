@@ -19,8 +19,6 @@ class ImapClient::UserThread
   include Common::LightSleep
   include Common::Stoppable
 
-  UIDValidityContentionError  = Class.new(StandardError)
-
   attr_accessor :daemon, :options
   attr_accessor :user, :client, :folder_name
   attr_accessor :uid_validity
