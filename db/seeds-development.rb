@@ -18,7 +18,6 @@ Oauth2::ImapProvider.create!(
   :smtp_domain               => "gmail.com",
   :smtp_enable_starttls_auto => true,
   :oauth2_site               => "https://accounts.google.com",
-  :oauth2_token_url          => "/o/oauth2/token",
   :oauth2_token_method       => "post",
   :oauth2_grant_type         => "refresh_token",
   :oauth2_scope              => "https://www.googleapis.com/auth/userinfo.email https://mail.google.com/",
