@@ -1,8 +1,10 @@
+require 'uri'
+
 module Oauth2::DisconnectsHelper
   def oauth2_new_helper
     # Disconnect the user. Assume that this succeeds.
     token = self.user.oauth2_refresh_token_secure
-    url = "https://accounts.google.com/o/oauth2/revoke?token=#{token}"
+    url = "https://accounts.google.com/o/oauth2/revoke?token=#{URI.escape(token)}"
     Net::HTTP.get_response(URI(url))
 
     # Throw away our credentials.
