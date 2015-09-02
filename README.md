@@ -320,7 +320,7 @@ Log in as the default user: "admin@example.com" / "password"
 
 Run this once:
 
-    RAILS_ENV=production rake db:setup db:seed"
+    RAILS_ENV=production rake db:setup db:seed
 
 Then start the server:
 
