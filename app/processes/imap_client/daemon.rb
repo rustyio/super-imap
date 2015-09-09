@@ -66,7 +66,9 @@ class ImapClient::Daemon
       self.processed_log = csv_log("./log/stress/processed_emails_#{server_tag}.csv")
     end
 
-    # Start our threads.
+    # Start our threads. We need one thread for each worker, plus four
+    # additional threads -- one each for the heartbeat, discovery,
+    # claim, and tracer threads.
     set_db_connection_pool_size(self.num_worker_threads + 4)
     start_worker_pool(num_worker_threads)
     start_heartbeat_thread
@@ -77,9 +79,9 @@ class ImapClient::Daemon
     # Sleep until we are stopped.
     light_sleep
   rescue Exception => e
-    stop!
     Log.error("ImapClient::Daemon is stopping because of an exception.")
     Log.exception(e)
+    stop!
   ensure
     stop!
     Log.info("ImapClient::Daemon is stopping.")
