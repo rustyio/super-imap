@@ -9,7 +9,17 @@ module Common::DbConnection
   end
 
   def establish_db_connection
-    ActiveRecord::Base.establish_connection
-    sleep 2
+    # Get the connection.
+    conn = ActiveRecord::Base.establish_connection
+
+    # Ensure we can successfully connected.
+    while running?
+      begin
+        conn.connection.execute("SELECT 1")
+        break if conn.connected?
+      rescue => e
+        sleep 1
+      end
+    end
   end
 end
