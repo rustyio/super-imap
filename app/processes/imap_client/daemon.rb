@@ -177,6 +177,7 @@ class ImapClient::Daemon
     raise e
   ensure
     Log.info("Stopping heartbeat thread.")
+    heartbeat.delete if heartbeat
   end
 
   # Private: Fetches all recently updated ImapDaemonHeartbeat records
