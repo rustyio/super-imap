@@ -2,6 +2,7 @@ fields = [
   :imap_provider_code,
   :users_count
 ]
-fields.map do |field|
+values = fields.map do |field|
   [field, @connection.send(field)]
-end.to_h.to_json
+end
+array_to_hash(values).to_json

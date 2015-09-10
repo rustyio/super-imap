@@ -3,28 +3,36 @@ module Common::WorkerPool
   include Common::WrappedThread
   include Common::DbConnection
 
-  attr_accessor :work_queues, :worker_rhash, :worker_threads, :work_queue_latency
+  attr_accessor :worker_rhash
+  attr_accessor :work_queues, :work_queues_lock
+  attr_accessor :worker_threads, :worker_threads_lock
+  attr_accessor :work_queue_latency
+
+  def init_worker_pool
+    self.work_queues = []
+    self.work_queues_lock = Mutex.new
+    self.worker_threads = []
+    self.worker_threads_lock = Mutex.new
+    self.worker_rhash = ImapClient::RendezvousHash.new
+  end
 
   # Public: Start a number of worker threads and begin processing
   # scheduled work.
   def start_worker_pool(num_worker_threads)
-    # Worker stuff.
-    self.work_queues = []
-    self.worker_threads = []
-    self.worker_rhash = ImapClient::RendezvousHash.new([])
-
     # Create work queues.
-    num_worker_threads.times do |n|
-      self.work_queues << Queue.new
-    end
-
-    # Start worker threads.
-    num_worker_threads.times do |n|
-      _start_worker_thread(self.work_queues[n])
+    work_queues_lock.synchronize do
+      worker_threads_lock.synchronize do
+        num_worker_threads.times do |n|
+          work_queue = Queue.new
+          worker_thread = _start_worker_thread(work_queue)
+          self.work_queues << work_queue
+          self.worker_threads << worker_thread
+        end
+      end
     end
 
     tags = num_worker_threads.times.map(&:to_i)
-    self.worker_rhash = ImapClient::RendezvousHash.new(tags)
+    self.worker_rhash.site_tags = tags
   end
 
   # Public: Schedule a task to be executed on one of the work
@@ -40,26 +48,33 @@ module Common::WorkerPool
     raise "No hash specified!" if options[:hash].nil?
     index = worker_rhash.hash(options[:hash] || rand())
     options.merge!(:'$action' => s, :'$time' => Time.now)
-    work_queues[index] << options
+    work_queues_lock.synchronize do
+      work_queues[index] << options
+    end
   end
 
   # Public: Return the total number of scheduled items in the work queue.
   def work_queue_length
-    work_queues.map(&:size).inject(&:+)
+    work_queues_lock.synchronize do
+      work_queues.map(&:size).inject(&:+)
+    end
   end
 
   # Public: Wait for the worker pool to finish processing all items.
   def terminate_worker_pool
     Log.info("Waiting for worker threads...")
-    worker_threads.present? && worker_threads.map(&:terminate)
+    worker_threads_lock.synchronize do
+      worker_threads.present? && worker_threads.map(&:terminate)
+    end
   end
 
   private
 
   def _start_worker_thread(work_queue)
-    self.worker_threads << wrapped_thread do
-      establish_db_connection
-      _worker_thread_runner(work_queue)
+    wrapped_thread do
+      ActiveRecord::Base.connection_pool.with_connection do |conn|
+        _worker_thread_runner(work_queue)
+      end
     end
   end
 

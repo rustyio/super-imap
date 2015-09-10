@@ -24,6 +24,7 @@ class ImapClient::UserThread
   attr_accessor :uid_validity
 
   def initialize(daemon, user, options)
+    init_stoppable
     self.daemon = daemon
     self.user = user
     self.options = options
@@ -114,7 +115,7 @@ class ImapClient::UserThread
   # are seeing for a given user. At most, wait 5 minutes before trying
   # to connect.
   def delay_start
-    errors  = self.daemon.error_count(user.id)
+    errors  = self.daemon.get_error_count(user.id)
     seconds = (errors ** 3) - 1
     seconds = [seconds, 300].min
     Log.librato(:measure, 'user_thread.delayed_start', seconds) if seconds > 0

@@ -31,6 +31,9 @@ class ImapTestServer::Daemon
   attr_accessor :generated_log, :fetched_log, :events_log
 
   def initialize(options = {})
+    # Initialize mixins.
+    init_stoppable
+
     # Config stuff.
     self.port              = options.fetch(:port)
     self.enable_chaos      = options.fetch(:enable_chaos)
@@ -92,21 +95,18 @@ class ImapTestServer::Daemon
 
   def start_stats_thread
     self.stats_thread = wrapped_thread do
-      establish_db_connection
       stats_thread_runner
     end
   end
 
   def start_connection_thread
     self.connection_thread = wrapped_thread do
-      establish_db_connection
       connection_thread_runner
     end
   end
 
   def start_new_mail_thread
     self.connection_thread = wrapped_thread do
-      establish_db_connection
       new_mail_thread_runner
     end
   end
@@ -120,16 +120,20 @@ class ImapTestServer::Daemon
 
   # Private: Accepts incoming connections.
   def connection_thread_runner
-    Log.info("Waiting for connections on port 127.0.0.1:#{port}.")
-    server = TCPServer.new("127.0.0.1", port)
+    Log.info("Waiting for connections on port 0.0.0.0:#{port}.")
+    server = TCPServer.new("0.0.0.0", port)
     while running?
       begin
-        socket = server.accept_nonblock
+        socket = server.accept
         new_sockets << socket
       rescue IO::EAGAINWaitReadable
         sleep 0.2
+      rescue => e
+        Log.exception(e)
       end
     end
+  rescue => e
+    Log.exception(e)
   end
 
   # Private: Sends and receives IMAP commands.
@@ -235,7 +239,6 @@ class ImapTestServer::Daemon
   def generate_new_mail(n)
     # What's our chance of generating an email for an individual user?
     prob_of_email = n / self.mailboxes.count
-
     self.mailboxes.each do |mailbox|
       if rand() < prob_of_email
         self.total_emails_generated += 1

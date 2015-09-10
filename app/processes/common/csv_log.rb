@@ -8,8 +8,9 @@ class Common::CsvLog
   attr_accessor :log_thread
 
   def initialize(log_path)
-    self.log_path       = log_path
-    self.log_queue      = Queue.new
+    init_stoppable
+    self.log_path   = log_path
+    self.log_queue  = Queue.new
     self.log_thread = wrapped_thread do
       _thread_runner
     end
@@ -42,7 +43,7 @@ class Common::CsvLog
     log_filehandle.flush()
   end
 
-  def _close_csv_logs
+  def _close_file
     log_filehandle.close
   rescue IOError
     # May fire if we've already closed the stream elsewhere.

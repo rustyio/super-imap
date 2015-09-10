@@ -23,13 +23,25 @@ class ImapClient::Daemon
   include Common::WrappedThread
   include Common::DbConnection
 
+  # Config variables.
   attr_accessor :stress_test_mode, :chaos_mode, :enable_profiler
   attr_accessor :num_worker_threads, :max_user_threads, :max_email_size, :tracer_interval, :num_tracers
+
+  # Threads.
+  attr_accessor :heartbeat_thread, :discovery_thread, :claim_thread, :tracer_thread
+
+  # Instance variables.
   attr_accessor :server_tag, :server_rhash
-  attr_accessor :heartbeat_thread, :discovery_thread
-  attr_accessor :claim_thread, :user_threads, :error_counts
-  attr_accessor :tracer_thread, :tracer_emails_processed
-  attr_accessor :total_emails_processed, :processed_log
+
+  # Shared variables.
+  attr_accessor :user_threads, :user_threads_lock
+  attr_accessor :error_counts, :error_counts_lock
+  attr_accessor :tracer_emails_processed
+  attr_accessor :total_emails_processed
+
+  # Stress testing variables.
+  attr_accessor :processed_log
+
 
   def initialize(options = {})
     # Settings.
@@ -42,17 +54,95 @@ class ImapClient::Daemon
     self.num_tracers        = options.fetch(:num_tracers)
     self.enable_profiler    = options.fetch(:enable_profiler)
 
+    # Initialize mixins.
+    init_stoppable
+    init_worker_pool
+
     # Load balancing stuff.
     self.server_tag = SecureRandom.hex(10)
-    self.server_rhash = ImapClient::RendezvousHash.new([])
+    self.server_rhash = ImapClient::RendezvousHash.new
 
     # User stuff.
     self.user_threads = {}
+    self.user_threads_lock = Mutex.new
+
+    # Error count stuff.
     self.error_counts = {}
+    self.error_counts_lock = Mutex.new
 
     # Stats.
     self.total_emails_processed = 0
   end
+
+  #
+  # Thread safe methods for `user_threads` object.
+  #
+
+  # Public: Get number of user threads.
+  def user_threads_count
+    user_threads_lock.synchronize do
+      user_threads.count
+    end
+  end
+
+  # Public: Get user thread for a user.
+  def get_user_thread(user_id)
+    user_threads_lock.synchronize do
+      user_threads[user_id]
+    end
+  end
+
+  # Public: Set user thread for a user.
+  def set_user_thread(user_id, user_thread)
+    user_threads_lock.synchronize do
+      user_threads[user_id] = user_thread
+    end
+  end
+
+  # Public: Delete user thread.
+  def delete_user_thread(user_id)
+    user_threads_lock.synchronize do
+      user_threads.delete(user_id)
+    end
+  end
+
+  # Public: Execute a block on all user threads. Block takes user_id,
+  # user_thread parameters.
+  def walk_user_threads
+    user_threads_lock.synchronize do
+      user_threads.each do |user_id, user_thread|
+        yield(user_id, user_thread)
+      end
+    end
+  end
+
+
+  #
+  # Thread safe methods for `error_counts`.
+  #
+
+  # Public: Returns the number of errors for a user.
+  def get_error_count(user_id)
+    error_counts_lock.synchronize do
+      self.error_counts[user_id] ||= 0
+    end
+  end
+
+  # Public: Increment the error count for a user
+  def increment_error_count(user_id)
+    error_counts_lock.synchronize do
+      self.error_counts[user_id] ||= 0
+      self.error_counts[user_id] += 1
+    end
+  end
+
+  # Public:
+  def clear_error_count(user_id)
+    error_counts_lock.synchronize do
+      self.error_counts[user_id] = 0
+    end
+  end
+
 
   def run
     trap_signals
@@ -67,7 +157,7 @@ class ImapClient::Daemon
     # Start our threads. We need one thread for each worker, plus four
     # additional threads -- one each for the heartbeat, discovery,
     # claim, and tracer threads.
-    set_db_connection_pool_size(self.num_worker_threads + 4)
+    set_db_connection_pool_size(self.num_worker_threads + 5)
     start_worker_pool(num_worker_threads)
     start_heartbeat_thread
     start_discovery_thread
@@ -93,23 +183,6 @@ class ImapClient::Daemon
   end
 
 
-  # Public: Returns the number of errors for a user.
-  def error_count(user_id)
-    self.error_counts[user_id] ||= 0
-  end
-
-  # Public: Increment the error count for a user
-  def increment_error_count(user_id)
-    self.error_counts[user_id] ||= 0
-    self.error_counts[user_id] += 1
-  end
-
-  # Public:
-  def clear_error_count(user_id)
-    self.error_counts[user_id] = 0
-  end
-
-
   private
 
 
@@ -119,18 +192,21 @@ class ImapClient::Daemon
     # autoloading constant ImapDaemonHeartbeat" error.
     ImapDaemonHeartbeat
     CallNewMailWebhook
-    self.error_counts = {}
   end
 
   def start_heartbeat_thread
     self.heartbeat_thread = Thread.new do
-      heartbeat_thread_runner
+      ActiveRecord::Base.connection_pool.with_connection do |conn|
+        heartbeat_thread_runner
+      end
     end
   end
 
   def start_discovery_thread
     self.discovery_thread = Thread.new do
-      discovery_thread_runner
+      ActiveRecord::Base.connection_pool.with_connection do |conn|
+        discovery_thread_runner
+      end
     end
 
     # Wait for servers.
@@ -142,20 +218,23 @@ class ImapClient::Daemon
 
   def start_claim_thread
     self.claim_thread = Thread.new do
-      claim_thread_runner
+      ActiveRecord::Base.connection_pool.with_connection do |conn|
+        claim_thread_runner
+      end
     end
   end
 
   def start_tracer_thread
     self.tracer_thread = Thread.new do
-      tracer_thread_runner
+      ActiveRecord::Base.connection_pool.with_connection do |conn|
+        tracer_thread_runner
+      end
     end
   end
 
   # Private: Creates/updates an ImapDaemonHeartbeat record in the
   # database every 10 seconds.
   def heartbeat_thread_runner
-    establish_db_connection
     heartbeat = ImapDaemonHeartbeat.create(:tag => server_tag)
     while running?
       # Update the heartbeat.
@@ -164,7 +243,7 @@ class ImapClient::Daemon
       # Log Heroku / Librato stats.
       Log.librato(:measure, 'imap_client.thread.count', Thread.list.count)
       Log.librato(:measure, 'imap_client.work_queue.length', work_queue_length)
-      Log.librato(:measure, 'imap_client.user_thread.count', user_threads.count)
+      Log.librato(:measure, 'imap_client.user_thread.count', user_threads_count)
       Log.librato(:measure, 'work_queue.latency', work_queue_latency)
       Log.librato(:sample, 'imap_client.total_emails_processed', total_emails_processed)
 
@@ -182,12 +261,11 @@ class ImapClient::Daemon
   # in the database very 30 seconds. Create a new RendezvousHash from
   # the associated tags.
   def discovery_thread_runner
-    establish_db_connection
     while running?
       tags = ImapDaemonHeartbeat.where("updated_at >= ?", 30.seconds.ago).map(&:tag)
       Log.info("There are #{tags.count} daemons running.")
 
-      self.server_rhash = ImapClient::RendezvousHash.new(tags)
+      self.server_rhash.site_tags = tags
 
       if server_rhash.size == 0
         light_sleep 1
@@ -206,7 +284,6 @@ class ImapClient::Daemon
   # disconnect task depending on whether the user is hashed to this
   # server.
   def claim_thread_runner
-    establish_db_connection
     while running?
       User.select(:id, :email, :connected_at, :archived).find_each do |user|
         if server_rhash.hash(user.id) == server_tag && !user.archived && user.connected_at
@@ -229,7 +306,6 @@ class ImapClient::Daemon
 
   # Private: Schedule a tracer emails to random tracer users.
   def tracer_thread_runner
-    establish_db_connection
     while running?
       # Get a random user assigned to this server.
       user = User.where(:enable_tracer => true, :archived => false).select(:id, :connected_at).all.select do |user|
@@ -251,13 +327,6 @@ class ImapClient::Daemon
     Log.info("Stopping tracer thread.")
   end
 
-  # Private: Disconnect all user threads.
-  def disconnect_all_users
-    user_threads.keys.dup.each do |user_id|
-      schedule_work(:disconnect_user, :hash => user_id, :user_id => user_id)
-    end
-  end
-
   # Private: Construct and return user thread options.
   def user_options
     @user_options ||= {
@@ -275,10 +344,13 @@ class ImapClient::Daemon
     return if stopping?
 
     # Are we allowed to create a new user thread?
-    return if user_threads.count > max_user_threads
+    if user_threads_count > max_user_threads
+      Log.error("Error: Reached maximum number of users (#{max_user_threads}).")
+      return
+    end
 
     # Nothing to do if already a running (or sleeping) thread.
-    user_thread = user_threads[user_id]
+    user_thread = get_user_thread(user_id)
     return if user_thread.present? && user_thread.alive?
 
     # Load the user; preload connection information.
@@ -286,10 +358,11 @@ class ImapClient::Daemon
     user.connection.imap_provider
 
     # Start the thread.
-    user_threads[user_id] = wrapped_thread do
+    user_thread = wrapped_thread do
       Log.info("Connecting #{user.email}...")
       ImapClient::UserThread.new(self, user, user_options).run
     end
+    set_user_thread(user_id, user_thread)
   rescue => e
     Log.exception(e)
   end
@@ -300,10 +373,10 @@ class ImapClient::Daemon
   def action_disconnect_user(options)
     # Nothing to do if no thread.
     user_id = options[:user_id]
-    return if user_threads[user_id].nil?
+    return if get_user_thread(user_id).nil?
 
     # Tell the thread to stop.
-    thread = user_threads.delete(user_id)
+    thread = delete_user_thread(user_id)
     thread.terminate
   rescue => e
     Log.exception(e)
@@ -311,14 +384,14 @@ class ImapClient::Daemon
 
   # Private: Stop and disconnect all user threads.
   def terminate_user_threads
-    user_threads.values.each do |thread|
-      # Terminate the thread, ignore exceptions.
-      thread.terminate rescue nil
+    # Terminate all threads, ignore exceptions.
+    walk_user_threads do |user_id, user_thread|
+      user_thread.terminate rescue nil
     end
 
-    user_threads.values.each do |thread|
-      # Join the thread, ignore exceptions.
-      thread.join if thread.alive?
+    # Wait for all threads to finish.
+    walk_user_threads do |user_id, user_thread|
+      user_thread.join if user_thread.alive?
     end
   end
 

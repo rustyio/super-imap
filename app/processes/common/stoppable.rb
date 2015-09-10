@@ -1,5 +1,8 @@
 module Common::Stoppable
-  attr_accessor :stop
+  def init_stoppable
+    @stop = false
+    @stop_lock = Mutex.new
+  end
 
   def trap_signals
     Signal.trap("INT") do self.stop! end
@@ -7,14 +10,20 @@ module Common::Stoppable
   end
 
   def stop!
-    self.stop = true
+    @stop_lock.synchronize do
+      @stop = true
+    end
   end
 
   def running?
-    self.stop != true
+    @stop_lock.synchronize do
+      @stop != true
+    end
   end
 
   def stopping?
-    self.stop == true
+    @stop_lock.synchronize do
+      @stop == true
+    end
   end
 end
