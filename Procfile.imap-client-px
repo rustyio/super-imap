@@ -1,4 +1,4 @@
-imap_client_px_1: DYNO=$DYNO-1 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
-imap_client_px_2: DYNO=$DYNO-2 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
-imap_client_px_3: DYNO=$DYNO-3 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
-imap_client_px_4: DYNO=$DYNO-4 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
+north: DYNO=$DYNO-1 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
+south: DYNO=$DYNO-2 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
+east: DYNO=$DYNO-3 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
+west: DYNO=$DYNO-4 NUM_WORKER_THREADS=3 MAX_USER_THREADS=3750 bundle exec rake imap:client
