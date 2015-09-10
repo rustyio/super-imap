@@ -35,7 +35,7 @@ class ImapTestServer::SocketState
   def handle_command(s)
     tag, verb, args = parse_command(s)
     method = verb_to_method(verb)
-    self.daemon.events_log << [Time.now, username, method]
+    self.daemon.events_log.log(Time.now, username, method)
     send(method, tag, args)
   end
 
@@ -256,7 +256,7 @@ class ImapTestServer::SocketState
         [field, as_integer(mail.encoded.size)]
       when "RFC822"
         self.daemon.total_emails_fetched += 1
-        self.daemon.fetched_log << [Time.now, username, mail.message_id]
+        self.daemon.fetched_log.log(Time.now, username, mail.message_id)
         [field, as_multiline_string(mail.encoded)]
       else
         raise "Unknown field: #{field}"

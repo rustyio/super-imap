@@ -15,6 +15,7 @@ module Common::DbConnection
     # Ensure we can successfully connected.
     while running?
       begin
+        Log.info("Acquiring database connection.")
         conn.connection.execute("SELECT 1")
         break if conn.connected?
       rescue => e

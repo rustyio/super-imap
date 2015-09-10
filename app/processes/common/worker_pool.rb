@@ -13,10 +13,16 @@ module Common::WorkerPool
     self.worker_threads = []
     self.worker_rhash = ImapClient::RendezvousHash.new([])
 
+    # Create work queues.
+    num_worker_threads.times do |n|
+      self.work_queues << Queue.new
+    end
+
     # Start worker threads.
     num_worker_threads.times do |n|
-      _start_worker_thread
+      _start_worker_thread(self.work_queues[n])
     end
+
     tags = num_worker_threads.times.map(&:to_i)
     self.worker_rhash = ImapClient::RendezvousHash.new(tags)
   end
@@ -50,17 +56,15 @@ module Common::WorkerPool
 
   private
 
-  def _start_worker_thread
+  def _start_worker_thread(work_queue)
     self.worker_threads << wrapped_thread do
       establish_db_connection
-      _worker_thread_runner
+      _worker_thread_runner(work_queue)
     end
   end
 
-  def _worker_thread_runner
+  def _worker_thread_runner(work_queue)
     # Create a work queue.
-    work_queue = Queue.new
-    self.work_queues << work_queue
     while running?
       _worker_thread_next_action(work_queue)
     end

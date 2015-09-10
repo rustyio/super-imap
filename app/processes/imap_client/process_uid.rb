@@ -258,7 +258,7 @@ class ProcessUid
   def update_daemon_stats
     daemon.clear_error_count(user.id)
     daemon.processed_log &&
-      daemon.processed_log << [Time.now, user.email, message_id]
+      daemon.processed_log.log(Time.now, user.email, message_id)
     daemon.total_emails_processed += 1
     return true
   end

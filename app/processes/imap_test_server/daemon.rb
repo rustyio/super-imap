@@ -21,7 +21,6 @@ class ImapTestServer::Daemon
   include Common::LightSleep
   include Common::WrappedThread
   include Common::DbConnection
-  include Common::CsvLog
 
   attr_accessor :port, :enable_chaos, :emails_per_minute, :length_of_test
   attr_accessor :stats_thread
@@ -54,11 +53,10 @@ class ImapTestServer::Daemon
   # Public: Start threads and begin servicing connections.
   def run
     trap_signals
-    start_csv_log_thread
 
-    self.generated_log = csv_log("./log/stress/generated_emails.csv")
-    self.fetched_log = csv_log("./log/stress/fetched_emails.csv")
-    self.events_log = csv_log("./log/stress/events.csv")
+    self.generated_log = Common::CsvLog.new("./log/stress/generated_emails.csv")
+    self.fetched_log = Common::CsvLog.new("./log/stress/fetched_emails.csv")
+    self.events_log = Common::CsvLog.new("./log/stress/events.csv")
 
     start_stats_thread
     start_connection_thread
@@ -81,7 +79,9 @@ class ImapTestServer::Daemon
     stop!
     connection_thread && connection_thread.terminate
     sockets.map(&:close)
-    close_csv_logs
+    self.generated_log.stop!
+    self.fetched_log.stop!
+    self.events_log.stop!
     Log.info("Generated #{total_emails_generated} emails.")
     Log.info("Served #{total_emails_fetched} emails.")
   end
@@ -240,7 +240,7 @@ class ImapTestServer::Daemon
       if rand() < prob_of_email
         self.total_emails_generated += 1
         mailbox.add_fake_message do |message_id|
-          self.generated_log << [Time.now, mailbox.username, message_id]
+          self.generated_log.log(Time.now, mailbox.username, message_id)
         end
       end
     end

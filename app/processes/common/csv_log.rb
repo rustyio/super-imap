@@ -1,62 +1,50 @@
-module Common::CsvLog
+class Common::CsvLog
   include Common::Stoppable
   include Common::WrappedThread
 
-  def start_csv_log_thread
-    _csv_log_initialize
-    wrapped_thread do
-      _csv_log_thread_runner
+  attr_accessor :log_path
+  attr_accessor :log_filehandle
+  attr_accessor :log_queue
+  attr_accessor :log_thread
+
+  def initialize(log_path)
+    self.log_path       = log_path
+    self.log_queue      = Queue.new
+    self.log_thread = wrapped_thread do
+      _thread_runner
     end
   end
 
-  def csv_log(path)
-    _csv_log_initialize
-    @csv_log_filehandles[path] ||= File.open(path, "w")
-    @csv_log_queues[path] ||= Queue.new
-    @csv_log_paths << path
-    @csv_log_queues[path]
-  end
-
-  def close_csv_logs
-    _csv_log_initialize
-    @csv_log_paths.each do |path|
-      begin
-        @csv_log_filehandles[path].close
-      rescue IOError
-        # May fire if we've already closed the stream elsewhere.
-      end
-    end
+  def log(*values)
+    self.log_queue << values
   end
 
   private
 
-  def _csv_log_initialize
-    @csv_log_paths ||= []
-    @csv_log_filehandles ||= {}
-    @csv_log_queues ||= {}
-  end
-
-  def _csv_log_thread_runner
+  def _thread_runner
+    self.log_filehandle = File.open(log_path, "w")
     while running?
-      @csv_log_paths.each do |path|
-        queue = @csv_log_queues[path]
-        file = @csv_log_filehandles[path]
-        _csv_log_drain_queue(queue, file)
-      end
+      _drain_queue
       sleep 0.1
     end
-    close_csv_logs
+    _drain_queue
+    _close_file
   end
 
-  def _csv_log_drain_queue(queue, file)
-    while running?
+  def _drain_queue
+    while true
       # Don't block, otherwise we can't exit.
-      values = queue.pop(true)
-      file.write(values.join(",") + "\n")
-      file.flush()
+      values = log_queue.pop(true)
+      log_filehandle.write(values.join(",") + "\n")
     end
   rescue ThreadError => e
-    # Queue is empty, return.
-    file.flush()
+    # Thrown when queue is empty.
+    log_filehandle.flush()
+  end
+
+  def _close_csv_logs
+    log_filehandle.close
+  rescue IOError
+    # May fire if we've already closed the stream elsewhere.
   end
 end

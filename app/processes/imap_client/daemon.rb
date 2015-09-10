@@ -22,7 +22,6 @@ class ImapClient::Daemon
   include Common::LightSleep
   include Common::WrappedThread
   include Common::DbConnection
-  include Common::CsvLog
 
   attr_accessor :stress_test_mode, :chaos_mode, :enable_profiler
   attr_accessor :num_worker_threads, :max_user_threads, :max_email_size, :tracer_interval, :num_tracers
@@ -62,8 +61,7 @@ class ImapClient::Daemon
 
     # If stress testing, start a log.
     if self.stress_test_mode
-      start_csv_log_thread
-      self.processed_log = csv_log("./log/stress/processed_emails_#{server_tag}.csv")
+      self.processed_log = Common::CsvLog.new("./log/stress/processed_emails_#{server_tag}.csv")
     end
 
     # Start our threads. We need one thread for each worker, plus four
@@ -90,7 +88,7 @@ class ImapClient::Daemon
     claim_thread && claim_thread.terminate
     terminate_worker_pool
     terminate_user_threads
-    close_csv_logs
+    self.processed_log.stop! if self.processed_log
     stop_profiling
   end
 
