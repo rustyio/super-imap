@@ -57,7 +57,6 @@ class ImapClient::Daemon
 
   def run
     trap_signals
-    force_class_loading
     maybe_start_profiling
 
     # If stress testing, start a log.
@@ -113,16 +112,6 @@ class ImapClient::Daemon
 
 
   private
-
-
-  def force_class_loading
-    # Force ImapDaemonHeartbeat to load before we create any
-    # threads. This fixes a "Circular dependency detected while
-    # autoloading constant ImapDaemonHeartbeat" error.
-    ImapDaemonHeartbeat
-    CallNewMailWebhook
-    self.error_counts = {}
-  end
 
   def start_heartbeat_thread
     self.heartbeat_thread = Thread.new do
