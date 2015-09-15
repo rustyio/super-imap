@@ -1,4 +1,4 @@
-# SuperIMAP - Version 0.1.1
+# SuperIMAP - Version 0.1.2
 
 SuperIMAP helps you build email-driven applications. It takes care of
 connecting to a customer's IMAP inbox, watching for new email, and
@@ -49,6 +49,7 @@ users.
   * [Running Stress Tests](#running-stress-tests)
   * [Future Work](#future-work)
   * [Contributions](#contributions)
+* [Changes](#changes)
 * [License](#license)
 
 ## Screenshot
@@ -631,6 +632,17 @@ Then run the stress test:
 To contribute to this project, please fork and file a pull
 request. Small patches will be accepted more quickly than large
 patches.
+
+## Changes
+
+#### Version 0.1.2
+
+* Re-organize and improve documentation in README.md.
+* Detect and handle race condition around changing UIDVALIDITY.
+* Properly escape OAuth 2.0 disconnect URL.
+* Improve usage of Rails connection pool.
+* Clean up heartbeat records during exit.
+* Synchronize access to shared objects.
 
 ## License
 
