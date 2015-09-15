@@ -506,11 +506,11 @@ thousands of active users.
 So, why Ruby? A few reasons:
 
 + **FiveStreet uses Ruby** - The primary goal of SuperIMAP is to power
-  a critical part of FiveStreet's application. FiveStreet is built and
-  maintained by a small team of Ruby engineers. The entire FiveStreet
-  application is written in Ruby. Adding a language would force the
-  team to spend dozens of hours learning a new stack and maintaining a
-  new development environment.
+  a critical part of FiveStreet's application. FiveStreet.com is
+  written in Ruby. It is built and maintained by a small team of Ruby
+  engineers. Introducing a new language would force the team to spend
+  dozens of hours learning a new stack and maintaining a new
+  development environment.
 
 + **Low barrier to entry** - A secondary goal of SuperIMAP is to become
   a healthy open-source project. Based only on language popularity, it
@@ -523,7 +523,7 @@ So, why Ruby? A few reasons:
   not impossible.
 
 + **For us, the cost savings are small** - FiveStreet's SuperIMAP
-  cluster currently runs on three commodity servers and happily handles
+  cluster currently runs on three commodity servers and easily handles
   thousands of users. It's possible that if SuperIMAP were written in
   a different language, we could handle the load on a single machine,
   saving us a few hundred dollars a month. Not worth changing our
@@ -540,7 +540,7 @@ So, why Ruby? A few reasons:
 
 Side Note: This was a deeply considered choice. I (Rusty Klophaus, the
 author of SuperIMAP) spent about 4 years writing Erlang
-professionally. It's a fascinating language
+professionally. It's a fascinating language.
 
 ## Appendix
 
