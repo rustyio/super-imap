@@ -491,7 +491,7 @@ At first glance, and from a purely technical point-of-view, Ruby is a
 poor choice for an application like SuperIMAP. SuperIMAP is highly
 concurrent, and Ruby is bad at concurrency.
 
-Specifically, the `imap_client` process spans what could technically
+Specifically, the `imap_client` process spawns what could technically
 be described as a "boatload" of threads (2 threads per connected user,
 plus a handful of other threads). Ruby threads are heavyweight, so the
 interpreter has to burn significant resources just to create and
