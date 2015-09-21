@@ -517,17 +517,17 @@ So, why Ruby? A few reasons:
   is more likely that another team can use, troubleshoot, and contribute to
   a Ruby-based SuperIMAP than an Erlang/Go/Rust-based SuperIMAP.
 
-+ **The concurrency is not complicated** - The concurrency in SuperIMAP is
-  fairly straightforward -- one parent process, many child
-  processes. It's a little painful to solve the problem in Ruby, but
-  not impossible.
-
 + **For us, the cost savings are small** - FiveStreet's SuperIMAP
   cluster currently runs on three commodity servers and easily handles
   thousands of users. It's possible that if SuperIMAP were written in
   a different language, we could handle the load on a single machine,
   saving us a few hundred dollars a month. Not worth changing our
   stack for it.
+
++ **The concurrency is not complicated** - The concurrency in SuperIMAP is
+  fairly straightforward -- one parent process, many child
+  processes. It's a little painful to solve the problem in Ruby, but
+  not impossible.
 
 + **Ruby has mature IMAP and OAuth 2.0 libraries** - Ruby has a
   [built-in IMAP library](http://ruby-doc.org/stdlib-2.0.0/libdoc/net/imap/rdoc/Net/IMAP.html),
