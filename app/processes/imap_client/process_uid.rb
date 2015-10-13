@@ -26,21 +26,22 @@ class ProcessUid
 
   # Public: Process the email.
   def run
-    maybe = Maybe.new
-    maybe.run { fetch_internal_date_and_size }
-    maybe.run { check_for_really_old_internal_date }
-    maybe.run { check_for_pre_creation_internal_date }
-    maybe.run { check_for_relapsed_internal_date }
-    maybe.run { check_for_big_messages }
-    maybe.run { fetch_uid_envelope_rfc822 }
-    maybe.run { update_user_mark_email_processed }
-    maybe.run { handle_tracer_email }
-    maybe.run { check_for_duplicate_message_id }
-    maybe.run { check_for_duplicate_sha1 }
-    maybe.run { create_mail_log }
-    maybe.run { deploy_webhook }
-    maybe.run { update_daemon_stats }
-    maybe.finish
+    # Run all the steps below. Stop as soon as one of them returns
+    # false or throws an error.
+    true &&
+      fetch_internal_date_and_size  &&
+      check_for_really_old_internal_date  &&
+      check_for_pre_creation_internal_date  &&
+      check_for_relapsed_internal_date  &&
+      check_for_big_messages  &&
+      fetch_uid_envelope_rfc822  &&
+      update_user_mark_email_processed  &&
+      handle_tracer_email  &&
+      check_for_duplicate_message_id  &&
+      check_for_duplicate_sha1  &&
+      create_mail_log  &&
+      deploy_webhook  &&
+      update_daemon_stats
   ensure
     clean_up
   end
