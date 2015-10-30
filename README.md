@@ -14,6 +14,8 @@ users.
 
 SuperIMAP is written in Ruby and open sourced under the MIT license. [Why Ruby?](#why-ruby)
 
++[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/rustyio/super-imap)
+
 ## Contents
 
 * [Installation](#installation)

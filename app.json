@@ -9,5 +9,15 @@
     },
     "addons": [
         "heroku-postgresql"
-    ]
+    ],
+    "env": {
+        "ENCRYPTION_KEY": {
+            "description": "Used to encrypt information in the database.",
+            "generator": "secret",
+        },
+        "SECRET_KEY_BASE": {
+            "description": "A secret key for verifying the integrity of signed cookies.",
+            "generator": "secret",
+        }
+    }
 }
